@@ -1,0 +1,1086 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Travel Vocabulary Flashcards & Quizzes</title>
+    <style>
+        :root {
+            --primary: #4a90e2;
+            --primary-hover: #357abd;
+            --background: #f5f7fa;
+            --card-front: #ffffff;
+            --card-back: #eef5fc;
+            --text: #333333;
+            /* Syllable Colors */
+            --syl1: #e74c3c; /* Red */
+            --syl2: #2ecc71; /* Green */
+            --syl3: #f39c12; /* Orange */
+            --syl4: #9b59b6; /* Purple */
+            --syl5: #1abc9c; /* Teal */
+            --syl6: #34495e; /* Navy */
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--background);
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            color: var(--text);
+        }
+
+        .app-container {
+            width: 100%;
+            max-width: 600px;
+            padding: 20px;
+            box-sizing: border-box;
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 1.8rem;
+            color: #2c3e50;
+            margin-bottom: 5px;
+        }
+
+        .progress {
+            font-size: 0.9rem;
+            color: #7f8c8d;
+            margin-bottom: 20px;
+        }
+
+        /* --- Flashcard Styles --- */
+        #flashcard-section {
+            display: block;
+        }
+
+        .flashcard-container {
+            perspective: 1000px;
+            -webkit-perspective: 1000px;
+            width: 100%;
+            height: 350px;
+            cursor: pointer;
+            margin-bottom: 30px;
+        }
+
+        .flashcard {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            transform-style: preserve-3d;
+            -webkit-transform-style: preserve-3d;
+            transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            -webkit-transition: -webkit-transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            border-radius: 20px;
+        }
+
+        .flashcard.flipped {
+            transform: rotateY(180deg);
+            -webkit-transform: rotateY(180deg);
+        }
+
+        .card-face {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            -webkit-backface-visibility: hidden;
+            border-radius: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            box-sizing: border-box;
+            border: 2px solid #e2e8f0;
+        }
+
+        .card-front {
+            background-color: var(--card-front);
+            padding: 20px;
+            transform: rotateY(0deg);
+            -webkit-transform: rotateY(0deg);
+            z-index: 2;
+        }
+
+        .card-back {
+            background-color: var(--card-back);
+            transform: rotateY(180deg);
+            -webkit-transform: rotateY(180deg);
+            padding: 30px;
+            z-index: 1;
+        }
+
+        .flashcard.flipped .card-front { z-index: 1; }
+        .flashcard.flipped .card-back { z-index: 2; }
+
+        .word-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: center;
+            gap: 4px;
+            width: 100%;
+        }
+
+        .syllable {
+            font-size: clamp(1.8rem, 6vw, 3.2rem); 
+            font-weight: 700;
+            padding: 4px 8px;
+            border-radius: 8px;
+            color: white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .c1 { background-color: var(--syl1); }
+        .c2 { background-color: var(--syl2); }
+        .c3 { background-color: var(--syl3); }
+        .c4 { background-color: var(--syl4); }
+        .c5 { background-color: var(--syl5); }
+        .c6 { background-color: var(--syl6); }
+        
+        .space { width: 15px; }
+
+        .audio-btn {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            background: #ffffff;
+            border: 2px solid #cbd5e1;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            z-index: 10;
+        }
+
+        .audio-btn:hover {
+            transform: scale(1.05);
+            border-color: var(--primary);
+        }
+
+        .audio-btn svg {
+            width: 24px;
+            height: 24px;
+            fill: var(--primary);
+        }
+
+        .chinese-meaning {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: #2c3e50;
+            letter-spacing: 2px;
+        }
+
+        .hint-text {
+            margin-top: 20px;
+            font-size: 0.9rem;
+            color: #94a3b8;
+        }
+
+        /* --- Quiz Styles --- */
+        #quiz-section, #gap-quiz-section, #final-summary-section {
+            display: none;
+            background: white;
+            padding: 40px 20px;
+            border-radius: 20px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            border: 2px solid #e2e8f0;
+            margin-bottom: 30px;
+        }
+
+        .quiz-header {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--primary);
+            margin-bottom: 10px;
+        }
+
+        .quiz-audio-btn {
+            position: static;
+            width: 80px;
+            height: 80px;
+            margin: 20px auto;
+            border-radius: 50%;
+            background-color: var(--card-back);
+        }
+
+        .quiz-audio-btn svg {
+            width: 40px;
+            height: 40px;
+        }
+
+        .quiz-input {
+            width: 80%;
+            max-width: 300px;
+            padding: 15px;
+            font-size: 1.2rem;
+            border: 2px solid #cbd5e1;
+            border-radius: 10px;
+            margin: 20px 0;
+            text-align: center;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .quiz-input:focus {
+            border-color: var(--primary);
+        }
+
+        .gap-sentence {
+            font-size: 1.3rem;
+            color: #2c3e50;
+            margin: 25px 0;
+            line-height: 1.6;
+            font-weight: 500;
+        }
+
+        .quiz-feedback {
+            font-size: 1.2rem;
+            font-weight: bold;
+            min-height: 30px;
+            margin-bottom: 10px;
+        }
+
+        /* Reward Image Styles */
+        .reward-container {
+            min-height: 100px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 15px;
+        }
+
+        .reward-img {
+            display: none;
+            width: 80px;
+            height: 80px;
+            animation: bounce 1s ease infinite;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-15px); }
+        }
+
+        /* --- Quiz Report Styles --- */
+        .quiz-report {
+            display: none;
+            margin: 20px auto;
+            text-align: left;
+            background: #f8fafc;
+            padding: 20px;
+            border-radius: 12px;
+            border: 1px solid #e2e8f0;
+            max-width: 500px;
+        }
+
+        .quiz-report h3 {
+            margin-top: 0;
+            color: #2c3e50;
+            font-size: 1.2rem;
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 10px;
+            margin-bottom: 15px;
+        }
+
+        .report-item {
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #cbd5e1;
+            line-height: 1.5;
+        }
+
+        .report-item:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+
+        .report-correct {
+            color: #2ecc71;
+            font-weight: bold;
+        }
+
+        .report-wrong {
+            color: #e74c3c;
+            text-decoration: line-through;
+            margin-left: 5px;
+        }
+        
+        .mistake-type {
+            font-size: 0.8rem;
+            background: #e2e8f0;
+            padding: 2px 6px;
+            border-radius: 4px;
+            margin-right: 8px;
+            color: #475569;
+            vertical-align: middle;
+        }
+
+        .clue-text {
+            display: block;
+            margin-top: 8px;
+            font-size: 0.95rem;
+            color: #475569;
+            background: #eef2ff;
+            padding: 10px;
+            border-radius: 8px;
+            border-left: 4px solid var(--primary);
+        }
+
+        .final-time {
+            font-size: 1.2rem;
+            color: #f39c12;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+
+        /* --- Shared Buttons --- */
+        .nav-controls {
+            display: flex;
+            justify-content: center;
+            width: 100%;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            flex: 1;
+            min-width: 110px;
+            max-width: 250px;
+            padding: 15px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.1s;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        }
+
+        .btn-prev {
+            background-color: #cbd5e1;
+            color: #475569;
+        }
+
+        .btn-next, .btn-submit {
+            background-color: var(--primary);
+            color: white;
+        }
+
+        .btn-review {
+            background-color: #e74c3c;
+            color: white;
+        }
+
+        .btn-shuffle {
+            background-color: #f39c12;
+            color: white;
+        }
+        .btn-shuffle.active {
+            background-color: #9b59b6;
+        }
+
+        .btn:hover { opacity: 0.9; }
+        .btn:active { transform: scale(0.98); }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    <h1 id="main-title">✈️ Travel Vocabulary</h1>
+    <div class="progress" id="progress-text">Card 1 of 25</div>
+
+    <!-- Flashcard Section -->
+    <div id="flashcard-section">
+        <div class="flashcard-container" onclick="flipCard()">
+            <div class="flashcard" id="card">
+                <div class="card-face card-front">
+                    <div class="word-container" id="word-box">
+                        <!-- Syllables will be injected here -->
+                    </div>
+                    <button class="audio-btn" onclick="playAudio(event)" title="Play Audio">
+                        <svg viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>
+                    </button>
+                </div>
+                <div class="card-face card-back">
+                    <div class="chinese-meaning" id="chinese-text">漢語意義</div>
+                    <div class="hint-text">(Click to flip back)</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="nav-controls">
+            <button class="btn btn-prev" onclick="prevCard()">Previous</button>
+            <button class="btn btn-shuffle" id="shuffle-btn" onclick="toggleShuffle()">🔀 Shuffle: OFF</button>
+            <button class="btn btn-next" onclick="nextCard()">Next</button>
+        </div>
+    </div>
+
+    <!-- Spelling Quiz Section -->
+    <div id="quiz-section">
+        <div class="quiz-header">Spelling Quiz</div>
+        <div class="hint-text" id="quiz-progress-text">Listen and spell the word</div>
+        
+        <button class="audio-btn quiz-audio-btn" id="quiz-audio-btn" onclick="playQuizAudio()" title="Play Audio Slowly">
+            <svg viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>
+        </button>
+
+        <div>
+            <input type="text" id="quiz-input" class="quiz-input" placeholder="Type here..." autocomplete="off" onkeypress="handleKeyPress(event, 'quiz-action-btn')">
+        </div>
+
+        <div class="quiz-feedback" id="quiz-feedback"></div>
+        
+        <div class="reward-container">
+            <img id="quiz-reward-img" class="reward-img" src="" alt="Reward">
+        </div>
+        
+        <div class="quiz-report" id="quiz-report"></div>
+
+        <div class="nav-controls">
+            <button class="btn btn-submit" id="quiz-action-btn" onclick="submitQuizAnswer()">Submit</button>
+        </div>
+    </div>
+
+    <!-- Gap-Filling Quiz Section -->
+    <div id="gap-quiz-section">
+        <div class="quiz-header">Gap-Filling Quiz</div>
+        <div class="hint-text" id="gap-progress-text">Read the sentence and fill in the blank (Case Sensitive!)</div>
+        
+        <div class="gap-sentence" id="gap-sentence-text"></div>
+
+        <div>
+            <input type="text" id="gap-input" class="quiz-input" placeholder="Type the missing word..." autocomplete="off" onkeypress="handleKeyPress(event, 'gap-action-btn')">
+        </div>
+
+        <div class="quiz-feedback" id="gap-feedback"></div>
+        
+        <div class="reward-container">
+            <img id="gap-reward-img" class="reward-img" src="" alt="Reward">
+        </div>
+        
+        <div class="quiz-report" id="gap-report"></div>
+
+        <div class="nav-controls">
+            <button class="btn btn-submit" id="gap-action-btn" onclick="submitGapAnswer()">Submit</button>
+        </div>
+    </div>
+
+    <!-- Final Summary Section -->
+    <div id="final-summary-section">
+        <div class="quiz-header">🎉 Final Report 🎉</div>
+        <div class="final-time" id="final-time-text"></div>
+        
+        <div class="quiz-report" id="final-mistakes-report" style="display:block; margin: 0 auto;"></div>
+
+        <div class="nav-controls" style="margin-top: 25px;">
+            <button class="btn btn-submit" onclick="restartApp(true)">Restart All</button>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    const vocabData = [
+        { wordText: "cultural heritage", syllables: [["cul", "tur", "al"], ["sp"], ["her", "i", "tage"]], colors: [["c1", "c2", "c3"], [], ["c4", "c5", "c6"]], chinese: "文化遺產", sentence: "The ancient temple is an important part of our local ___.", explanation: "The words <b>'ancient temple'</b> point to historical structures, which are an important part of a region's <b>cultural heritage</b>." },
+        { wordText: "custom", syllables: [["cus", "tom"]], colors: [["c1", "c2"]], chinese: "風俗 / 習俗", sentence: "It is a local ___ to bow when you greet someone.", explanation: "The phrase <b>'to bow when you greet someone'</b> describes a traditional practice or behavior, which is a <b>custom</b>." },
+        { wordText: "destination", syllables: [["des", "ti", "na", "tion"]], colors: [["c1", "c2", "c3", "c4"]], chinese: "目的地", sentence: "Paris is a very popular holiday ___.", explanation: "The phrase <b>'popular holiday'</b> refers to a place people travel to, which is a <b>destination</b>." },
+        { wordText: "travel brochure", syllables: [["trav", "el"], ["sp"], ["bro", "chure"]], colors: [["c1", "c2"], [], ["c3", "c4"]], chinese: "旅遊手冊", sentence: "I read a ___ to learn more about the hotel.", explanation: "The phrase <b>'read a... to learn more about the hotel'</b> indicates an informational booklet, which is a <b>travel brochure</b>." },
+        { wordText: "passport", syllables: [["pass", "port"]], colors: [["c1", "c2"]], chinese: "護照", sentence: "You must show your ___ at the airport to travel to another country.", explanation: "The phrase <b>'show your... at the airport to travel to another country'</b> clearly describes an official identity document: a <b>passport</b>." },
+        { wordText: "luggage / baggage", syllables: [["lug", "gage"], ["sp"], ["/"], ["sp"], ["bag", "gage"]], colors: [["c1", "c2"], [], [], [], ["c3", "c4"]], chinese: "行李", sentence: "He carried his heavy ___ to the check-in desk.", explanation: "The words <b>'heavy... to the check-in desk'</b> refer to the bags you travel with, which is <b>luggage</b> or <b>baggage</b>." },
+        { wordText: "vacation", syllables: [["va", "ca", "tion"]], colors: [["c1", "c2", "c3"]], chinese: "假期 / 度假", sentence: "We are going to the beach for our summer ___.", explanation: "The phrase <b>'going to the beach for our summer...'</b> describes a holiday trip, which is a <b>vacation</b>." },
+        { wordText: "itinerary", syllables: [["i", "tin", "er", "ar", "y"]], colors: [["c1", "c2", "c3", "c4", "c5"]], chinese: "行程表", sentence: "Our daily ___ includes a visit to the museum at 10 AM.", explanation: "The phrase <b>'daily... includes a visit to the museum at 10 AM'</b> describes a planned schedule of events, which is an <b>itinerary</b>." },
+        { wordText: "excursion", syllables: [["ex", "cur", "sion"]], colors: [["c1", "c2", "c3"]], chinese: "短途旅遊", sentence: "We went on a short ___ to the nearby island.", explanation: "The words <b>'short... to the nearby island'</b> describe a brief pleasure trip, which is an <b>excursion</b>." },
+        { wordText: "landscape", syllables: [["land", "scape"]], colors: [["c1", "c2"]], chinese: "陸地風景", sentence: "The artist painted a beautiful picture of the green ___.", explanation: "The phrase <b>'painted a beautiful picture of the green...'</b> refers to the visible features of an area of land, which is a <b>landscape</b>." },
+        { wordText: "vibrant", syllables: [["vi", "brant"]], colors: [["c1", "c2"]], chinese: "充滿活力的", sentence: "The city is very ___ and full of energy at night.", explanation: "The phrase <b>'full of energy'</b> is a direct synonym for being lively and <b>vibrant</b>." },
+        { wordText: "landmark", syllables: [["land", "mark"]], colors: [["c1", "c2"]], chinese: "地標", sentence: "The Eiffel Tower is a famous ___ in Paris.", explanation: "The phrase <b>'Eiffel Tower is a famous...'</b> refers to a recognizable natural or artificial feature, which is a <b>landmark</b>." },
+        { wordText: "tourist spot", syllables: [["tour", "ist"], ["sp"], ["spot"]], colors: [["c1", "c2"], [], ["c3"]], chinese: "旅遊景點", sentence: "The beach is a busy ___ in the summer.", explanation: "The phrase <b>'beach is a busy... in the summer'</b> refers to a place visited by many travelers, which is a <b>tourist spot</b>." },
+        { wordText: "capital", syllables: [["cap", "i", "tal"]], colors: [["c1", "c2", "c3"]], chinese: "首都", sentence: "Tokyo is the ___ city of Japan.", explanation: "The phrase <b>'Tokyo is the... city of Japan'</b> refers to the primary or most important city of a country, which is its <b>capital</b>." },
+        { wordText: "nightlife", syllables: [["night", "life"]], colors: [["c1", "c2"]], chinese: "夜生活", sentence: "The city has great ___ with many clubs and bars open late.", explanation: "The phrase <b>'many clubs and bars open late'</b> describes evening entertainment, which is <b>nightlife</b>." },
+        { wordText: "overcrowded", syllables: [["o", "ver", "crowd", "ed"]], colors: [["c1", "c2", "c3", "c4"]], chinese: "過於擁擠的", sentence: "The train was so ___ that we couldn't find a seat.", explanation: "The phrase <b>'couldn't find a seat'</b> indicates there were too many people, meaning the train was <b>overcrowded</b>." },
+        { wordText: "accommodation", syllables: [["ac", "com", "mo", "da", "tion"]], colors: [["c1", "c2", "c3", "c4", "c5"]], chinese: "住宿", sentence: "We booked our hotel ___ for three nights.", explanation: "The phrase <b>'booked our hotel... for three nights'</b> refers to a place to stay or lodge, which is <b>accommodation</b>." },
+        { wordText: "infrastructure", syllables: [["in", "fra", "struc", "ture"]], colors: [["c1", "c2", "c3", "c4"]], chinese: "基礎建設", sentence: "The city has good ___, like new roads and bridges.", explanation: "The words <b>'new roads and bridges'</b> are examples of physical and organizational structures, which is <b>infrastructure</b>." },
+        { wordText: "scenery", syllables: [["sce", "ner", "y"]], colors: [["c1", "c2", "c3"]], chinese: "風景 / 景色", sentence: "The mountain ___ is beautiful in the winter.", explanation: "The phrase <b>'mountain... is beautiful'</b> refers to the general appearance of a natural place, which is <b>scenery</b>." },
+        { wordText: "spectacular", syllables: [["spec", "tac", "u", "lar"]], colors: [["c1", "c2", "c3", "c4"]], chinese: "壯觀的", sentence: "The fireworks display in the sky was absolutely ___.", explanation: "A <b>'fireworks display'</b> is usually described as visually striking, amazing, or <b>spectacular</b>." },
+        { wordText: "the Forbidden City", syllables: [["the"], ["sp"], ["For", "bid", "den"], ["sp"], ["Ci", "ty"]], colors: [["c1"], [], ["c2", "c3", "c4"], [], ["c5", "c6"]], chinese: "紫禁城 (故宮)", sentence: "In Beijing, we visited ___, where emperors used to live.", explanation: "The phrase <b>'In Beijing... where emperors used to live'</b> specifically points to the famous palace complex: <b>the Forbidden City</b>." },
+        { wordText: "Mount Fuji", syllables: [["Mount"], ["sp"], ["Fu", "ji"]], colors: [["c1"], [], ["c2", "c3"]], chinese: "富士山", sentence: "___ is the highest and most famous mountain in Japan.", explanation: "The phrase <b>'highest and most famous mountain in Japan'</b> specifically identifies <b>Mount Fuji</b>." },
+        { wordText: "Sydney Opera House", syllables: [["Syd", "ney"], ["sp"], ["Op", "er", "a"], ["sp"], ["House"]], colors: [["c1", "c2"], [], ["c3", "c4", "c5"], [], ["c6"]], chinese: "悉尼歌劇院", sentence: "We watched a musical show at the famous ___ in Australia.", explanation: "The phrase <b>'musical show... in Australia'</b> points to the famous performing arts center: the <b>Sydney Opera House</b>." },
+        { wordText: "Statue of Liberty", syllables: [["Stat", "ue"], ["sp"], ["of"], ["sp"], ["Lib", "er", "ty"]], colors: [["c1", "c2"], [], ["c3"], [], ["c4", "c5", "c6"]], chinese: "自由女神像", sentence: "The ___ is a huge green monument in New York.", explanation: "The phrase <b>'huge green monument in New York'</b> describes the iconic <b>Statue of Liberty</b>." },
+        { wordText: "Eiffel Tower", syllables: [["Eif", "fel"], ["sp"], ["Tow", "er"]], colors: [["c1", "c2"], [], ["c3", "c4"]], chinese: "巴黎鐵塔", sentence: "We climbed to the top of the ___ in Paris.", explanation: "The phrase <b>'climbed to the top... in Paris'</b> refers to the famous iron lattice tower: the <b>Eiffel Tower</b>." }
+    ];
+
+    // --- Praise & Rewards Data ---
+    const praiseMessages = [
+        "Awesome!", "Fantastic!", "Great job!", "Spot on!", 
+        "You nailed it!", "Perfect!", "Brilliant!", "Superb!"
+    ];
+    const rewardImages = [
+        "https://img.icons8.com/color/96/000000/trophy.png",
+        "https://img.icons8.com/color/96/000000/gift.png",
+        "https://img.icons8.com/color/96/000000/star--v1.png",
+        "https://img.icons8.com/color/96/000000/medal2.png",
+        "https://img.icons8.com/color/96/000000/party-baloons.png",
+        "https://img.icons8.com/color/96/000000/confetti.png"
+    ];
+
+    // --- Global Tracking Data ---
+    let currentVocabData = [...vocabData];
+    let isShuffled = false;
+    let globalQuizTimeSeconds = 0;
+    let globalMistakes = [];
+    let currentQuizStartTime = 0;
+
+    // --- Flashcard Logic ---
+    let currentIndex = 0;
+    const cardEl = document.getElementById('card');
+    let completedQuizzes = new Set(); 
+
+    function toggleShuffle() {
+        isShuffled = !isShuffled;
+        const btn = document.getElementById('shuffle-btn');
+        btn.innerText = isShuffled ? '🔀 Shuffle: ON' : '🔀 Shuffle: OFF';
+        
+        if (isShuffled) {
+            btn.classList.add('active');
+        } else {
+            btn.classList.remove('active');
+        }
+        
+        restartApp(false); // Restart but maintain the new shuffle state
+    }
+
+    function shuffleArray(array) {
+        for (let i = array.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [array[i], array[j]] = [array[j], array[i]];
+        }
+    }
+
+    function loadCard(index) {
+        // Instant flip to front to avoid seeing the back text change
+        cardEl.style.transition = 'none';
+        cardEl.classList.remove('flipped');
+        void cardEl.offsetWidth; // Trigger reflow
+        cardEl.style.transition = 'transform 0.6s cubic-bezier(0.4, 0, 0.2, 1)';
+
+        const data = currentVocabData[index];
+        
+        document.getElementById('progress-text').innerText = `Card ${index + 1} of ${currentVocabData.length}`;
+        document.getElementById('chinese-text').innerText = data.chinese;
+        
+        const wordBox = document.getElementById('word-box');
+        wordBox.innerHTML = '';
+        
+        data.syllables.forEach((wordSegment, wordIdx) => {
+            // Check if the segment is a space or a slash
+            if (wordSegment.length === 1 && wordSegment[0] === "sp") {
+                const space = document.createElement('div');
+                space.className = 'space';
+                wordBox.appendChild(space);
+            } else if (wordSegment.length === 1 && wordSegment[0] === "/") {
+                const slash = document.createElement('div');
+                slash.style.fontSize = 'clamp(1.8rem, 6vw, 3.2rem)';
+                slash.style.fontWeight = '700';
+                slash.style.padding = '0 10px';
+                slash.style.color = '#94a3b8';
+                slash.innerText = '/';
+                wordBox.appendChild(slash);
+            } else {
+                // Group syllables of a single word together to prevent breaking in the middle of the word
+                const wordGroup = document.createElement('div');
+                // Using inline-flex ensures it behaves like a text block but keeps children together
+                wordGroup.style.display = 'inline-flex';
+                wordGroup.style.flexWrap = 'nowrap'; // Prevents breaking inside the word
+                wordGroup.style.gap = '4px';
+
+                wordSegment.forEach((syl, sylIdx) => {
+                    const span = document.createElement('span');
+                    span.className = `syllable ${data.colors[wordIdx][sylIdx]}`;
+                    span.innerText = syl;
+                    wordGroup.appendChild(span);
+                });
+                wordBox.appendChild(wordGroup);
+            }
+        });
+    }
+
+    function flipCard() {
+        cardEl.classList.toggle('flipped');
+    }
+
+    function playAudio(event) {
+        event.stopPropagation(); 
+        try {
+            if ('speechSynthesis' in window) {
+                const currentWord = currentVocabData[currentIndex].wordText;
+                const utterance = new SpeechSynthesisUtterance(currentWord);
+                utterance.lang = 'en-US';
+                utterance.rate = 0.85; 
+                window.speechSynthesis.speak(utterance);
+            }
+        } catch (error) {
+            console.warn("Speech Synthesis failed or is unsupported in this environment:", error);
+        }
+    }
+
+    function nextCard() {
+        if ((currentIndex + 1) % 5 === 0 && !completedQuizzes.has(currentIndex)) {
+            startSpellingQuiz();
+            return;
+        }
+
+        if (currentIndex < currentVocabData.length - 1) {
+            currentIndex++;
+        } else {
+            currentIndex = 0;
+        }
+        loadCard(currentIndex);
+    }
+
+    function prevCard() {
+        if (currentIndex > 0) {
+            currentIndex--;
+        } else {
+            currentIndex = currentVocabData.length - 1;
+        }
+        loadCard(currentIndex);
+    }
+
+    // --- Shared Logic ---
+    function handleKeyPress(event, btnId) {
+        if (event.key === 'Enter') {
+            document.getElementById(btnId).click();
+        }
+    }
+
+    // --- Spelling Quiz Logic ---
+    let quizWords = [];
+    let currentQuizIndex = 0;
+    let quizScore = 0;
+    let currentQuizMistakes = []; 
+
+    function startSpellingQuiz() {
+        document.getElementById('flashcard-section').style.display = 'none';
+        document.getElementById('quiz-section').style.display = 'block';
+        document.getElementById('progress-text').innerText = `Spelling Quiz Time!`;
+        
+        document.getElementById('quiz-report').style.display = 'none';
+        document.getElementById('quiz-report').innerHTML = '';
+
+        // Slices the exact 5 words just studied (respects shuffle state)
+        quizWords = currentVocabData.slice(currentIndex - 4, currentIndex + 1);
+        currentQuizIndex = 0;
+        quizScore = 0;
+        currentQuizMistakes = [];
+        
+        currentQuizStartTime = Date.now();
+        loadSpellingQuestion();
+    }
+
+    function loadSpellingQuestion() {
+        document.getElementById('quiz-progress-text').innerText = `Question ${currentQuizIndex + 1} of 5`;
+        
+        const inputEl = document.getElementById('quiz-input');
+        inputEl.value = '';
+        inputEl.disabled = false;
+        inputEl.style.display = 'inline-block';
+        inputEl.focus();
+
+        document.getElementById('quiz-feedback').innerText = '';
+        document.getElementById('quiz-reward-img').style.display = 'none'; 
+        document.getElementById('quiz-audio-btn').style.display = 'flex';
+        
+        const actionBtn = document.getElementById('quiz-action-btn');
+        actionBtn.innerText = 'Submit';
+        actionBtn.className = 'btn btn-submit'; 
+        actionBtn.onclick = submitQuizAnswer;
+
+        setTimeout(playQuizAudio, 300);
+    }
+
+    function playQuizAudio() {
+        try {
+            if ('speechSynthesis' in window) {
+                let word = quizWords[currentQuizIndex].wordText;
+                if (word.includes('/')) {
+                    word = word.split('/')[0]; 
+                }
+                const utterance = new SpeechSynthesisUtterance(word);
+                utterance.lang = 'en-US';
+                utterance.rate = 0.5; 
+                window.speechSynthesis.speak(utterance);
+            }
+        } catch (error) {
+            console.warn("Speech Synthesis failed or is unsupported in this environment:", error);
+        }
+    }
+
+    function submitQuizAnswer() {
+        const inputEl = document.getElementById('quiz-input');
+        // Spelling quiz remains case-insensitive
+        const userAnswer = inputEl.value.trim().toLowerCase();
+        const actualWord = quizWords[currentQuizIndex].wordText;
+        
+        let validAnswers = actualWord.split('/').map(w => w.trim().toLowerCase());
+        if (actualWord === "the Forbidden City") validAnswers.push("forbidden city");
+
+        const isCorrect = validAnswers.includes(userAnswer);
+        const feedbackEl = document.getElementById('quiz-feedback');
+        const rewardImgEl = document.getElementById('quiz-reward-img');
+        
+        if (isCorrect) {
+            const randomPraise = praiseMessages[Math.floor(Math.random() * praiseMessages.length)];
+            const randomReward = rewardImages[Math.floor(Math.random() * rewardImages.length)];
+            
+            feedbackEl.innerText = `✅ ${randomPraise}`;
+            feedbackEl.style.color = "#2ecc71";
+            
+            rewardImgEl.src = randomReward;
+            rewardImgEl.style.display = 'block';
+            
+            quizScore++;
+        } else {
+            feedbackEl.innerText = `❌ Incorrect. The correct spelling is: ${actualWord}`;
+            feedbackEl.style.color = "#e74c3c";
+            rewardImgEl.style.display = 'none';
+            
+            currentQuizMistakes.push({
+                type: 'Spelling',
+                actual: actualWord,
+                typed: userAnswer || "(left blank)"
+            });
+        }
+        
+        inputEl.disabled = true;
+        
+        const actionBtn = document.getElementById('quiz-action-btn');
+        if (currentQuizIndex < 4) {
+            actionBtn.innerText = 'Next Question';
+            actionBtn.onclick = () => {
+                currentQuizIndex++;
+                loadSpellingQuestion();
+            };
+        } else {
+            actionBtn.innerText = 'See Results';
+            actionBtn.onclick = showSpellingResults;
+        }
+    }
+
+    function showSpellingResults() {
+        const timeSpentSeconds = Math.floor((Date.now() - currentQuizStartTime) / 1000);
+        globalQuizTimeSeconds += timeSpentSeconds;
+        globalMistakes = globalMistakes.concat(currentQuizMistakes);
+
+        document.getElementById('quiz-progress-text').innerText = 'Spelling Quiz Complete!';
+        
+        const feedbackEl = document.getElementById('quiz-feedback');
+        document.getElementById('quiz-input').style.display = 'none';
+        document.getElementById('quiz-audio-btn').style.display = 'none';
+        document.getElementById('quiz-reward-img').style.display = 'none';
+        
+        const reportEl = document.getElementById('quiz-report');
+        reportEl.style.display = 'block';
+        
+        if (currentQuizMistakes.length === 0) {
+            reportEl.innerHTML = '<div style="text-align:center; color:#2ecc71; font-weight:bold; font-size: 1.2rem;">Perfect! You spelled everything correctly. 🎉</div>';
+        } else {
+            let reportHTML = '<h3>Mistakes Summary</h3>';
+            currentQuizMistakes.forEach(mistake => {
+                reportHTML += `
+                    <div class="report-item">
+                        <div>Correct: <span class="report-correct">${mistake.actual}</span></div>
+                        <div>You typed: <span class="report-wrong">${mistake.typed}</span></div>
+                    </div>
+                `;
+            });
+            reportEl.innerHTML = reportHTML;
+        }
+
+        const actionBtn = document.getElementById('quiz-action-btn');
+        const passed = quizScore >= 4;
+
+        if (passed) {
+            feedbackEl.innerHTML = `Great job! You scored ${quizScore} out of 5!<br><span style="font-size:1rem; color:#7f8c8d; font-weight:normal;">Time spent: ${timeSpentSeconds} seconds</span>`;
+            feedbackEl.style.color = "#2c3e50";
+            
+            actionBtn.innerText = 'Continue to Gap-Fill Quiz';
+            actionBtn.className = 'btn btn-submit';
+            actionBtn.onclick = () => {
+                document.getElementById('quiz-section').style.display = 'none';
+                startGapQuiz();
+            };
+        } else {
+            feedbackEl.innerHTML = `You scored ${quizScore} out of 5.<br><span style="font-size:1rem; color:#7f8c8d; font-weight:normal;">Time spent: ${timeSpentSeconds} seconds</span><br>Let's review these words again!`;
+            feedbackEl.style.color = "#e74c3c";
+            
+            actionBtn.innerText = 'Review Words';
+            actionBtn.className = 'btn btn-review'; 
+            actionBtn.onclick = () => {
+                document.getElementById('quiz-section').style.display = 'none';
+                document.getElementById('flashcard-section').style.display = 'block';
+                // Syncs exactly back to the start of the 5-word block
+                currentIndex = currentIndex - 4;
+                loadCard(currentIndex);
+            };
+        }
+    }
+
+    // --- Gap-Filling Quiz Logic ---
+    let gapQuizWords = [];
+    let gapScore = 0;
+    let currentGapMistakes = [];
+
+    function startGapQuiz() {
+        document.getElementById('gap-quiz-section').style.display = 'block';
+        document.getElementById('progress-text').innerText = `Gap-Filling Quiz Time!`;
+        
+        document.getElementById('gap-report').style.display = 'none';
+        document.getElementById('gap-report').innerHTML = '';
+
+        // Get the 5 words from the current block and shuffle them for the gap fill
+        gapQuizWords = currentVocabData.slice(currentIndex - 4, currentIndex + 1);
+        for (let i = gapQuizWords.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [gapQuizWords[i], gapQuizWords[j]] = [gapQuizWords[j], gapQuizWords[i]];
+        }
+
+        currentQuizIndex = 0;
+        gapScore = 0;
+        currentGapMistakes = [];
+        
+        currentQuizStartTime = Date.now();
+        loadGapQuestion();
+    }
+
+    function loadGapQuestion() {
+        document.getElementById('gap-progress-text').innerText = `Question ${currentQuizIndex + 1} of 5`;
+        document.getElementById('gap-sentence-text').innerText = gapQuizWords[currentQuizIndex].sentence;
+        
+        const inputEl = document.getElementById('gap-input');
+        inputEl.value = '';
+        inputEl.disabled = false;
+        inputEl.style.display = 'inline-block';
+        inputEl.focus();
+
+        document.getElementById('gap-feedback').innerText = '';
+        document.getElementById('gap-reward-img').style.display = 'none'; 
+        
+        const actionBtn = document.getElementById('gap-action-btn');
+        actionBtn.innerText = 'Submit';
+        actionBtn.className = 'btn btn-submit'; 
+        actionBtn.onclick = submitGapAnswer;
+    }
+
+    function submitGapAnswer() {
+        const inputEl = document.getElementById('gap-input');
+        // Gap-Fill is now CASE-SENSITIVE (removed .toLowerCase())
+        const userAnswer = inputEl.value.trim();
+        const actualWord = gapQuizWords[currentQuizIndex].wordText;
+        
+        let validAnswers = actualWord.split('/').map(w => w.trim());
+        
+        // Allow "The Forbidden City" as an acceptable capitalised variant
+        if (actualWord === "the Forbidden City") {
+            validAnswers.push("The Forbidden City");
+        }
+
+        const isCorrect = validAnswers.includes(userAnswer);
+        const feedbackEl = document.getElementById('gap-feedback');
+        const rewardImgEl = document.getElementById('gap-reward-img');
+        
+        if (isCorrect) {
+            const randomPraise = praiseMessages[Math.floor(Math.random() * praiseMessages.length)];
+            const randomReward = rewardImages[Math.floor(Math.random() * rewardImages.length)];
+            
+            feedbackEl.innerText = `✅ ${randomPraise}`;
+            feedbackEl.style.color = "#2ecc71";
+            
+            rewardImgEl.src = randomReward;
+            rewardImgEl.style.display = 'block';
+            
+            gapScore++;
+        } else {
+            feedbackEl.innerText = `❌ Incorrect. The correct word is: ${actualWord}`;
+            feedbackEl.style.color = "#e74c3c";
+            rewardImgEl.style.display = 'none';
+            
+            currentGapMistakes.push({
+                type: 'Gap-Fill',
+                actual: actualWord,
+                typed: userAnswer || "(left blank)",
+                sentence: gapQuizWords[currentQuizIndex].sentence,
+                explanation: gapQuizWords[currentQuizIndex].explanation
+            });
+        }
+        
+        inputEl.disabled = true;
+        
+        const actionBtn = document.getElementById('gap-action-btn');
+        if (currentQuizIndex < 4) {
+            actionBtn.innerText = 'Next Question';
+            actionBtn.onclick = () => {
+                currentQuizIndex++;
+                loadGapQuestion();
+            };
+        } else {
+            actionBtn.innerText = 'See Results';
+            actionBtn.onclick = showGapResults;
+        }
+    }
+
+    function showGapResults() {
+        const timeSpentSeconds = Math.floor((Date.now() - currentQuizStartTime) / 1000);
+        globalQuizTimeSeconds += timeSpentSeconds;
+        globalMistakes = globalMistakes.concat(currentGapMistakes);
+
+        document.getElementById('gap-progress-text').innerText = 'Gap-Filling Quiz Complete!';
+        document.getElementById('gap-sentence-text').innerText = '';
+        
+        const feedbackEl = document.getElementById('gap-feedback');
+        document.getElementById('gap-input').style.display = 'none';
+        document.getElementById('gap-reward-img').style.display = 'none';
+        
+        const reportEl = document.getElementById('gap-report');
+        reportEl.style.display = 'block';
+        
+        if (currentGapMistakes.length === 0) {
+            reportEl.innerHTML = '<div style="text-align:center; color:#2ecc71; font-weight:bold; font-size: 1.2rem;">Perfect! You filled in all the blanks correctly. 🎉</div>';
+        } else {
+            let reportHTML = '<h3>Mistakes Summary & Explanations</h3>';
+            currentGapMistakes.forEach(mistake => {
+                const filledSentence = mistake.sentence.replace('___', `<span class="report-correct">${mistake.actual}</span>`);
+                reportHTML += `
+                    <div class="report-item">
+                        <div><strong>Sentence:</strong> ${filledSentence}</div>
+                        <div><strong>You typed:</strong> <span class="report-wrong">${mistake.typed}</span></div>
+                        <div class="clue-text">💡 <strong>Why?</strong> ${mistake.explanation}</div>
+                    </div>
+                `;
+            });
+            reportEl.innerHTML = reportHTML;
+        }
+
+        const actionBtn = document.getElementById('gap-action-btn');
+        const passed = gapScore >= 4;
+
+        if (passed) {
+            feedbackEl.innerHTML = `Great job! You scored ${gapScore} out of 5!<br><span style="font-size:1rem; color:#7f8c8d; font-weight:normal;">Time spent: ${timeSpentSeconds} seconds</span>`;
+            feedbackEl.style.color = "#2c3e50";
+            
+            actionBtn.innerText = 'Continue Studying';
+            actionBtn.className = 'btn btn-submit';
+            actionBtn.onclick = () => {
+                completedQuizzes.add(currentIndex);
+                
+                if (completedQuizzes.size === currentVocabData.length / 5) {
+                    showFinalReport();
+                } else {
+                    document.getElementById('gap-quiz-section').style.display = 'none';
+                    document.getElementById('flashcard-section').style.display = 'block';
+                    
+                    if (currentIndex < currentVocabData.length - 1) {
+                        currentIndex++;
+                    } else {
+                        currentIndex = 0;
+                    }
+                    loadCard(currentIndex);
+                }
+            };
+        } else {
+            feedbackEl.innerHTML = `You scored ${gapScore} out of 5.<br><span style="font-size:1rem; color:#7f8c8d; font-weight:normal;">Time spent: ${timeSpentSeconds} seconds</span><br>Let's review these words again!`;
+            feedbackEl.style.color = "#e74c3c";
+            
+            actionBtn.innerText = 'Review Words';
+            actionBtn.className = 'btn btn-review'; 
+            actionBtn.onclick = () => {
+                document.getElementById('gap-quiz-section').style.display = 'none';
+                document.getElementById('flashcard-section').style.display = 'block';
+                // Syncs exactly back to the start of the 5-word block
+                currentIndex = currentIndex - 4;
+                loadCard(currentIndex);
+            };
+        }
+    }
+
+    // --- Final Summary Logic ---
+    function showFinalReport() {
+        document.getElementById('quiz-section').style.display = 'none';
+        document.getElementById('gap-quiz-section').style.display = 'none';
+        document.getElementById('flashcard-section').style.display = 'none';
+        document.getElementById('progress-text').style.display = 'none';
+        document.getElementById('main-title').style.display = 'none';
+        
+        const finalSection = document.getElementById('final-summary-section');
+        finalSection.style.display = 'block';
+        
+        const mins = Math.floor(globalQuizTimeSeconds / 60);
+        const secs = globalQuizTimeSeconds % 60;
+        document.getElementById('final-time-text').innerText = `Total time spent on all quizzes: ${mins}m ${secs}s`;
+        
+        const reportEl = document.getElementById('final-mistakes-report');
+        if (globalMistakes.length === 0) {
+            reportEl.innerHTML = '<div style="text-align:center; color:#2ecc71; font-weight:bold; font-size: 1.2rem;">Flawless victory! 0 mistakes made across all quizzes. 🏆</div>';
+        } else {
+            let reportHTML = '<h3>All Mistakes Made</h3>';
+            globalMistakes.forEach(mistake => {
+                reportHTML += `
+                    <div class="report-item">
+                        <div><span class="mistake-type">${mistake.type}</span> Correct: <span class="report-correct">${mistake.actual}</span></div>
+                        <div>You typed: <span class="report-wrong">${mistake.typed}</span></div>
+                        ${mistake.type === 'Gap-Fill' ? `<div class="clue-text">💡 <strong>Why?</strong> ${mistake.explanation}</div>` : ''}
+                    </div>
+                `;
+            });
+            reportEl.innerHTML = reportHTML;
+        }
+    }
+
+    function restartApp(resetShuffleState = true) {
+        if (resetShuffleState) {
+            isShuffled = false;
+            const btn = document.getElementById('shuffle-btn');
+            btn.innerText = '🔀 Shuffle: OFF';
+            btn.classList.remove('active');
+        }
+
+        if (isShuffled) {
+            currentVocabData = [...vocabData];
+            shuffleArray(currentVocabData);
+        } else {
+            currentVocabData = [...vocabData];
+        }
+
+        currentIndex = 0;
+        completedQuizzes.clear();
+        globalQuizTimeSeconds = 0;
+        globalMistakes = [];
+        
+        document.getElementById('final-summary-section').style.display = 'none';
+        document.getElementById('progress-text').style.display = 'block';
+        document.getElementById('main-title').style.display = 'block';
+        document.getElementById('flashcard-section').style.display = 'block';
+        
+        loadCard(currentIndex);
+    }
+
+    // Initial load
+    loadCard(currentIndex);
+</script>
+
+</body>
+</html>
