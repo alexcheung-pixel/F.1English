@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1.0" />
+<title>Gerunds & Infinitives Learning App – Dynamic + Voice+ Edition</title>
+<style>
+body{font-family:"Segoe UI","Microsoft JhengHei",Arial,sans-serif;margin:0;padding:0;background:linear-gradient(120deg,#e0f7fa,#bbdefb);}
+header{background:linear-gradient(90deg,#1a73e8,#4fc3f7);color:white;text-align:center;padding:18px;border-bottom:4px solid #1976d2;}
+.container{max-width:760px;margin:auto;padding:20px;}
+.card{background:white;padding:25px;border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,0.12);}
+h2{color:#1a73e8;text-align:center;margin-top:0;}
+h3{color:#1a73e8;}
+button{padding:10px 15px;margin:10px 5px;border:none;border-radius:6px;background:#1a73e8;color:white;font-size:16px;cursor:pointer;transition:background .3s;}
+button:hover{background:#1557b0;}
+.nav-buttons{text-align:center;margin-top:20px;}
+.example{background:#fff8e1;padding:16px 14px;border-left:5px solid #f39c12;margin:14px 0 18px;border-radius:8px;line-height:1.8;}
+.feedback{font-weight:bold;margin-top:5px;}
+.correct{color:green;}
+.wrong{color:red;}
+.explain{color:#1565c0;font-weight:normal;font-size:15px;margin-top:3px;}
+.summary{background:#e3f2fd;border-left:5px solid #1a73e8;padding:10px;margin-top:10px;border-radius:8px;}
+.hidden{display:none;}
+table{width:100%;border-collapse:collapse;margin-top:10px;}
+td{border:1px solid #ddd;padding:8px;text-align:center;vertical-align:top;}
+td small{display:block;font-size:13px;color:#555;margin-top:4px;}
+input[type=text]{width:75%;padding:6px;font-size:16px;border:1px solid #ccc;border-radius:6px;margin-top:4px;}
+@media(max-width:600px){button{width:100%;margin:5px 0;}input[type=text]{width:100%;}}
+.green{color:green;font-weight:bold;}
+.orange{color:orange;font-weight:bold;}
+.purple{color:purple;font-weight:bold;}
+.black-bold{color:black;font-weight:bold;}
+</style>
+</head>
+
+<body>
+<header>
+  <img src="https://cdn-icons-png.flaticon.com/128/2920/2920017.png" width="60" style="vertical-align:middle;margin-right:10px;">
+  <span style="font-size:22px;font-weight:bold;">Gerunds & Infinitives Learning App</span>
+</header>
+
+<div class="container"><div class="card">
+
+<!-- ================= PAGE 1 ================= -->
+<div id="page1">
+<h2>📘 To‑Infinitives</h2>
+<p>We use <b>to + base form</b> of the verb after these verbs:</p>
+<table>
+<tr><td><b>afford</b><small>負擔得起</small></td><td><b>expect</b><small>期望</small></td><td><b>love</b><small>喜愛</small></td><td><b>pretend</b><small>假裝</small></td></tr>
+<tr><td><b>agree</b><small>同意</small></td><td><b>fail</b><small>失敗</small></td><td><b>manage</b><small>設法做到</small></td><td><b>promise</b><small>承諾</small></td></tr>
+<tr><td><b>ask</b><small>詢問</small></td><td><b>hope</b><small>希望</small></td><td><b>need</b><small>需要</small></td><td><b>refuse</b><small>拒絕</small></td></tr>
+<tr><td><b>choose</b><small>選擇</small></td><td><b>forget</b><small>忘記</small></td><td><b>plan</b><small>計畫</small></td><td><b>remember</b><small>記得</small></td></tr>
+<tr><td><b>decide</b><small>決定</small></td><td><b>learn</b><small>學習</small></td><td><b>prepare</b><small>準備</small></td><td><b>want</b><small>想要</small></td></tr>
+</table>
+
+<div class="example">
+<ul>
+<li>John <span class="green"><b>wants</b></span> <span class="black-bold">to eat</span> dinner now.</li>
+<li>She <span class="green"><b>decided</b></span> <span class="black-bold">to study</span> for the exam tonight.</li>
+<li>They <span class="green"><b>hope</b></span> <span class="black-bold">to win</span> the competition tomorrow.</li>
+</ul>
+</div>
+<p><b>Rule:</b> Use <b>to + base form</b> after these verbs.</p>
+<div class="nav-buttons">
+<button disabled>⬅ Back</button>
+<button onclick="nextPage(2)">Next ➡</button>
+</div>
+</div>
+
+<!-- ================= PAGE 2 ================= -->
+<div id="page2" class="hidden">
+<h2>✏️ Short Exercise – To‑Infinitives</h2>
+<p>Fill in the blanks with the correct <b>to + verb</b> form.</p>
+<div id="toInfExercise"></div>
+<p id="toInfReport" class="feedback"></p>
+<div class="nav-buttons">
+<button onclick="nextPage(1)">⬅ Back</button>
+<button onclick="checkToInf()">✅ Check Answers</button>
+<button onclick="newToInfSet()">🔁 New Set of Questions</button>
+<button onclick="nextPage(3)">Next ➡</button>
+</div>
+</div>
+
+<!-- ================= PAGE 3 ================= -->
+<div id="page3" class="hidden">
+<h2>⚙️ Bare Infinitives</h2>
+<p>Use the <b>base verb</b> (without "to") after modals and certain verbs:</p>
+<table>
+<tr><td><b>can</b></td><td><b>could</b></td><td><b>may</b></td><td><b>might</b></td><td><b>must</b></td></tr>
+<tr><td><b>shall</b></td><td><b>should</b></td><td><b>will</b></td><td><b>would</b></td><td><b>make</b>/<b>let</b></td></tr>
+</table>
+<div class="example">
+<ul>
+<li>I <span class="orange"><b>can</b></span> <span class="black-bold">swim</span> fast.</li>
+<li>You <span class="orange"><b>should</b></span> <span class="black-bold">study</span> every day.</li>
+<li>They <span class="orange"><b>let</b></span> him <span class="black-bold">go</span> early.</li>
+</ul>
+</div>
+<p><b>Rule:</b> Do <b>not</b> add "to" after these verbs or modals.</p>
+<div class="nav-buttons">
+<button onclick="nextPage(2)">⬅ Back</button>
+<button onclick="nextPage(4)">Next ➡</button>
+</div>
+</div>
+
+<!-- ================= PAGE 4 ================= -->
+<div id="page4" class="hidden">
+<h2>🧩 Short Exercise – Bare Infinitives</h2>
+<p>Fill in the blanks with the correct <b>base form (no “to”)</b>.</p>
+<div id="bareExercise"></div>
+<p id="bareReport" class="feedback"></p>
+<div class="nav-buttons">
+<button onclick="nextPage(3)">⬅ Back</button>
+<button onclick="checkBare()">✅ Check Answers</button>
+<button onclick="newBareSet()">🔁 New Set of Questions</button>
+<button onclick="nextPage(5)">Next ➡</button>
+</div>
+</div>
+
+<!-- ================= PAGE 5 ================= -->
+<div id="page5" class="hidden">
+<h2>🎨 Gerunds (V‑ing)</h2>
+<h3>Rule 1 – As the Subject</h3>
+<div class="example">
+<ul>
+<li><span class="purple"><b>Swimming</b></span> is a good exercise.</li>
+<li><span class="purple"><b>Reading</b></span> improves your vocabulary.</li>
+<li><span class="purple"><b>Playing</b></span> football keeps you fit.</li>
+</ul>
+</div>
+<h3>Rule 2 – After Certain Verbs</h3>
+<p>Use <b>‑ing</b> after verbs like:</p>
+<table>
+<tr><td><b>like</b></td><td><b>love</b></td><td><b>dislike</b></td><td><b>hate</b></td><td><b>prefer</b></td></tr>
+<tr><td><b>avoid</b></td><td><b>finish</b></td><td><b>keep</b></td><td><b>mind</b></td><td><b>practise</b></td></tr>
+<tr><td><b>stop</b></td><td><b>suggest</b></td><td><b>consider</b></td><td><b>enjoy</b></td><td><b>imagine</b></td></tr>
+<tr><td><b>mention</b></td><td><b>miss</b></td><td><b>recommend</b></td><td colspan="2"></td></tr>
+</table>
+<div class="example">
+<ul>
+<li>She <span class="purple"><b>enjoys</b></span> <span class="black-bold">reading</span> novels.</li>
+<li>He <span class="purple"><b>stopped</b></span> <span class="black-bold">smoking</span> last year.</li>
+<li>We <span class="purple"><b>finished</b></span> <span class="black-bold">doing</span> homework.</li>
+</ul>
+</div>
+<h3>Rule 3 – After Prepositions</h3>
+<p>Use a gerund after prepositions like <b>in, on, of, with, about</b>, etc.</p>
+<div class="example">
+<ul>
+<li>She is interested <b>in</b> learning Spanish.</li>
+<li>They talked <b>about</b> going abroad.</li>
+<li>He got tired <b>of</b> waiting.</li>
+</ul>
+</div>
+<div class="nav-buttons">
+<button onclick="nextPage(4)">⬅ Back</button>
+<button onclick="nextPage(6)">Next ➡</button>
+</div>
+</div>
+
+<!-- ================= PAGE 6 ================= -->
+<div id="page6" class="hidden">
+<h2>✏️ Short Exercise – Gerunds</h2>
+<p>Fill in the blanks with the correct <b>‑ing</b> form:</p>
+<div id="gerundExercise"></div>
+<p id="gerundReport" class="feedback"></p>
+<div class="nav-buttons">
+<button onclick="nextPage(5)">⬅ Back</button>
+<button onclick="checkGerund()">✅ Check Answers</button>
+<button onclick="newGerundSet()">🔁 New Set of Questions</button>
+<button onclick="nextPage(7)">Next ➡</button>
+</div>
+</div>
+
+<!-- ================= PAGE 7 ================= -->
+<div id="page7" class="hidden">
+<h2>🏁 Final Mixed Quiz (10 Questions)</h2>
+<p><b>Fill in the blanks and see why each answer is correct.</b></p>
+<div id="quiz-area"></div>
+<p id="score" class="feedback"></p>
+<div id="summary" class="summary hidden"></div>
+<div class="nav-buttons">
+<button onclick="nextPage(6)">⬅ Back</button>
+<button onclick="checkFinalQuiz()">✅ Check All Answers</button>
+<button onclick="challenge()">🚀 New Set of 10 Questions</button>
+</div>
+</div>
+
+</div></div>
+
+<script>
+// ---------- Navigation ----------
+function nextPage(p){for(let i=1;i<=7;i++){const pg=document.getElementById("page"+i);if(pg)pg.classList.add("hidden");}
+document.getElementById("page"+p).classList.remove("hidden");window.scrollTo({top:0,behavior:"smooth"});}
+
+// ---------- Voice Encouragement ----------
+function speakEncouragement(text){
+  if(!('speechSynthesis' in window)) return;
+  window.speechSynthesis.cancel();
+  const utter=new SpeechSynthesisUtterance(text);
+  utter.lang='en-US'; utter.rate=1; utter.pitch=1.05; utter.volume=1;
+  const voices=window.speechSynthesis.getVoices();
+  const eng=voices.find(v=>v.lang.startsWith('en'));
+  if(eng) utter.voice=eng;
+  window.speechSynthesis.speak(utter);
+}
+function randomFrom(arr){return arr[Math.floor(Math.random()*arr.length)];}
+
+// ---------- Reusable Rendering & Checking ----------
+function renderSet(data,id,report){
+ const area=document.getElementById(id);area.innerHTML="";
+ document.getElementById(report).textContent="";
+ data.forEach((x,i)=>{
+  const d=document.createElement("div");
+  d.innerHTML=`${i+1}. ${x.q}<br><input type='text'><div class='feedback'></div>`;
+  area.appendChild(d);
+ });
+}
+function checkAnswers(data,id,report){
+ let c=0; const inputs=document.querySelectorAll(`#${id} input`);
+ inputs.forEach((inp,i)=>{
+   const ans=inp.value.trim().toLowerCase();
+   const fb=inp.nextSibling;
+   if(ans===data[i].a){fb.innerHTML="✅ Correct!<div class='explain'>"+data[i].rule+"</div>";fb.className="feedback correct";c++;}
+   else{fb.innerHTML=`❌ Correct answer: <b>${data[i].a}</b><div class='explain'>${data[i].rule}</div>`;fb.className="feedback wrong";}
+   inp.disabled=true;
+ });
+ const ratio=c/data.length;
+ let msg=`You got ${c}/${data.length} correct.`;
+ let spoken="";
+ if(ratio<0.5){
+   const opts=[
+     "That was a tough one! Review the rules and give it another try.",
+     "Good start! Take another look at the lessons, then challenge yourself again!",
+     "Keep going — revision helps! You can improve on your next try."
+   ];
+   msg+="<br>📘 Time for some revision—review and try again! 💪";
+   spoken=randomFrom(opts);
+ }else if(ratio<1){
+   const opts=[
+     "Nice work! You’re improving — keep practicing!",
+     "Great job! A few more tries and you’ll master this!",
+     "Well done! Keep up your effort and confidence!"
+   ];
+   spoken=randomFrom(opts);
+ }else{
+   const opts=[
+     "Amazing! Perfect score — outstanding job!",
+     "Fantastic! You nailed every question!",
+     "Excellent! 100 percent — you’re a grammar star!"
+   ];
+   spoken=randomFrom(opts);
+ }
+ document.getElementById(report).innerHTML=msg;
+ if(spoken) speakEncouragement(spoken);
+}
+function checkToInf(){checkAnswers(toInfData,"toInfExercise","toInfReport");}
+function checkBare(){checkAnswers(bareData,"bareExercise","bareReport");}
+function checkGerund(){checkAnswers(gerundData,"gerundExercise","gerundReport");}
+
+// ---------- Exercise Pools ----------
+function getRandomSubset(pool,n){return[...pool].sort(()=>Math.random()-0.5).slice(0,n);}
+const toInfPool=[
+ {q:"I <b>want</b> ______ (learn) English.",a:"to learn",rule:"Use to + verb after <b>want</b>."},
+ {q:"She <b>decided</b> ______ (study) harder.",a:"to study",rule:"decide → to + verb."},
+ {q:"They <b>plan</b> ______ (visit) Japan.",a:"to visit",rule:"plan → to + verb."},
+ {q:"He <b>needs</b> ______ (buy) a ticket.",a:"to buy",rule:"need → to + verb."},
+ {q:"We <b>hope</b> ______ (travel) soon.",a:"to travel",rule:"hope → to + verb."},
+ {q:"She <b>promised</b> ______ (help) me.",a:"to help",rule:"promise → to + verb."},
+ {q:"He <b>learned</b> ______ (drive) a car.",a:"to drive",rule:"learn → to + verb."},
+ {q:"I <b>forgot</b> ______ (call) my friend.",a:"to call",rule:"forget → to + verb."}
+];
+let toInfData=getRandomSubset(toInfPool,5);
+function newToInfSet(){toInfData=getRandomSubset(toInfPool,5);renderSet(toInfData,"toInfExercise","toInfReport");}
+
+const barePool=[
+ {q:"I <b>can</b> ______ (swim) fast.",a:"swim",rule:"can → base form (no to)."},
+ {q:"You <b>should</b> ______ (study) more.",a:"study",rule:"should → base form."},
+ {q:"They <b>let</b> him ______ (go) home early.",a:"go",rule:"let + object + verb."},
+ {q:"He <b>made</b> me ______ (cry).",a:"cry",rule:"make + object + verb."},
+ {q:"We <b>must</b> ______ (leave) now.",a:"leave",rule:"must → base."},
+ {q:"You <b>might</b> ______ (find) it easy.",a:"find",rule:"modal → base form."},
+ {q:"She <b>will</b> ______ (join) us tomorrow.",a:"join",rule:"will → base."},
+ {q:"They <b>would</b> ______ (help) if possible.",a:"help",rule:"would → base form."}
+];
+let bareData=getRandomSubset(barePool,5);
+function newBareSet(){bareData=getRandomSubset(barePool,5);renderSet(bareData,"bareExercise","bareReport");}
+
+const gerundPool=[
+ {q:"I <b>enjoy</b> ______ (read) books.",a:"reading",rule:"enjoy → gerund."},
+ {q:"She <b>avoids</b> ______ (eat) junk food.",a:"eating",rule:"avoid → gerund."},
+ {q:"They <b>keep</b> ______ (talk) in class.",a:"talking",rule:"keep → gerund."},
+ {q:"He <b>finished</b> ______ (do) homework.",a:"doing",rule:"finish → gerund."},
+ {q:"We <b>suggest</b> ______ (go) early.",a:"going",rule:"suggest → gerund."},
+ {q:"He <b>considered</b> ______ (move) abroad.",a:"moving",rule:"consider → gerund."},
+ {q:"They <b>miss</b> ______ (see) friends.",a:"seeing",rule:"miss → gerund."},
+ {q:"She <b>stopped</b> ______ (smoke) last year.",a:"smoking",rule:"stop → gerund when action ceases."}
+];
+let gerundData=getRandomSubset(gerundPool,5);
+function newGerundSet(){gerundData=getRandomSubset(gerundPool,5);renderSet(gerundData,"gerundExercise","gerundReport");}
+
+// ---------- Final Quiz ----------
+let quizItems=[];
+const quizPool=[
+ {q:"I <b>want</b> ______ (learn) Spanish.",a:"to learn",rule:"want → to + verb."},
+ {q:"She <b>decided</b> ______ (go) abroad.",a:"to go",rule:"decide → to + verb."},
+ {q:"We <b>managed</b> ______ (finish) the work.",a:"to finish",rule:"manage → to."},
+ {q:"He <b>promised</b> ______ (help) me.",a:"to help",rule:"promise → to."},
+ {q:"They <b>plan</b> ______ (travel) next week.",a:"to travel",rule:"plan → to."},
+ {q:"I <b>enjoy</b> ______ (read) novels.",a:"reading",rule:"enjoy → gerund."},
+ {q:"She <b>avoids</b> ______ (eat) sugar.",a:"eating",rule:"avoid → gerund."},
+ {q:"He <b>suggested</b> ______ (leave) early.",a:"leaving",rule:"suggest → gerund."},
+ {q:"We <b>love</b> ______ (play) guitar.",a:"playing",rule:"love → gerund."},
+ {q:"She <b>needs</b> ______ (buy) shoes.",a:"to buy",rule:"need → to + verb."}
+];
+function generateQuiz(){quizItems=quizPool.sort(()=>Math.random()-0.5).slice(0,10);loadQuiz();}
+function loadQuiz(){
+ const q=document.getElementById("quiz-area");
+ q.innerHTML="";document.getElementById("score").textContent="";
+ document.getElementById("summary").classList.add("hidden");
+ quizItems.forEach((x,i)=>{
+  const d=document.createElement("div");
+  d.innerHTML=`${i+1}. ${x.q}<br><input type='text'><div class='feedback'></div>`;
+  q.appendChild(d);
+ });
+}
+function checkFinalQuiz(){
+ const inputs=document.querySelectorAll("#quiz-area input");
+ inputs.forEach((ip,i)=>{
+  if(!ip.disabled){
+   const item=quizItems[i];
+   const val=ip.value.trim().toLowerCase();
+   const fb=ip.nextSibling;
+   if(val===item.a){fb.innerHTML="✅ Correct!<div class='explain'>"+item.rule+"</div>";fb.className="feedback correct";}
+   else{fb.innerHTML=`❌ Correct answer: <b>${item.a}</b><div class='explain'>${item.rule}</div>`;fb.className="feedback wrong";}
+   ip.disabled=true;
+  }
+ });
+ checkScore();
+}
+function checkScore(){
+ let done=0,c=0;
+ document.querySelectorAll("#quiz-area input").forEach(i=>{
+  if(i.disabled){done++;if(i.nextSibling.textContent.includes("✅"))c++;}});
+ if(done===quizItems.length){
+  const t=quizItems.length,p=Math.round(c/t*100);
+  const s=document.getElementById("summary");
+  s.classList.remove("hidden");
+  let spoken="",note="";
+  const ratio=c/t;
+  if(ratio<0.5){
+    note="<p>📘 You got under 50%. Review the lessons and challenge yourself again!</p>";
+    const low=[
+      "Keep learning! Review the material and take the quiz again — you can do it!",
+      "Don’t give up! Study the examples again and aim higher next round.",
+      "It’s okay! Practice makes perfect — revise and try again soon."
+    ];
+    spoken=randomFrom(low);
+  }else if(ratio<1){
+    note="<p>🌱 Nice progress! You’re on the right track — keep practicing!</p>";
+    const mid=[
+      "Great effort! You’re improving — keep challenging yourself!",
+      "Good work! A few more reviews and you’ll reach perfection.",
+      "Nice job! You’re growing stronger each quiz!"
+    ];
+    spoken=randomFrom(mid);
+  }else{
+    note="<p>🎉 Excellent work! Perfect score — you’re a grammar master!</p>";
+    const high=[
+      "Outstanding! Every answer correct — impressive work!",
+      "Perfect! You understood everything perfectly!",
+      "Fantastic achievement! Keep shining!"
+    ];
+    spoken=randomFrom(high);
+  }
+  s.innerHTML=`<p><b>Summary</b></p><ul><li>Correct: ${c}</li><li>Total: ${t}</li><li>Score: ${p}%</li></ul>${note}`;
+  document.getElementById("score").textContent=`${c}/${t} correct`;
+  if(spoken) speakEncouragement(spoken);
+ }
+}
+function challenge(){generateQuiz();}
+
+// ---------- Init ----------
+window.onload=()=>{
+ renderSet(toInfData,"toInfExercise","toInfReport");
+ renderSet(bareData,"bareExercise","bareReport");
+ renderSet(gerundData,"gerundExercise","gerundReport");
+ generateQuiz();
+};
+</script>
+</body>
+</html>
