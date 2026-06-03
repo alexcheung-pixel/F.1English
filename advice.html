@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>S1 Advice Quest: Final Edition</title>
+    <style>
+        :root {
+            --neon-blue: #00d2ff; --neon-purple: #9d50bb; --neon-green: #39ff14;
+            --neon-pink: #ff007f; --dark-space: #1a1a2e;
+        }
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: white; margin: 0; padding-bottom: 120px;
+        }
+        .top-nav {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 15px 30px; background: rgba(0,0,0,0.7);
+            border-bottom: 3px solid var(--neon-blue); position: sticky; top: 0; z-index: 2000;
+        }
+        .level-indicator {
+            background: var(--neon-pink); padding: 5px 15px; border-radius: 20px;
+            font-weight: bold; box-shadow: 0 0 10px var(--neon-pink);
+        }
+        .verb-box {
+            position: sticky; top: 80px; z-index: 1000; max-width: 800px;
+            margin: 20px auto; background: white; padding: 15px;
+            border-radius: 15px; box-shadow: 0 0 20px var(--neon-blue); color: var(--dark-space);
+        }
+        .verb-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px; text-align: center; }
+        .verb-item { background: #eef2f3; padding: 8px; border-radius: 5px; font-weight: bold; border: 1px solid #bdc3c7; }
+        .container { max-width: 800px; margin: auto; padding: 20px; }
+        .card {
+            background: rgba(255,255,255,0.05); padding: 25px; margin-bottom: 20px;
+            border-radius: 15px; border-left: 10px solid #555; transition: 0.3s;
+        }
+        .card.correct { border-left-color: var(--neon-green); background: rgba(0,255,0,0.05); }
+        .card.wrong { border-left-color: var(--neon-pink); background: rgba(255,0,0,0.05); }
+        .q-number { color: var(--neon-blue); font-size: 0.9rem; font-weight: bold; margin-bottom: 10px; display: block; text-transform: uppercase; }
+        input { background: rgba(0,0,0,0.5); border: 2px solid var(--neon-blue); padding: 12px; color: white; border-radius: 8px; width: 300px; font-size: 1rem; }
+        .feedback { margin-top: 15px; display: none; font-size: 0.95rem; line-height: 1.4; }
+        .dock {
+            position: fixed; bottom: 0; width: 100%; background: rgba(0,0,0,0.9);
+            padding: 20px; display: flex; justify-content: center; gap: 15px; border-top: 2px solid var(--neon-blue);
+        }
+        button { padding: 12px 30px; border: none; border-radius: 50px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        .btn-check { background: var(--neon-blue); color: white; }
+        .btn-next { background: var(--neon-green); color: black; display: none; }
+        #summary-screen { display: none; text-align: center; padding: 100px 50px; }
+    </style>
+</head>
+<body>
+
+<div class="top-nav">
+    <h2 style="margin:0; color:var(--neon-blue);">ADVICE QUEST ⚡</h2>
+    <div class="level-indicator" id="lvl-tag">Level 1</div>
+</div>
+
+<div class="container" id="main-game">
+    <div style="background:rgba(255,255,255,0.1); padding:15px; border-radius:10px; margin-bottom:20px; border-left:5px solid var(--neon-green);">
+        <b>Final Challenge:</b> Shuffled questions! Use verbs from the table. <br>
+        ✅ <i>"Don't" or "Do not" are both fine! Reuse verbs as much as you like.</i>
+    </div>
+
+    <div class="verb-box">
+        <div class="verb-grid" id="verb-grid">
+            </div>
+    </div>
+
+    <div id="fail-msg" style="display:none; color:var(--neon-pink); text-align:center; font-weight:bold; margin-bottom:15px; background:rgba(0,0,0,0.5); padding:10px; border-radius: 10px;">
+        ⚠️ Score < 60%! I have shuffled a new set for you. Study the hints and try again!
+    </div>
+
+    <div id="quiz-container"></div>
+</div>
+
+<div id="summary-screen" class="container">
+    <h1>QUEST COMPLETE! 🏆</h1>
+    <div id="final-score-display" style="font-size:5rem; color:var(--neon-green);">0/20</div>
+    <div id="summary-comment" style="font-size:1.5rem; margin-bottom:30px;"></div>
+    <button onclick="location.reload()" style="background:var(--neon-blue); color:white; padding:15px 40px; border-radius:30px; font-size:1.2rem;">Start New Adventure</button>
+</div>
+
+<div class="dock" id="control-dock">
+    <button onclick="move(-1)" style="background:#555; color:white;">Previous</button>
+    <button class="btn-check" id="check-btn" onclick="processCheck()">Check Answers</button>
+    <button class="btn-next" id="next-btn" onclick="move(1)">Next Level ➔</button>
+</div>
+
+<script>
+const masterVerbs = ["study", "bring", "sleep", "eat", "wash", "talk", "shout", "be", "clean", "listen", "play", "wear", "ask", "drink", "go"];
+
+const questionBank = [
+    // Level 1
+    [
+        { q: "You have a test tomorrow. You _______ (should / should not) hard.", v: "study", h: "Books and tests mean you need to learn." },
+        { q: "It is raining outside. You _______ (must / must not) an umbrella.", v: "bring", h: "Carry an umbrella to stay dry." },
+        { q: "I am very thirsty. I _______ (should / should not) some water.", v: "drink", h: "Water is for thirst." },
+        { q: "Your hands are dirty. You _______ (must / must not) them.", v: "wash", h: "Wash with soap to be clean." },
+        { q: "It is 11:30 PM. You _______ (ought to / ought not to) now.", v: "sleep", h: "Go to bed when it is late." }
+    ],
+    // Level 2
+    [
+        { q: "The bell rang! You _______ (must / must not) late for class.", v: "be", h: "Don't be late!" },
+        { q: "The library is quiet. You _______ (must / must not) to your friends.", v: "talk", h: "No talking in the library." },
+        { q: "Bored at home? _______ (Why don't you / Why do you) video games?", v: "play", h: "Games are fun when bored." },
+        { q: "The floor is sticky. You _______ (should / should not) it.", v: "clean", h: "Clean the mess on the floor." },
+        { q: "Tomorrow is a holiday. I _______ (do not have to / have to) early.", v: "be", h: "You can stay in bed late." }
+    ],
+    // Level 3
+    [
+        { q: "This is a secret. You _______ (must / must not) to anyone.", v: "talk", h: "Keep the secret private." },
+        { q: "Teacher is giving rules. You _______ (should / should not) carefully.", v: "listen", h: "Use your ears for the rules." },
+        { q: "It is freezing! You _______ (had better / had better not) a coat.", v: "wear", h: "Wear clothes to stay warm." },
+        { q: "If you are lost, you _______ (should / should not) a policeman.", v: "ask", h: "Ask for help with directions." },
+        { q: "The cinema is open. _______ (Shall we / Why don't) inside?", v: "go", h: "Go into the building." }
+    ],
+    // Level 4
+    [
+        { q: "Dirty uniform! You _______ (ought to / ought not to) it today.", v: "wash", h: "Wash your dirty clothes." },
+        { q: "The gym is open. _______ (Shall we / Why don't) basketball?", v: "play", h: "Basketball is a game to play." },
+        { q: "It is rude to make noise. You _______ (must / must not) at people.", v: "shout", h: "Don't shout loudly." },
+        { q: "You are hungry. _______ (Why don't you / Why do you) some fruit?", v: "eat", h: "Eat food when hungry." },
+        { q: "We are at school. You _______ (must / must not) helpful.", v: "be", h: "Be a good student." }
+    ]
+];
+
+let curLvl = 0;
+let totalScore = 0;
+let currentLvlScore = 0;
+let shuffledQs = [];
+
+function shuffle(array) {
+    let currentIndex = array.length, randomIndex;
+    while (currentIndex != 0) {
+        randomIndex = Math.floor(Math.random() * currentIndex);
+        currentIndex--;
+        [array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]];
+    }
+    return array;
+}
+
+function normalize(str) {
+    return str.toLowerCase().trim()
+        .replace("don't", "do not").replace("shouldn't", "should not")
+        .replace("mustn't", "must not").replace("won't", "will not")
+        .replace("can't", "cannot").replace("oughtn't", "ought not")
+        .replace(/\s+/g, ' ');
+}
+
+function speak(text) {
+    const utter = new SpeechSynthesisUtterance(text);
+    utter.rate = 0.9;
+    window.speechSynthesis.speak(utter);
+}
+
+function render() {
+    document.getElementById('verb-grid').innerHTML = masterVerbs.map(v => `<div class="verb-item">${v}</div>`).join('');
+    document.getElementById('lvl-tag').innerText = "Level " + (curLvl + 1);
+    
+    // Pick and Shuffle questions for this attempt
+    shuffledQs = shuffle([...questionBank[curLvl]]);
+    
+    let html = "";
+    shuffledQs.forEach((q, i) => {
+        html += `<div class="card" id="card${i}">
+            <span class="q-number">Question ${i + 1}</span>
+            <p style="font-size: 1.15rem; margin-top: 0;">${q.q}</p>
+            <input type="text" id="ans${i}" placeholder="Type advice + verb...">
+            <div class="feedback" id="feed${i}"></div>
+        </div>`;
+    });
+    document.getElementById('quiz-container').innerHTML = html;
+    document.getElementById('check-btn').style.display = "block";
+    document.getElementById('next-btn').style.display = "none";
+    window.scrollTo(0,0);
+}
+
+function processCheck() {
+    let score = 0;
+    shuffledQs.forEach((q, i) => {
+        const userInput = document.getElementById(`ans${i}`).value.trim();
+        const normInput = normalize(userInput);
+        const card = document.getElementById(`card${i}`);
+        const feed = document.getElementById(`feed${i}`);
+        
+        const advicePart = q.q.match(/\(([^)]+)\)/)[1].split(' / ')[0];
+        const correctNorm = normalize(advicePart + " " + q.v);
+
+        if (normInput === correctNorm || (normInput.includes(normalize(advicePart)) && normInput.includes(q.v))) {
+            card.className = "card correct";
+            feed.innerHTML = "✅ <b>Correct!</b>";
+            score++;
+        } else {
+            card.className = "card wrong";
+            feed.innerHTML = `❌ <b>Wrong.</b> Correct: <u>${advicePart} ${q.v}</u>. <br><i>${q.h}</i>`;
+        }
+        feed.style.display = "block";
+    });
+
+    const pct = (score / 5) * 100;
+    currentLvlScore = score;
+
+    if (pct >= 80) {
+        const praises = ["Excellent! You are a master!", "Brilliant work! All correct!", "Fantastic! I'm so proud of you!"];
+        const p = praises[Math.floor(Math.random() * praises.length)];
+        speak(p); 
+        alert(p);
+    }
+
+    if (pct < 60) {
+        document.getElementById('fail-msg').style.display = "block";
+        setTimeout(() => {
+            document.getElementById('fail-msg').style.display = "none";
+            render(); // Shuffles again for retry
+        }, 6000);
+    } else {
+        document.getElementById('check-btn').style.display = "none";
+        document.getElementById('next-btn').style.display = "block";
+    }
+}
+
+function move(dir) {
+    if (dir === 1) totalScore += currentLvlScore;
+    curLvl += dir;
+    if (curLvl < 0) curLvl = 0;
+    if (curLvl >= 4) {
+        document.getElementById('main-game').style.display = "none";
+        document.getElementById('control-dock').style.display = "none";
+        document.getElementById('summary-screen').style.display = "block";
+        document.getElementById('final-score-display').innerText = totalScore + "/20";
+        let msg = totalScore >= 16 ? "You are an Advice Hero! 👑" : "Great job! Adventure Complete! 👍";
+        document.getElementById('summary-comment').innerText = msg;
+    } else {
+        render();
+    }
+}
+
+render();
+</script>
+</body>
+</html>
