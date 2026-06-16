@@ -1,0 +1,1569 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VocabQuest Pro: Ultimate Spelling & Context Challenge</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Fredoka+One&display=swap" rel="stylesheet">
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Confetti Library -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <!-- PDF.js Library for Client-side PDF Reading -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
+    
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background: radial-gradient(circle at top, #f0fdf4 0%, #e0f2fe 100%);
+        }
+        .header-font {
+            font-family: 'Fredoka One', cursive, sans-serif;
+        }
+        .card {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 30px rgba(59, 130, 246, 0.15);
+        }
+        .fade-in {
+            animation: fadeIn 0.4s ease-out forwards;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .shake {
+            animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both;
+        }
+        @keyframes shake {
+            10%, 90% { transform: translate3d(-3px, 0, 0); }
+            20%, 80% { transform: translate3d(5px, 0, 0); }
+            30%, 50%, 70% { transform: translate3d(-6px, 0, 0); }
+            40%, 60% { transform: translate3d(6px, 0, 0); }
+        }
+        .bounce-active {
+            animation: bounce 0.5s ease;
+        }
+        @keyframes bounce {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.15); }
+        }
+        .pulse-orange {
+            animation: pulseOrange 2s infinite;
+        }
+        @keyframes pulseOrange {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(249, 115, 22, 0.4); }
+            50% { box-shadow: 0 0 0 10px rgba(249, 115, 22, 0); }
+        }
+        /* Custom scrollbars */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between p-3 sm:p-6 text-slate-800">
+
+    <div id="toast-container" class="fixed top-4 right-4 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+    <!-- Scanner & File Upload Modal Overlays -->
+    <div id="scanner-modal" class="hidden fixed inset-0 bg-slate-950/85 backdrop-blur-md z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-2xl border-4 border-indigo-500/30 text-center flex flex-col items-center gap-5">
+            <div class="relative w-20 h-20">
+                <div class="absolute inset-0 rounded-full border-4 border-t-indigo-600 border-r-indigo-200 border-b-indigo-200 border-l-indigo-200 animate-spin"></div>
+                <div class="absolute inset-2 bg-indigo-50 rounded-full flex items-center justify-center">
+                    <i id="scanner-icon" class="fa-solid fa-wand-magic-sparkles text-3xl text-indigo-600 animate-pulse"></i>
+                </div>
+            </div>
+            <div>
+                <h3 id="scanner-title" class="header-font text-xl sm:text-2xl text-slate-800">Reading Document...</h3>
+                <p id="scanner-status" class="text-sm text-slate-500 mt-2 font-medium">Extracting content and preparing file parameters</p>
+            </div>
+            
+            <div class="w-full bg-slate-100 rounded-full h-2 overflow-hidden mt-2">
+                <div id="scanner-progress" class="bg-gradient-to-r from-indigo-500 to-teal-500 h-full w-[10%] transition-all duration-300"></div>
+            </div>
+            <p id="scanner-sub-text" class="text-xs text-slate-400 italic">This will only take a moment</p>
+        </div>
+    </div>
+
+    <!-- Choice dialog for parsed words -->
+    <div id="import-choice-modal" class="hidden fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-2xl border-4 border-teal-500/30 text-center flex flex-col gap-4">
+            <div class="bg-teal-50 p-4 rounded-full w-16 h-16 flex items-center justify-center mx-auto text-teal-600">
+                <i class="fa-solid fa-file-import text-2xl"></i>
+            </div>
+            <h3 class="header-font text-xl text-slate-800">Words Generated Successfully!</h3>
+            <p id="import-details" class="text-sm text-slate-500 font-medium"></p>
+            
+            <div class="grid grid-cols-2 gap-3 mt-2">
+                <button onclick="applyImportChoice('append')" class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-extrabold py-3 px-4 rounded-xl transition-all text-xs sm:text-sm active:scale-95">
+                    Add to Current list
+                </button>
+                <button onclick="applyImportChoice('replace')" class="bg-teal-600 hover:bg-teal-700 text-white font-extrabold py-3 px-4 rounded-xl shadow-lg shadow-teal-600/10 transition-all text-xs sm:text-sm active:scale-95">
+                    Replace list & Start!
+                </button>
+            </div>
+            <button onclick="closeImportChoiceModal()" class="text-slate-400 hover:text-slate-600 font-bold text-xs mt-1">Cancel</button>
+        </div>
+    </div>
+
+    <!-- Main Game Frame -->
+    <div class="w-full max-w-3xl mx-auto bg-white/95 backdrop-blur-md rounded-3xl shadow-2xl overflow-hidden border-4 border-blue-500/80 flex flex-col min-h-[620px] transition-all">
+        
+        <!-- Interactive Progress Header -->
+        <div class="relative w-full bg-slate-100 h-3">
+            <div id="progress-bar" class="bg-gradient-to-r from-teal-400 via-emerald-400 to-emerald-500 h-full w-0 transition-all duration-500 ease-out"></div>
+            <div id="progress-indicator" class="absolute -top-1.5 right-2 bg-emerald-500 text-white text-[10px] font-black px-1.5 py-0.5 rounded-full shadow transition-all duration-300 scale-0">0%</div>
+        </div>
+
+        <!-- Dynamic Game HUD -->
+        <div class="bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-700 text-white p-4 sm:p-5 flex flex-wrap justify-between items-center gap-3 shadow-lg relative z-20">
+            <div class="flex items-center gap-3">
+                <div class="bg-white/10 p-2 rounded-2xl flex items-center justify-center border border-white/10">
+                    <i class="fa-solid fa-graduation-cap text-2xl text-yellow-300 animate-pulse"></i>
+                </div>
+                <div class="flex flex-col">
+                    <span class="header-font text-xl sm:text-2xl tracking-wide flex items-center gap-1">
+                        VocabQuest <span class="text-xs bg-yellow-400 text-slate-900 px-2 py-0.5 rounded-md font-black">PRO</span>
+                    </span>
+                    <span id="rank-text" class="text-xs font-bold text-blue-200 uppercase tracking-widest flex items-center gap-1">
+                        <i class="fa-solid fa-shield-halved text-teal-300"></i> Rank: Novice
+                    </span>
+                </div>
+            </div>
+
+            <!-- Stats & Settings Navigation -->
+            <div class="flex items-center gap-2 sm:gap-4">
+                
+                <!-- Dynamic File Upload Activation Button -->
+                <button onclick="triggerFileUpload()" class="bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 px-3 py-1.5 rounded-full transition-all border border-emerald-400/20 active:scale-95 flex items-center gap-1.5" title="Upload custom PDF or Image">
+                    <i class="fa-solid fa-cloud-arrow-up text-white animate-pulse"></i>
+                    <span class="text-xs font-black text-white pr-1">Scan Materials</span>
+                </button>
+                <input type="file" id="ai-file-upload" class="hidden" accept="image/*,application/pdf" onchange="handleFileUpload(event)">
+
+                <div id="streak-counter" class="font-bold text-orange-400 hidden flex items-center bg-white/10 px-3 py-1.5 rounded-full border border-orange-500/30 pulse-orange">
+                    <i class="fa-solid fa-fire text-lg mr-1.5 text-orange-500"></i>
+                    <span id="streak-text" class="text-white">0</span>
+                </div>
+                
+                <div id="xp-counter" class="font-bold text-yellow-300 flex items-center bg-white/10 px-3 py-1.5 rounded-full border border-yellow-500/30">
+                    <i class="fa-solid fa-star text-lg mr-1.5 text-yellow-400"></i>
+                    <span id="xp-text" class="text-white mr-1">0</span> XP
+                </div>
+
+                <button onclick="toggleConfigTab()" class="bg-white/10 hover:bg-white/20 p-2.5 rounded-full transition-all border border-white/10 active:scale-95" title="Manage Vocabulary & Settings">
+                    <i class="fa-solid fa-sliders text-base text-white"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Word List & Settings Tab Panel (Slide Down) -->
+        <div id="config-tab" class="hidden bg-slate-50 border-b border-slate-200 p-4 sm:p-6 transition-all duration-300 ease-in-out fade-in">
+            <div class="flex flex-col gap-4">
+                <div class="flex justify-between items-center pb-2 border-b border-slate-200">
+                    <h3 class="font-black text-slate-700 text-base sm:text-lg flex items-center gap-2">
+                        <i class="fa-solid fa-book text-blue-500"></i> Vocabulary Management
+                    </h3>
+                    <div class="flex items-center gap-2">
+                        <button onclick="resetToDefaults()" class="text-xs bg-slate-200 text-slate-600 hover:bg-slate-300 px-2.5 py-1.5 rounded-lg font-bold transition-all flex items-center gap-1">
+                            <i class="fa-solid fa-rotate-left"></i> Restore Defaults
+                        </button>
+                        <button onclick="toggleConfigTab()" class="text-slate-400 hover:text-slate-600 p-1">
+                            <i class="fa-solid fa-xmark text-lg"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Custom Options & Match Settings -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 bg-white p-3 rounded-xl border border-slate-200 shadow-sm">
+                    <div>
+                        <span class="block text-xs font-extrabold text-slate-500 uppercase tracking-wider mb-2">Check Engine Settings</span>
+                        <div class="flex flex-col gap-2">
+                            <label class="relative flex items-center cursor-pointer select-none">
+                                <input type="checkbox" id="strict-match-toggle" class="sr-only peer" checked>
+                                <div class="w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-indigo-600"></div>
+                                <span class="ml-3 text-xs font-semibold text-slate-600">Strict Match (Case-sensitive, strict spaces)</span>
+                            </label>
+                            <label class="relative flex items-center cursor-pointer select-none">
+                                <input type="checkbox" id="sound-toggle" class="sr-only peer" checked>
+                                <div class="w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-indigo-600"></div>
+                                <span class="ml-3 text-xs font-semibold text-slate-600">Retro Audio Synthesizer Sound FX</span>
+                            </label>
+                        </div>
+                    </div>
+                    <div>
+                        <span class="block text-xs font-extrabold text-slate-500 uppercase tracking-wider mb-2">Speech Engine Speed</span>
+                        <div class="flex items-center gap-3">
+                            <i class="fa-solid fa-gauge text-slate-400"></i>
+                            <input type="range" id="speech-speed" min="0.3" max="1.0" step="0.1" value="0.5" class="w-full accent-blue-600 bg-slate-200 h-2 rounded-lg appearance-none cursor-pointer">
+                            <span id="speed-indicator" class="text-xs font-black text-blue-600 w-8">0.5x</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Add New Word Form -->
+                <form id="add-word-form" onsubmit="addNewWord(event)" class="bg-indigo-50 border border-indigo-100 p-4 rounded-xl flex flex-col gap-3">
+                    <span class="text-xs font-black text-indigo-700 uppercase tracking-widest block"><i class="fa-solid fa-plus-circle"></i> Add Custom Vocabulary Entry</span>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                        <input type="text" id="new-word" placeholder="Word (e.g. popular)" class="p-2 border border-indigo-200 rounded-lg text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-400" required>
+                        <input type="text" id="new-syllables" placeholder="Syllables (e.g. pop|u|lar)" class="p-2 border border-indigo-200 rounded-lg text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-400" required>
+                        <input type="text" id="new-meaning" placeholder="Meaning / Translation" class="p-2 border border-indigo-200 rounded-lg text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-400" required>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        <div class="flex flex-col gap-1">
+                            <input type="text" id="new-sentence-1" placeholder="Practice Sentence 1 (use _____ for gap)" class="p-2 border border-indigo-200 rounded-lg text-xs font-medium focus:outline-none focus:ring-2 focus:ring-indigo-400" required>
+                            <input type="text" id="new-clue-1" placeholder="Clue for Sentence 1" class="p-2 border border-indigo-200 rounded-lg text-xs font-medium focus:outline-none focus:ring-2 focus:ring-indigo-400" required>
+                        </div>
+                        <div class="flex flex-col gap-1">
+                            <input type="text" id="new-sentence-2" placeholder="Practice Sentence 2 (use _____ for gap)" class="p-2 border border-indigo-200 rounded-lg text-xs font-medium focus:outline-none focus:ring-2 focus:ring-indigo-400" required>
+                            <input type="text" id="new-clue-2" placeholder="Clue for Sentence 2" class="p-2 border border-indigo-200 rounded-lg text-xs font-medium focus:outline-none focus:ring-2 focus:ring-indigo-400" required>
+                        </div>
+                    </div>
+                    <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white font-black text-sm py-2 px-4 rounded-lg transition-all self-end flex items-center gap-2 shadow-sm">
+                        <i class="fa-solid fa-save"></i> Save Word
+                    </button>
+                </form>
+
+                <!-- Current Words List -->
+                <div>
+                    <span class="block text-xs font-extrabold text-slate-500 uppercase tracking-wider mb-2">Word Database (<span id="database-count">0</span>)</span>
+                    <div id="word-chips-container" class="flex flex-wrap gap-2 max-h-40 overflow-y-auto p-1 bg-white border border-slate-200 rounded-xl">
+                        <!-- Word Chips injected here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Content Work Area -->
+        <div id="content-area" class="flex-grow p-4 sm:p-8 flex flex-col justify-center items-center text-center fade-in">
+            <!-- Dynamic phases (memorize, milestone, listening, gapfill, final report) render here -->
+        </div>
+        
+        <!-- Controls & Bottom Bar -->
+        <div id="controls" class="bg-slate-50 p-4 flex justify-between items-center border-t border-slate-200 rounded-b-2xl">
+            <!-- Dynamic Navigation Buttons render here -->
+        </div>
+    </div>
+
+    <!-- Immersive Interactive Audio Engine -->
+    <script>
+        const AudioFX = {
+            ctx: null,
+            init() {
+                if (!this.ctx) {
+                    this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+                }
+            },
+            play(type) {
+                if (!document.getElementById('sound-toggle').checked) return;
+                this.init();
+                
+                const now = this.ctx.currentTime;
+                
+                if (type === 'correct') {
+                    // Ascending chime
+                    const osc1 = this.ctx.createOscillator();
+                    const osc2 = this.ctx.createOscillator();
+                    const gainNode = this.ctx.createGain();
+                    
+                    osc1.type = 'triangle';
+                    osc2.type = 'sine';
+                    
+                    gainNode.gain.setValueAtTime(0.15, now);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
+                    
+                    osc1.frequency.setValueAtTime(523.25, now); // C5
+                    osc1.frequency.setValueAtTime(659.25, now + 0.1); // E5
+                    osc1.frequency.setValueAtTime(783.99, now + 0.2); // G5
+                    osc1.frequency.setValueAtTime(1046.50, now + 0.3); // C6
+                    
+                    osc2.frequency.setValueAtTime(1046.50, now);
+                    
+                    osc1.connect(gainNode);
+                    osc2.connect(gainNode);
+                    gainNode.connect(this.ctx.destination);
+                    
+                    osc1.start(now);
+                    osc2.start(now);
+                    osc1.stop(now + 0.4);
+                    osc2.stop(now + 0.4);
+                } else if (type === 'wrong') {
+                    // Retro flat drop
+                    const osc = this.ctx.createOscillator();
+                    const gainNode = this.ctx.createGain();
+                    
+                    osc.type = 'sawtooth';
+                    gainNode.gain.setValueAtTime(0.12, now);
+                    gainNode.gain.linearRampToValueAtTime(0.01, now + 0.4);
+                    
+                    osc.frequency.setValueAtTime(180, now);
+                    osc.frequency.linearRampToValueAtTime(80, now + 0.3);
+                    
+                    osc.connect(gainNode);
+                    gainNode.connect(this.ctx.destination);
+                    
+                    osc.start(now);
+                    osc.stop(now + 0.4);
+                } else if (type === 'milestone') {
+                    // Battle transition flourish
+                    const osc = this.ctx.createOscillator();
+                    const gainNode = this.ctx.createGain();
+                    osc.type = 'sine';
+                    gainNode.gain.setValueAtTime(0.15, now);
+                    gainNode.gain.linearRampToValueAtTime(0.01, now + 0.6);
+                    
+                    osc.frequency.setValueAtTime(220, now);
+                    osc.frequency.linearRampToValueAtTime(440, now + 0.2);
+                    osc.frequency.linearRampToValueAtTime(880, now + 0.4);
+                    
+                    osc.connect(gainNode);
+                    gainNode.connect(this.ctx.destination);
+                    
+                    osc.start(now);
+                    osc.stop(now + 0.6);
+                } else if (type === 'purchase') {
+                    // Ping noise
+                    const osc = this.ctx.createOscillator();
+                    const gainNode = this.ctx.createGain();
+                    osc.type = 'sine';
+                    gainNode.gain.setValueAtTime(0.15, now);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
+                    osc.frequency.setValueAtTime(987.77, now); // B5
+                    osc.connect(gainNode);
+                    gainNode.connect(this.ctx.destination);
+                    osc.start(now);
+                    osc.stop(now + 0.2);
+                }
+            }
+        };
+    </script>
+
+    <script>
+        // Core Vocabulary dataset starts empty for a customized student experience
+        const defaultVocabulary = [];
+
+        // Configure PDFJS Worker
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
+
+        // Retrieve local storage if present, otherwise set defaults
+        let vocabulary = JSON.parse(localStorage.getItem('vocabquest_db')) || [...defaultVocabulary];
+        let pendingParsedWords = []; // Temporarily holding parsed items during user import choice
+
+        const praisePhrases = ["Perfect!", "Excellent!", "Spectacular!", "Unstoppable!", "Godlike!", "Masterful!", "Bravo!"];
+        const encouragementPhrases = ["Focus!", "Almost had it!", "Oof! Try again!", "Keep pushing!", "You've got this!"];
+        
+        let state = {
+            phase: 'flashcard', // flashcard, milestone, listening, listening-result, gapfill, report
+            currentIndex: 0,
+            testStartIndex: 0,
+            testEndIndex: 5,
+            xp: parseInt(localStorage.getItem('vocabquest_xp')) || 0,
+            streak: 0,
+            errors: [],
+            currentTestIndex: 0,
+            listeningScore: 0,
+            gapFillAnswered: false,
+            currentSentenceObj: null,
+            clueUsed: false,
+            scrambledHintUsed: false
+        };
+
+        let currentUtterance = null;
+
+        // Cache DOM elements
+        const contentArea = document.getElementById('content-area');
+        const controls = document.getElementById('controls');
+        const xpCounter = document.getElementById('xp-counter');
+        const xpText = document.getElementById('xp-text');
+        const streakCounter = document.getElementById('streak-counter');
+        const streakText = document.getElementById('streak-text');
+        const rankText = document.getElementById('rank-text');
+        const progressBar = document.getElementById('progress-bar');
+        const progressIndicator = document.getElementById('progress-indicator');
+        const speedSlider = document.getElementById('speech-speed');
+        const speedIndicator = document.getElementById('speed-indicator');
+
+        // Activation of scanner trigger
+        function triggerFileUpload() {
+            document.getElementById('ai-file-upload').click();
+        }
+
+        // File handler dispatch
+        async function handleFileUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const scannerModal = document.getElementById('scanner-modal');
+            const scannerTitle = document.getElementById('scanner-title');
+            const scannerStatus = document.getElementById('scanner-status');
+            const scannerProgress = document.getElementById('scanner-progress');
+            
+            // Show scanning overlay
+            scannerModal.classList.remove('hidden');
+            setScannerProgress(15, "Reading uploaded resource", "Converting layout components...");
+
+            try {
+                if (file.type === "application/pdf") {
+                    setScannerProgress(30, "Parsing PDF structure", "Analyzing file pages with local engine...");
+                    const arrayBuffer = await file.arrayBuffer();
+                    
+                    // Attempt text content extraction first - slice(0) copies memory to prevent detaching
+                    let parsedText = await extractPDFText(arrayBuffer.slice(0));
+                    
+                    if (parsedText.trim().length > 30) {
+                        setScannerProgress(55, "Generating Context with AI", "Formulating structured vocabulary challenges...");
+                        await processExtractedText(parsedText);
+                    } else {
+                        // Fallback: Scanned PDF / Image-Only PDF - slice(0) allows reuse safely
+                        setScannerProgress(40, "Image PDF detected", "Rendering page layout to visual canvas...");
+                        const base64Image = await renderPDFPageToImage(arrayBuffer.slice(0));
+                        setScannerProgress(60, "Scanning visuals with AI", "Dissecting snapshot for target terms...");
+                        await processVisualDocument(base64Image, file.type);
+                    }
+                } else if (file.type.startsWith("image/")) {
+                    setScannerProgress(35, "Converting Image layout", "Compressing texture formats for processing...");
+                    const base64Image = await convertFileToBase64(file);
+                    setScannerProgress(55, "Scanning visual with AI", "Recognizing text patterns via Vision AI...");
+                    await processVisualDocument(base64Image, file.type);
+                } else {
+                    throw new Error("Invalid format. Please supply a PDF or common image (JPG/PNG).");
+                }
+            } catch (err) {
+                console.error(err);
+                showToast(err.message || "Unable to parse file. Ensure it is readable.", "error");
+            } finally {
+                scannerModal.classList.add('hidden');
+                event.target.value = ''; // Clean input
+            }
+        }
+
+        function setScannerProgress(percent, title, status) {
+            document.getElementById('scanner-progress').style.width = `${percent}%`;
+            document.getElementById('scanner-title').innerText = title;
+            document.getElementById('scanner-status').innerText = status;
+        }
+
+        // Base64 helper for regular images
+        function convertFileToBase64(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = error => reject(error);
+            });
+        }
+
+        // PDF text-layer parser
+        async function extractPDFText(arrayBuffer) {
+            try {
+                const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+                let text = "";
+                const pageLimit = Math.min(pdf.numPages, 5); // Read first 5 pages max to protect context windows
+                for (let i = 1; i <= pageLimit; i++) {
+                    const page = await pdf.getPage(i);
+                    const content = await page.getTextContent();
+                    const pageText = content.items.map(item => item.str).join(" ");
+                    text += pageText + "\n";
+                }
+                return text;
+            } catch (e) {
+                console.warn("PDF text layer extraction failed: ", e);
+                return "";
+            }
+        }
+
+        // Helper to render the first page of a PDF to an image (base64) for visual/OCR processing
+        async function renderPDFPageToImage(arrayBuffer) {
+            try {
+                const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+                if (pdf.numPages === 0) {
+                    throw new Error("PDF contains no pages.");
+                }
+                const page = await pdf.getPage(1);
+                const viewport = page.getViewport({ scale: 1.5 });
+                
+                const canvas = document.createElement('canvas');
+                const context = canvas.getContext('2d');
+                canvas.width = viewport.width;
+                canvas.height = viewport.height;
+                
+                await page.render({
+                    canvasContext: context,
+                    viewport: viewport
+                }).promise;
+                
+                return canvas.toDataURL('image/jpeg', 0.85);
+            } catch (err) {
+                console.error("renderPDFPageToImage error:", err);
+                throw new Error("Failed to visually render the PDF page: " + err.message);
+            }
+        }
+
+        // Processing Text extracted directly from PDFs
+        async function processExtractedText(text) {
+            const systemPrompt = `You are an elite English lexicographer and gamification architect.
+Analyze the provided study text and extract ALL key vocabulary terms present. Do not place an arbitrary limit or cap extraction to a specific number; capture every single vocabulary word found in the document to build a complete, non-restricted study list.
+For each selected word, formulate a structured item according to the schema. Output JSON array containing these elements. No conversational filler.`;
+
+            const userQuery = `Extract academic vocabulary terms from this text:
+---
+${text}
+---`;
+
+            await callGeminiParser(systemPrompt, userQuery);
+        }
+
+        // Processing Scanned Images/PDF snapshots using Vision capabilities of gemini-3-flash-preview
+        async function processVisualDocument(base64DataUrl, mimeType) {
+            const base64DataOnly = base64DataUrl.split(',')[1];
+            const systemPrompt = `You are an elite English lexicographer and gamification architect.
+Analyze this image (textbook, workspace page, study guide, worksheet). Extract ALL key vocabulary terms present. Do not place an arbitrary limit or cap extraction to a specific number; capture every single vocabulary word visible in the image to build a complete, non-restricted study list.
+For each term, formulate a structured item according to the schema. Output JSON array containing these elements. No conversational filler.`;
+
+            const userQuery = "Review this document, find the key vocabulary terms, and compile them into structured database questions.";
+
+            const apiKey = ""; // Canvas runtime replaces this if empty
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
+
+            const payload = {
+                contents: [{
+                    role: "user",
+                    parts: [
+                        { text: userQuery },
+                        {
+                            inlineData: {
+                                mimeType: mimeType.includes("pdf") ? "image/jpeg" : mimeType,
+                                data: base64DataOnly
+                            }
+                        }
+                    ]
+                }],
+                generationConfig: {
+                    responseMimeType: "application/json",
+                    responseSchema: getGeminiOutputSchema()
+                },
+                systemInstruction: {
+                    parts: [{ text: systemPrompt }]
+                }
+            };
+
+            await executeGeminiRequest(apiUrl, payload);
+        }
+
+        // Master wrapper for standard JSON schemas
+        function getGeminiOutputSchema() {
+            return {
+                type: "ARRAY",
+                description: "Array of extracted vocabulary terms and challenges.",
+                items: {
+                    type: "OBJECT",
+                    properties: {
+                        word: { 
+                            type: "STRING", 
+                            description: "The core target vocabulary word, lowercase. (e.g. 'popular')" 
+                        },
+                        syllables: { 
+                            type: "STRING", 
+                            description: "Syllable breakdown using '|' separator. (e.g. 'pop|u|lar')" 
+                        },
+                        meaning: { 
+                            type: "STRING", 
+                            description: "Accurate Traditional Chinese (繁體中文) translation or definition. (e.g. '受歡迎的')" 
+                        },
+                        sentences: {
+                            type: "ARRAY",
+                            description: "Exactly 2 custom context/practice sentences.",
+                            items: {
+                                type: "OBJECT",
+                                properties: {
+                                    text: { 
+                                        type: "STRING", 
+                                        description: "Context sentence where the vocabulary word is represented as '_____'. Do not include the word itself." 
+                                    },
+                                    clue: { 
+                                        type: "STRING", 
+                                        description: "A short, descriptive hint explaining the meaning or usage in this sentence." 
+                                    }
+                                },
+                                required: ["text", "clue"]
+                            }
+                        }
+                    },
+                    required: ["word", "syllables", "meaning", "sentences"]
+                }
+            };
+        }
+
+        // Call Gemini for Text payload
+        async function callGeminiParser(systemPrompt, userQuery) {
+            const apiKey = "";
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
+
+            const payload = {
+                contents: [{ parts: [{ text: userQuery }] }],
+                generationConfig: {
+                    responseMimeType: "application/json",
+                    responseSchema: getGeminiOutputSchema()
+                },
+                systemInstruction: {
+                    parts: [{ text: systemPrompt }]
+                }
+            };
+
+            await executeGeminiRequest(apiUrl, payload);
+        }
+
+        // Actual fetch API engine with exponential backoff handling
+        async function executeGeminiRequest(apiUrl, payload) {
+            let attempts = 0;
+            const maxAttempts = 3;
+            let response;
+
+            while (attempts < maxAttempts) {
+                try {
+                    response = await fetch(apiUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                    
+                    if (response.ok) break;
+                } catch (e) {
+                    // Failures fall through to standard exponential delay
+                }
+                attempts++;
+                if (attempts < maxAttempts) {
+                    await new Promise(r => setTimeout(r, Math.pow(2, attempts) * 1000));
+                }
+            }
+
+            if (!response || !response.ok) {
+                throw new Error("Unable to reach AI analyzer. Please check connectivity or try again.");
+            }
+
+            const result = await response.json();
+            const candidate = result.candidates?.[0];
+            const responseText = candidate?.content?.parts?.[0]?.text;
+
+            if (responseText) {
+                const cleanWords = JSON.parse(responseText);
+                if (Array.isArray(cleanWords) && cleanWords.length > 0) {
+                    pendingParsedWords = cleanWords;
+                    promptImportChoice(cleanWords);
+                } else {
+                    throw new Error("No usable terms were found in your document.");
+                }
+            } else {
+                throw new Error("The scanner was unable to formulate exercises from this content.");
+            }
+        }
+
+        // Prompting the choice dialogue to append/replace the list
+        function promptImportChoice(wordArray) {
+            const modal = document.getElementById('import-choice-modal');
+            const details = document.getElementById('import-details');
+            
+            const wordsListText = wordArray.map(item => `"${item.word}"`).join(", ");
+            details.innerHTML = `Loaded <strong>${wordArray.length} words</strong>: <br><span class="text-xs italic text-indigo-600">${wordsListText}</span>`;
+            
+            modal.classList.remove('hidden');
+        }
+
+        // Close import modal helper
+        function closeImportChoiceModal() {
+            document.getElementById('import-choice-modal').classList.add('hidden');
+            pendingParsedWords = [];
+        }
+
+        // Applying changes depending on student preference (merge or replace)
+        function applyImportChoice(mode) {
+            if (pendingParsedWords.length === 0) return;
+
+            if (mode === 'replace') {
+                vocabulary = [...pendingParsedWords];
+                showToast(`Replaced database with ${pendingParsedWords.length} custom AI-scanned words!`, "success");
+            } else {
+                // Merge without duplicating existing base words
+                const currentWords = vocabulary.map(v => v.word.toLowerCase());
+                let addedCount = 0;
+                pendingParsedWords.forEach(p => {
+                    if (!currentWords.includes(p.word.toLowerCase())) {
+                        vocabulary.push(p);
+                        addedCount++;
+                    }
+                });
+                showToast(`Merged ${addedCount} new cards into database stack!`, "success");
+            }
+
+            localStorage.setItem('vocabquest_db', JSON.stringify(vocabulary));
+            document.getElementById('import-choice-modal').classList.add('hidden');
+            
+            // Re-align HUD and launch game loop
+            resetGame();
+            renderWordChips();
+        }
+
+        // Utility toast alert
+        function showToast(message, type = "success") {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `p-3.5 rounded-xl shadow-xl border-l-4 text-xs font-bold flex items-center gap-2 pointer-events-auto transition-all duration-300 transform translate-x-20 opacity-0 ${
+                type === 'success' ? 'bg-emerald-50 border-emerald-500 text-emerald-800' :
+                type === 'error' ? 'bg-red-50 border-red-500 text-red-800' : 'bg-blue-50 border-blue-500 text-blue-800'
+            }`;
+            
+            const icon = type === 'success' ? 'fa-circle-check' : type === 'error' ? 'fa-circle-xmark' : 'fa-circle-info';
+            toast.innerHTML = `<i class="fa-solid ${icon} text-base"></i><span>${message}</span>`;
+            
+            container.appendChild(toast);
+            
+            // Animation Trigger
+            setTimeout(() => {
+                toast.classList.remove('translate-x-20', 'opacity-0');
+            }, 50);
+
+            setTimeout(() => {
+                toast.classList.add('translate-x-20', 'opacity-0');
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        function updateRank() {
+            let rank = "Novice";
+            let color = "text-blue-200";
+            if (state.xp >= 1000) { rank = "Grandmaster"; color = "text-yellow-300"; }
+            else if (state.xp >= 600) { rank = "Elite Scholar"; color = "text-pink-300"; }
+            else if (state.xp >= 300) { rank = "Master"; color = "text-violet-300"; }
+            else if (state.xp >= 150) { rank = "Scholar"; color = "text-indigo-300"; }
+            else if (state.xp >= 50) { rank = "Apprentice"; color = "text-teal-200"; }
+            
+            rankText.innerHTML = `<i class="fa-solid fa-shield-halved"></i> Rank: ${rank}`;
+            rankText.className = `text-xs font-bold ${color} uppercase tracking-widest flex items-center gap-1`;
+            localStorage.setItem('vocabquest_xp', state.xp);
+        }
+
+        function updateProgress() {
+            const range = Math.max(1, state.testEndIndex - state.testStartIndex);
+            let totalSteps = range * 3; // flashcard batch + listening batch + gapfill batch
+            let currentStep = 0;
+            
+            if (state.phase === 'flashcard') {
+                currentStep = state.currentIndex - state.testStartIndex;
+            } else if (state.phase === 'listening') {
+                currentStep = range + (state.currentTestIndex - state.testStartIndex);
+            } else if (state.phase === 'gapfill') {
+                currentStep = (range * 2) + (state.currentTestIndex - state.testStartIndex);
+            } else if (state.phase === 'report' || state.phase === 'listening-result') {
+                currentStep = totalSteps;
+            }
+
+            const percentage = Math.min(100, Math.max(0, Math.round((currentStep / totalSteps) * 100)));
+            progressBar.style.width = `${percentage}%`;
+            
+            if (percentage > 0) {
+                progressIndicator.innerText = `${percentage}%`;
+                progressIndicator.classList.remove('scale-0');
+            } else {
+                progressIndicator.classList.add('scale-0');
+            }
+        }
+
+        // Speed slider indicator listener
+        speedSlider.addEventListener('input', (e) => {
+            speedIndicator.innerText = `${e.target.value}x`;
+        });
+
+        // Speech engine voice selector
+        function getHumanVoice() {
+            const voices = window.speechSynthesis.getVoices();
+            const femaleKeywords = ['female', 'woman', 'samantha', 'victoria', 'zira', 'karen', 'tessa', 'melina', 'ava', 'allison', 'susan'];
+            
+            let femaleVoice = voices.find(voice => 
+                voice.lang.startsWith('en') && 
+                femaleKeywords.some(keyword => voice.name.toLowerCase().includes(keyword))
+            );
+            
+            if (femaleVoice) return femaleVoice;
+
+            return voices.find(voice => voice.lang.startsWith('en') && (voice.name.includes('Natural') || voice.name.includes('Premium') || voice.name.includes('Google'))) 
+                || voices.find(voice => voice.lang.startsWith('en'));
+        }
+
+        function playAudio(text) {
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+                currentUtterance = new SpeechSynthesisUtterance(text);
+                const voice = getHumanVoice();
+                if (voice) currentUtterance.voice = voice;
+                currentUtterance.lang = 'en-US';
+                currentUtterance.rate = parseFloat(speedSlider.value); 
+                window.speechSynthesis.speak(currentUtterance);
+            } else {
+                showToast("Text-to-speech is not supported in this browser.", "error");
+            }
+        }
+
+        function playFeedbackAudio(type) {
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+                let text = type === 'correct' 
+                    ? praisePhrases[Math.floor(Math.random() * praisePhrases.length)] 
+                    : encouragementPhrases[Math.floor(Math.random() * encouragementPhrases.length)];
+                
+                currentUtterance = new SpeechSynthesisUtterance(text);
+                const voice = getHumanVoice();
+                if (voice) currentUtterance.voice = voice;
+                currentUtterance.lang = 'en-US';
+                currentUtterance.rate = 0.6;
+                currentUtterance.pitch = type === 'correct' ? 1.25 : 0.85;
+                window.speechSynthesis.speak(currentUtterance);
+            }
+        }
+
+        if ('speechSynthesis' in window) {
+            window.speechSynthesis.onvoiceschanged = getHumanVoice;
+        }
+
+        function handleAnswer(isCorrect) {
+            if (isCorrect) {
+                state.streak++;
+                let multiplier = 1 + Math.floor(state.streak / 3) * 0.5;
+                let earnedXp = Math.floor(10 * multiplier);
+                state.xp += earnedXp;
+                
+                streakCounter.classList.remove('hidden');
+                streakText.innerText = `${state.streak}`;
+                streakCounter.classList.add('bounce-active');
+                
+                xpText.innerText = state.xp;
+                xpCounter.classList.add('bounce-active');
+                
+                setTimeout(() => {
+                    streakCounter.classList.remove('bounce-active');
+                    xpCounter.classList.remove('bounce-active');
+                }, 500);
+
+                if (state.streak > 0 && state.streak % 3 === 0) {
+                    confetti({ particleCount: 60, spread: 50, origin: { y: 0.8 } });
+                }
+                updateRank();
+            } else {
+                state.streak = 0;
+                streakCounter.classList.add('hidden');
+            }
+        }
+
+        function advanceBatch() {
+            if (state.testEndIndex < vocabulary.length) {
+                state.testStartIndex = state.testEndIndex;
+                state.testEndIndex = Math.min(state.testStartIndex + 5, vocabulary.length);
+                state.currentIndex = state.testStartIndex;
+                state.phase = 'flashcard';
+            } else {
+                state.phase = 'report';
+            }
+            render();
+        }
+
+        function getColoredSyllables(syllablesString) {
+            const colors = ['text-blue-600', 'text-amber-500', 'text-teal-600', 'text-violet-600', 'text-rose-500'];
+            return syllablesString.split('|').map((syllable, index) => {
+                const colorClass = colors[index % colors.length];
+                return `<span class="${colorClass}">${syllable}</span>`;
+            }).join('');
+        }
+
+        function setRandomSentence() {
+            const wordObj = vocabulary[state.currentTestIndex];
+            if (wordObj && wordObj.sentences && wordObj.sentences.length > 0) {
+                const randomIndex = Math.floor(Math.random() * wordObj.sentences.length);
+                state.currentSentenceObj = wordObj.sentences[randomIndex];
+            } else {
+                state.currentSentenceObj = {
+                    text: "No sentence provided for _____.",
+                    clue: "Placeholder"
+                };
+            }
+            state.clueUsed = false;
+            state.scrambledHintUsed = false;
+        }
+
+        function render() {
+            updateProgress();
+            contentArea.classList.remove('fade-in');
+            void contentArea.offsetWidth; // Force CSS reflow
+            contentArea.classList.add('fade-in');
+
+            const startIdx = state.testStartIndex;
+            const endIdx = state.testEndIndex;
+
+            if (vocabulary.length === 0) {
+                contentArea.innerHTML = `
+                    <div class="p-6 sm:p-10 bg-slate-50/80 rounded-3xl border-4 border-dashed border-indigo-200/60 shadow-sm max-w-md text-center flex flex-col items-center justify-center gap-4 fade-in">
+                        <div class="w-16 h-16 bg-indigo-50 text-indigo-600 rounded-full flex items-center justify-center animate-bounce mb-1">
+                            <i class="fa-solid fa-wand-magic-sparkles text-3xl"></i>
+                        </div>
+                        <h2 class="text-2xl font-black text-slate-800">Your Quest Starts Here!</h2>
+                        <p class="text-slate-500 text-sm leading-relaxed">
+                            Your vocabulary list is currently empty. Scan a <strong>PDF document</strong> or <strong>upload an image</strong> of your study materials to let our AI build custom games for you instantly!
+                        </p>
+                        <div class="flex flex-col sm:flex-row gap-2.5 w-full mt-2">
+                            <button onclick="triggerFileUpload()" class="flex-grow bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 text-white font-black py-3 px-4 rounded-xl shadow-lg shadow-indigo-600/20 transition-all flex items-center justify-center gap-2 active:scale-95 text-xs sm:text-sm">
+                                <i class="fa-solid fa-cloud-arrow-up"></i> Scan Materials
+                            </button>
+                            <button onclick="toggleConfigTab()" class="bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 font-extrabold py-3 px-4 rounded-xl transition-all flex items-center justify-center gap-2 active:scale-95 text-xs sm:text-sm">
+                                <i class="fa-solid fa-plus"></i> Add Words Manually
+                            </button>
+                        </div>
+                    </div>
+                `;
+                controls.innerHTML = `<div></div><div></div>`;
+                return;
+            }
+
+            // Ensure index boundaries
+            if (state.currentIndex >= vocabulary.length) state.currentIndex = startIdx;
+
+            // Flashcard Stage
+            if (state.phase === 'flashcard') {
+                const wordObj = vocabulary[state.currentIndex];
+                contentArea.innerHTML = `
+                    <div class="text-xs font-black text-slate-400 mb-2 uppercase tracking-widest">Stage 1 of 3: Memorize</div>
+                    <div class="card bg-white border-2 border-indigo-100 rounded-3xl p-6 sm:p-10 w-full max-w-md shadow-lg relative overflow-hidden">
+                        <div class="absolute -right-4 -top-4 w-24 h-24 bg-indigo-50 rounded-full -z-10 opacity-60"></div>
+                        
+                        <button onclick="playAudio('${wordObj.word.replace(/'/g, "\\'")}')" class="mb-4 bg-indigo-50 hover:bg-indigo-100 text-indigo-600 hover:text-indigo-800 transition-all hover:scale-105 active:scale-95 rounded-2xl p-4 inline-flex items-center justify-center shadow-sm">
+                            <i class="fa-solid fa-volume-high text-3xl"></i>
+                        </button>
+
+                        <h2 class="text-3xl sm:text-5xl font-black mb-6 tracking-wide drop-shadow-sm select-all">
+                            ${getColoredSyllables(wordObj.syllables)}
+                        </h2>
+                        
+                        <div class="bg-indigo-50/50 p-4 rounded-2xl border border-indigo-100">
+                            <p class="text-xs text-indigo-500 uppercase tracking-wider font-extrabold mb-1">Translation / Definition</p>
+                            <p class="text-xl sm:text-2xl font-black text-slate-800">${wordObj.meaning}</p>
+                        </div>
+                    </div>
+                `;
+                
+                const isFirst = state.currentIndex === startIdx;
+                controls.innerHTML = `
+                    <button onclick="prevCard()" class="px-4 py-2.5 bg-slate-200 text-slate-600 rounded-xl hover:bg-slate-300 font-bold transition-all flex items-center gap-1 active:scale-95 ${isFirst ? 'invisible' : ''}">
+                        <i class="fa-solid fa-chevron-left"></i> Back
+                    </button>
+                    <span class="text-slate-400 text-xs font-bold">${state.currentIndex - startIdx + 1} / ${endIdx - startIdx}</span>
+                    <button onclick="nextCard()" class="px-6 py-2.5 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 font-extrabold shadow-md hover:shadow-indigo-500/20 transition-all flex items-center gap-1.5 active:scale-95">
+                        Next <i class="fa-solid fa-chevron-right"></i>
+                    </button>
+                `;
+            } 
+            
+            // Milestone Boss Challenge Trigger
+            else if (state.phase === 'milestone') {
+                contentArea.innerHTML = `
+                    <div class="relative flex flex-col items-center">
+                        <div class="relative mb-4">
+                            <i class="fa-solid fa-shield-halved text-7xl sm:text-8xl text-indigo-500 drop-shadow-xl animate-bounce"></i>
+                            <i class="fa-solid fa-bolt text-3xl text-yellow-400 absolute bottom-0 right-0 animate-pulse"></i>
+                        </div>
+                    </div>
+                    <h2 class="text-3xl sm:text-4xl header-font text-slate-800 mb-3">Quest Battle Triggered!</h2>
+                    <p class="text-slate-500 max-w-md text-sm sm:text-base font-medium mb-4">You have studied the syllables of this block. Now, listen carefully and type the words correctly to advance!</p>
+                `;
+                controls.innerHTML = `
+                    <button onclick="retryFlashcards()" class="px-4 py-2 bg-slate-200 text-slate-600 rounded-xl hover:bg-slate-300 font-bold transition-all"><i class="fa-solid fa-rotate-left mr-1"></i> Review Again</button>
+                    <button onclick="startListeningQuiz()" class="px-6 py-3 bg-red-500 hover:bg-red-600 text-white rounded-xl font-black text-base shadow-lg hover:shadow-red-500/30 transition-all flex items-center gap-2 active:scale-95">
+                        FIGHT! <i class="fa-solid fa-fire"></i>
+                    </button>
+                `;
+                AudioFX.play('milestone');
+            } 
+            
+            // Listening Quiz Arena
+            else if (state.phase === 'listening') {
+                const wordObj = vocabulary[state.currentTestIndex];
+                contentArea.innerHTML = `
+                    <div class="text-xs font-black text-slate-400 mb-2 uppercase tracking-widest">Stage 2 of 3: Audio Arena (${state.currentTestIndex - startIdx + 1} / ${endIdx - startIdx})</div>
+                    <div class="w-full max-w-md bg-white p-6 sm:p-8 rounded-3xl shadow-lg border border-slate-100 flex flex-col items-center gap-6">
+                        
+                        <div class="flex gap-4 w-full justify-center">
+                            <button onclick="playAudio('${wordObj.word.replace(/'/g, "\\'")}')" class="w-16 h-16 bg-blue-500 hover:bg-blue-600 text-white rounded-2xl shadow-md flex items-center justify-center transition-all hover:scale-105 active:scale-95" title="Hear Normal Speed">
+                                <i class="fa-solid fa-volume-high text-2xl animate-pulse"></i>
+                            </button>
+                            <button onclick="playSlowSpeech('${wordObj.word.replace(/'/g, "\\'")}')" class="w-16 h-16 bg-amber-500 hover:bg-amber-600 text-white rounded-2xl shadow-md flex items-center justify-center transition-all hover:scale-105 active:scale-95" title="Hear Slow (Cost 5 XP)">
+                                <div class="flex flex-col items-center">
+                                    <i class="fa-solid fa-turtle text-lg"></i>
+                                    <span class="text-[9px] font-bold">Slow (5 XP)</span>
+                                </div>
+                            </button>
+                        </div>
+
+                        <div class="w-full relative">
+                            <input type="text" id="spell-input" class="w-full text-center text-xl sm:text-2xl font-bold p-3.5 border-4 border-slate-200 rounded-2xl focus:border-blue-500 focus:ring-0 focus:outline-none transition-all placeholder:text-slate-300" placeholder="Spell the word you heard..." autocomplete="off" autofocus>
+                        </div>
+
+                        <!-- Micro XP Store Powerups -->
+                        <div class="flex gap-2 w-full justify-center border-t border-slate-100 pt-4">
+                            <button onclick="buyFirstLetterClue()" id="btn-first-letter" class="flex-grow bg-slate-100 hover:bg-indigo-50 border border-slate-200 text-slate-600 hover:text-indigo-700 py-1.5 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1 active:scale-95">
+                                <i class="fa-solid fa-wand-magic-sparkles"></i> First Letter (10 XP)
+                            </button>
+                            <button onclick="buyScrambledClue()" id="btn-scrambled" class="flex-grow bg-slate-100 hover:bg-indigo-50 border border-slate-200 text-slate-600 hover:text-indigo-700 py-1.5 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1 active:scale-95">
+                                <i class="fa-solid fa-shuffle"></i> Scramble Hint (15 XP)
+                            </button>
+                        </div>
+
+                        <div id="hint-display" class="hidden text-xs font-bold text-indigo-600 bg-indigo-50 p-2.5 rounded-xl w-full border border-indigo-100"></div>
+
+                        <p id="feedback-msg" class="font-black h-6 text-sm sm:text-base"></p>
+                    </div>
+                `;
+                controls.innerHTML = `
+                    <div></div>
+                    <button id="listening-submit-btn" onclick="checkListening()" class="px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 font-extrabold shadow-md active:scale-95 transition-all flex items-center gap-1.5">
+                        ATTACK <i class="fa-solid fa-khanda"></i>
+                    </button>
+                `;
+                
+                setTimeout(() => {
+                    playAudio(wordObj.word);
+                    const inp = document.getElementById('spell-input');
+                    if (inp) inp.focus();
+                }, 400);
+
+                const inp = document.getElementById('spell-input');
+                if (inp) {
+                    inp.addEventListener('keypress', (e) => {
+                        if (e.key === 'Enter') checkListening();
+                    });
+                }
+            } 
+            
+            // Listening Round Milestone Report
+            else if (state.phase === 'listening-result') {
+                const total = endIdx - startIdx;
+                const percentage = Math.round((state.listeningScore / total) * 100);
+                
+                if (percentage >= 60) {
+                    confetti({ particleCount: 150, spread: 80, origin: { y: 0.6 } });
+                    contentArea.innerHTML = `
+                        <i class="fa-solid fa-crown text-7xl text-yellow-400 mb-4 drop-shadow-xl animate-bounce"></i>
+                        <h2 class="text-3xl font-black text-green-600 mb-2">Stage Victory!</h2>
+                        <p class="text-slate-500 font-bold mb-4">Spell Accuracy: ${percentage}% (${state.listeningScore}/${total} correct)</p>
+                        <p class="text-xs text-slate-400 max-w-sm mb-4">Excellent auditory matching. Now prepare to analyze these vocabulary words in context.</p>
+                    `;
+                    controls.innerHTML = `
+                        <div></div>
+                        <button onclick="startGapFill()" class="px-6 py-3 bg-green-500 hover:bg-green-600 text-white rounded-xl font-black shadow-md flex items-center gap-1.5 active:scale-95 transition-all">
+                            Unlock Context Stage <i class="fa-solid fa-lock-open"></i>
+                        </button>
+                    `;
+                } else {
+                    contentArea.innerHTML = `
+                        <i class="fa-solid fa-skull-crossbones text-7xl text-slate-400 mb-4 drop-shadow-lg"></i>
+                        <h2 class="text-3xl font-black text-rose-500 mb-2">Defeated!</h2>
+                        <p class="text-slate-500 font-bold mb-4">Accuracy: ${percentage}% (${state.listeningScore}/${total} correct)</p>
+                        <p class="text-xs text-slate-400 max-w-sm mb-4">Don't worry, failure is the best teacher. Let's study the syllable layouts one more time.</p>
+                    `;
+                    controls.innerHTML = `
+                        <div></div>
+                        <button onclick="retryFlashcards()" class="px-6 py-3 bg-slate-800 hover:bg-slate-900 text-white rounded-xl font-black shadow-md flex items-center gap-1.5 active:scale-95 transition-all">
+                            <i class="fa-solid fa-rotate-left"></i> Retry Practice
+                        </button>
+                    `;
+                }
+            } 
+            
+            // Gap Fill / Sentence Context Stage
+            else if (state.phase === 'gapfill') {
+                state.gapFillAnswered = false;
+                const sentenceParts = state.currentSentenceObj.text.split('_____');
+                
+                contentArea.innerHTML = `
+                    <div class="text-xs font-black text-slate-400 mb-2 uppercase tracking-widest">Stage 3 of 3: Sentence Context (${state.currentTestIndex - startIdx + 1} / ${endIdx - startIdx})</div>
+                    <div class="w-full max-w-xl text-left bg-white p-6 sm:p-8 rounded-3xl shadow-lg border border-slate-100 flex flex-col gap-4">
+                        <div class="flex items-center gap-2 text-violet-700 mb-2">
+                            <i class="fa-solid fa-puzzle-piece text-xl"></i>
+                            <h3 class="font-black text-lg">Synthesize Context</h3>
+                        </div>
+
+                        <div class="bg-violet-50/50 p-5 rounded-2xl border border-violet-100/60 mb-2">
+                            <p class="text-lg sm:text-xl leading-relaxed text-slate-700 font-medium flex flex-wrap items-center gap-x-2 gap-y-3">
+                                <span>${sentenceParts[0]}</span>
+                                <input type="text" id="gap-input" class="w-36 sm:w-44 text-center border-b-4 border-violet-500 bg-violet-50 focus:bg-violet-100 focus:outline-none focus:border-violet-700 text-violet-800 font-black transition-colors rounded-t-lg p-1 text-lg" autocomplete="off" autofocus>
+                                <span>${sentenceParts[1] || ''}</span>
+                            </p>
+                        </div>
+
+                        <!-- Micro XP Clue Store -->
+                        <div class="flex items-center justify-between border-t border-slate-100 pt-3">
+                            <span class="text-xs text-slate-400 font-bold">Stuck? Buy a context clue.</span>
+                            <button onclick="revealContextClue()" id="btn-context-clue" class="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-100 py-1.5 px-3.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1 active:scale-95">
+                                <i class="fa-solid fa-eye text-[11px]"></i> Show Clue (5 XP)
+                            </button>
+                        </div>
+
+                        <div id="dev-analysis" class="hidden bg-slate-50 border-l-4 border-slate-400 p-4 rounded-r-xl transition-all">
+                            <p class="font-black text-slate-700 text-xs uppercase tracking-wide flex items-center gap-1">
+                                <i class="fa-solid fa-lightbulb text-yellow-500"></i> Hint & Clue
+                            </p>
+                            <p id="analysis-text" class="text-xs sm:text-sm text-slate-600 mt-1 font-medium leading-relaxed"></p>
+                        </div>
+                    </div>
+                `;
+                
+                controls.innerHTML = `
+                    <div></div>
+                    <button id="gap-submit-btn" onclick="checkGapFill()" class="px-6 py-3 bg-violet-600 text-white rounded-xl hover:bg-violet-700 font-extrabold shadow-md active:scale-95 transition-all flex items-center gap-1.5">
+                        Lock In <i class="fa-solid fa-lock"></i>
+                    </button>
+                `;
+
+                const gapInp = document.getElementById('gap-input');
+                if (gapInp) {
+                    setTimeout(() => gapInp.focus(), 100);
+                    gapInp.addEventListener('keypress', (e) => {
+                        if (e.key === 'Enter') checkGapFill();
+                    });
+                }
+            } 
+            
+            // Grand Final Report for Current Batch
+            else if (state.phase === 'report') {
+                confetti({ particleCount: 200, spread: 120, origin: { y: 0.4 } });
+                
+                const uniqErrors = [...new Set(state.errors)];
+                let focusWordsHtml = uniqErrors.length > 0 
+                    ? `<div class="mt-4 text-left bg-orange-50 p-5 rounded-2xl w-full max-w-md border-2 border-orange-200">
+                        <h3 class="font-black text-orange-800 mb-2 flex items-center gap-1.5 text-sm sm:text-base">
+                            <i class="fa-solid fa-crosshairs text-orange-600"></i> Focus Words for Next Match:
+                        </h3>
+                        <ul class="list-disc pl-5 text-orange-700 font-bold text-xs sm:text-sm space-y-1">
+                            ${uniqErrors.map(w => `<li>${w}</li>`).join('')}
+                        </ul>
+                       </div>`
+                    : `<div class="mt-4 text-center bg-teal-50 p-5 rounded-2xl w-full max-w-md border-2 border-teal-200">
+                        <p class="font-black text-teal-800 text-base sm:text-lg"><i class="fa-solid fa-medal mr-2 text-2xl text-teal-500 animate-bounce"></i>Flawless Run!</p>
+                        <p class="text-teal-600 text-xs font-semibold mt-1">You conquered every spelling and sentence puzzle on the first try!</p>
+                       </div>`;
+
+                contentArea.innerHTML = `
+                    <div class="mb-4">
+                        <i class="fa-solid fa-gift text-7xl text-yellow-500 drop-shadow-xl animate-pulse"></i>
+                    </div>
+                    <h2 class="text-3xl sm:text-4xl header-font text-slate-800 mb-1">Quest Completed!</h2>
+                    <p class="text-slate-500 text-base font-bold mb-4">Total Accumulated Score: <strong class="text-yellow-500 text-2xl sm:text-3xl">${state.xp}</strong> XP</p>
+                    ${focusWordsHtml}
+                `;
+                
+                controls.innerHTML = `
+                    <button onclick="resetGame()" class="px-4 py-2 bg-slate-200 text-slate-600 rounded-xl hover:bg-slate-300 font-bold transition-all"><i class="fa-solid fa-rotate-left mr-1"></i> Restart All</button>
+                    <button onclick="restartBatch()" class="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-black shadow-lg hover:shadow-indigo-500/20 active:scale-95 transition-all">
+                        Study Next Block <i class="fa-solid fa-forward ml-1"></i>
+                    </button>
+                `;
+            }
+        }
+
+        function prevCard() {
+            if (state.currentIndex > state.testStartIndex) {
+                state.currentIndex--;
+                render();
+            }
+        }
+
+        function nextCard() {
+            state.currentIndex++;
+            if (state.currentIndex === state.testEndIndex) {
+                state.phase = 'milestone';
+            } else if (state.currentIndex === vocabulary.length) {
+                state.phase = 'report';
+            }
+            render();
+        }
+
+        function startListeningQuiz() {
+            state.phase = 'listening';
+            state.currentTestIndex = state.testStartIndex;
+            state.listeningScore = 0;
+            render();
+        }
+
+        function playSlowSpeech(word) {
+            if (state.xp >= 5) {
+                state.xp -= 5;
+                xpText.innerText = state.xp;
+                localStorage.setItem('vocabquest_xp', state.xp);
+                showToast("Deducted 5 XP for slow rate audio", "info");
+                AudioFX.play('purchase');
+                
+                if ('speechSynthesis' in window) {
+                    window.speechSynthesis.cancel();
+                    currentUtterance = new SpeechSynthesisUtterance(word);
+                    const voice = getHumanVoice();
+                    if (voice) currentUtterance.voice = voice;
+                    currentUtterance.lang = 'en-US';
+                    currentUtterance.rate = 0.25; // Super slow turtle mode
+                    window.speechSynthesis.speak(currentUtterance);
+                }
+            } else {
+                showToast("Insufficient XP! Earn more points by spelling words.", "error");
+            }
+        }
+
+        function buyFirstLetterClue() {
+            if (state.clueUsed) {
+                showToast("First letter hint already revealed!", "info");
+                return;
+            }
+            if (state.xp >= 10) {
+                state.xp -= 10;
+                xpText.innerText = state.xp;
+                localStorage.setItem('vocabquest_xp', state.xp);
+                state.clueUsed = true;
+                AudioFX.play('purchase');
+
+                const wordObj = vocabulary[state.currentTestIndex];
+                const display = document.getElementById('hint-display');
+                display.classList.remove('hidden');
+                display.innerHTML = `💡 The word starts with: <strong class="text-lg text-indigo-800 uppercase">${wordObj.word.charAt(0)}</strong> (Word length: ${wordObj.word.length} letters)`;
+                
+                showToast("Deducted 10 XP", "success");
+            } else {
+                showToast("Not enough XP! Requires 10 XP.", "error");
+            }
+        }
+
+        // Action key trigger to reveal scrambled anagrams
+        function buyScrambledClue() {
+            if (state.scrambledHintUsed) {
+                showToast("Scramble hint already revealed!", "info");
+                return;
+            }
+            if (state.xp >= 15) {
+                state.xp -= 15;
+                xpText.innerText = state.xp;
+                localStorage.setItem('vocabquest_xp', state.xp);
+                state.scrambledHintUsed = true;
+                AudioFX.play('purchase');
+
+                const wordObj = vocabulary[state.currentTestIndex];
+                // Scramble algorithm
+                const arr = wordObj.word.split('');
+                for (let i = arr.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [arr[i], arr[j]] = [arr[j], arr[i]];
+                }
+                const scrambled = arr.join(' ');
+                
+                const display = document.getElementById('hint-display');
+                display.classList.remove('hidden');
+                display.innerHTML = `💡 Scrambled Anagram Hint: <strong class="text-sm tracking-widest text-indigo-800 uppercase">${scrambled}</strong>`;
+                
+                showToast("Deducted 15 XP", "success");
+            } else {
+                showToast("Not enough XP! Requires 15 XP.", "error");
+            }
+        }
+
+        function revealContextClue() {
+            if (state.clueUsed) {
+                showToast("Clue is already revealed below!", "info");
+                return;
+            }
+            if (state.xp >= 5) {
+                state.xp -= 5;
+                xpText.innerText = state.xp;
+                localStorage.setItem('vocabquest_xp', state.xp);
+                state.clueUsed = true;
+                AudioFX.play('purchase');
+
+                const analysisBox = document.getElementById('dev-analysis');
+                const analysisText = document.getElementById('analysis-text');
+                analysisBox.classList.remove('hidden');
+                analysisText.innerHTML = `Analysis context clue: <strong class="text-violet-700">"${state.currentSentenceObj.clue}"</strong>`;
+                
+                showToast("Deducted 5 XP", "success");
+            } else {
+                showToast("Not enough XP! Requires 5 XP.", "error");
+            }
+        }
+
+        function checkListening() {
+            const btn = document.getElementById('listening-submit-btn');
+            if (btn.disabled) return;
+
+            const input = document.getElementById('spell-input');
+            const feedback = document.getElementById('feedback-msg');
+            const wordObj = vocabulary[state.currentTestIndex];
+
+            const isStrict = document.getElementById('strict-match-toggle').checked;
+            
+            let userVal = input.value;
+            let targetVal = wordObj.word;
+
+            if (!isStrict) {
+                userVal = userVal.trim().toLowerCase();
+                targetVal = targetVal.trim().toLowerCase();
+            }
+
+            btn.disabled = true;
+
+            if (userVal === targetVal) {
+                state.listeningScore++;
+                input.classList.add('border-green-500', 'bg-green-50', 'text-green-700');
+                feedback.innerHTML = `<span class="text-green-600"><i class="fa-solid fa-circle-check mr-1 animate-ping"></i> Perfect Alignment!</span>`;
+                handleAnswer(true);
+                AudioFX.play('correct');
+                playFeedbackAudio('correct');
+            } else {
+                state.errors.push(wordObj.word);
+                input.classList.add('border-rose-500', 'bg-rose-50', 'text-rose-700', 'shake');
+                feedback.innerHTML = `<span class="text-rose-600"><i class="fa-solid fa-circle-xmark mr-1"></i> Exact Word: <strong class="underline">${wordObj.word}</strong></span>`;
+                handleAnswer(false);
+                AudioFX.play('wrong');
+                playFeedbackAudio('wrong');
+            }
+
+            setTimeout(() => {
+                state.currentTestIndex++;
+                if (state.currentTestIndex < state.testEndIndex) {
+                    render();
+                } else {
+                    state.phase = 'listening-result';
+                    render();
+                }
+            }, 1800);
+        }
+
+        function retryFlashcards() {
+            state.phase = 'flashcard';
+            state.currentIndex = state.testStartIndex;
+            render();
+        }
+
+        function startGapFill() {
+            state.phase = 'gapfill';
+            state.currentTestIndex = state.testStartIndex;
+            setRandomSentence();
+            render();
+        }
+
+        function checkGapFill() {
+            const input = document.getElementById('gap-input');
+            const analysisBox = document.getElementById('dev-analysis');
+            const analysisText = document.getElementById('analysis-text');
+            const btn = document.getElementById('gap-submit-btn');
+            const wordObj = vocabulary[state.currentTestIndex];
+
+            if (state.gapFillAnswered) {
+                state.currentTestIndex++;
+                if (state.currentTestIndex < state.testEndIndex) {
+                    setRandomSentence();
+                    render();
+                } else {
+                    advanceBatch();
+                }
+                return;
+            }
+
+            const isStrict = document.getElementById('strict-match-toggle').checked;
+            
+            let userVal = input.value;
+            let targetVal = wordObj.word;
+
+            if (!isStrict) {
+                userVal = userVal.trim().toLowerCase();
+                targetVal = targetVal.trim().toLowerCase();
+            }
+
+            if (userVal === targetVal) {
+                state.gapFillAnswered = true;
+                input.disabled = true;
+                input.classList.replace('border-violet-500', 'border-green-500');
+                input.classList.replace('text-violet-800', 'text-green-700');
+                
+                btn.innerHTML = `Nailed it! <i class="fa-solid fa-face-smile-beam ml-1.5"></i>`;
+                btn.className = "px-6 py-3 bg-green-500 text-white rounded-xl font-black shadow-md transition-all active:scale-95";
+                
+                handleAnswer(true);
+                AudioFX.play('correct');
+                playFeedbackAudio('correct');
+
+                setTimeout(() => {
+                    state.currentTestIndex++;
+                    if (state.currentTestIndex < state.testEndIndex) {
+                        setRandomSentence();
+                        render();
+                    } else {
+                        advanceBatch();
+                    }
+                }, 1600);
+            } else {
+                state.gapFillAnswered = true;
+                input.disabled = true;
+                state.errors.push(wordObj.word);
+                
+                input.classList.add('shake');
+                analysisBox.classList.remove('hidden');
+                
+                handleAnswer(false);
+                AudioFX.play('wrong');
+                playFeedbackAudio('wrong');
+
+                analysisText.innerHTML = `Clue analysis point: <strong>"${state.currentSentenceObj.clue}"</strong>.<br>The correct term is: <strong class="text-rose-600 select-all">${wordObj.word}</strong>.`;
+                
+                input.value = wordObj.word;
+                input.classList.replace('border-violet-500', 'border-rose-500');
+                input.classList.replace('text-violet-800', 'text-rose-700');
+
+                btn.innerHTML = `Continue <i class="fa-solid fa-chevron-right ml-1.5"></i>`;
+                btn.className = "px-6 py-3 bg-slate-800 text-white rounded-xl hover:bg-slate-900 font-extrabold shadow-md transition-all active:scale-95";
+            }
+        }
+
+        function toggleConfigTab() {
+            const panel = document.getElementById('config-tab');
+            panel.classList.toggle('hidden');
+            if (!panel.classList.contains('hidden')) {
+                renderWordChips();
+            }
+        }
+
+        function renderWordChips() {
+            const container = document.getElementById('word-chips-container');
+            const countEl = document.getElementById('database-count');
+            countEl.innerText = vocabulary.length;
+
+            if (vocabulary.length === 0) {
+                container.innerHTML = `<p class="text-xs text-slate-400 italic p-3 w-full text-center">No words in current database stack.</p>`;
+                return;
+            }
+
+            container.innerHTML = vocabulary.map((vocab, index) => {
+                return `
+                    <div class="inline-flex items-center gap-1.5 bg-slate-100 hover:bg-slate-200 border border-slate-200 rounded-full px-3 py-1.5 text-xs font-semibold text-slate-700 transition-all">
+                        <span class="font-black text-slate-800">${vocab.word}</span>
+                        <span class="text-slate-400">(${vocab.meaning})</span>
+                        <button type="button" onclick="deleteWord(${index})" class="text-slate-400 hover:text-rose-600 transition-colors p-0.5">
+                            <i class="fa-solid fa-times-circle text-sm"></i>
+                        </button>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function deleteWord(index) {
+            const deletedWord = vocabulary[index].word;
+            vocabulary.splice(index, 1);
+            localStorage.setItem('vocabquest_db', JSON.stringify(vocabulary));
+            renderWordChips();
+            showToast(`Deleted "${deletedWord}" from database.`, "error");
+            
+            // Re-align milestones indices safely
+            state.testEndIndex = Math.min(vocabulary.length, 5);
+            state.testStartIndex = 0;
+            state.currentIndex = 0;
+            render();
+        }
+
+        function addNewWord(event) {
+            event.preventDefault();
+            
+            const word = document.getElementById('new-word').value.trim();
+            const syllables = document.getElementById('new-syllables').value.trim();
+            const meaning = document.getElementById('new-meaning').value.trim();
+            
+            const text1 = document.getElementById('new-sentence-1').value.trim();
+            const clue1 = document.getElementById('new-clue-1').value.trim();
+            
+            const text2 = document.getElementById('new-sentence-2').value.trim();
+            const clue2 = document.getElementById('new-clue-2').value.trim();
+
+            if (!text1.includes('_____') || !text2.includes('_____')) {
+                showToast("Practice sentences must contain the blank placeholder '_____'", "error");
+                return;
+            }
+
+            const newEntry = {
+                word: word,
+                syllables: syllables,
+                meaning: meaning,
+                sentences: [
+                    { text: text1, clue: clue1 },
+                    { text: text2, clue: clue2 }
+                ]
+            };
+
+            vocabulary.push(newEntry);
+            localStorage.setItem('vocabquest_db', JSON.stringify(vocabulary));
+            
+            // Reset form fields
+            document.getElementById('add-word-form').reset();
+            
+            renderWordChips();
+            showToast(`Successfully added word "${word}"!`, "success");
+            
+            // Adjust batch size dynamically
+            state.testEndIndex = Math.min(vocabulary.length, state.testStartIndex + 5);
+            render();
+        }
+
+        function resetToDefaults() {
+            vocabulary = [...defaultVocabulary];
+            localStorage.setItem('vocabquest_db', JSON.stringify(vocabulary));
+            renderWordChips();
+            
+            state.currentIndex = 0;
+            state.testStartIndex = 0;
+            state.testEndIndex = Math.min(vocabulary.length, 5);
+            state.phase = 'flashcard';
+            
+            showToast("Restored all vocabulary default settings.", "success");
+            render();
+        }
+
+        function resetGame() {
+            state.currentIndex = 0;
+            state.testStartIndex = 0;
+            state.testEndIndex = Math.min(vocabulary.length, 5);
+            state.errors = [];
+            state.phase = 'flashcard';
+            render();
+        }
+
+        function restartBatch() {
+            if (state.testEndIndex < vocabulary.length) {
+                advanceBatch();
+            } else {
+                resetGame();
+            }
+        }
+
+        // Initialize HUD stats
+        xpText.innerText = state.xp;
+        updateRank();
+
+        // Start animation loop on window load
+        window.onload = function () {
+            render();
+        }
+    </script>
+</body>
+</html>
