@@ -1,0 +1,1561 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vocab Master - Sec 1 Unit 2: No Place like School</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- Canvas Confetti -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Nunito:wght@400;600;700;800;900&display=swap');
+
+    body {
+      font-family: 'Nunito', sans-serif;
+      background: radial-gradient(circle at top left, #e0f2fe 0%, #f0f9ff 50%, #e0e7ff 100%);
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    .font-display {
+      font-family: 'Fredoka', sans-serif;
+    }
+
+    /* Syllable Colors */
+    .syl-0 { color: #2563eb; } /* Royal Blue */
+    .syl-1 { color: #d97706; } /* Warm Amber */
+    .syl-2 { color: #059669; } /* Emerald Green */
+    .syl-3 { color: #dc2626; } /* Crimson Red */
+    .syl-4 { color: #7c3aed; } /* Purple */
+    .syl-5 { color: #db2777; } /* Pink */
+
+    .custom-shadow {
+      box-shadow: 0 15px 30px -5px rgba(14, 165, 233, 0.2), 0 10px 15px -6px rgba(99, 102, 241, 0.15);
+    }
+
+    .tile-btn {
+      transition: transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.15s ease;
+    }
+    .tile-btn:active {
+      transform: scale(0.92);
+    }
+
+    /* Floating XP animation */
+    @keyframes floatUp {
+      0% { opacity: 1; transform: translateY(0) scale(0.8); }
+      50% { opacity: 1; transform: translateY(-30px) scale(1.2); }
+      100% { opacity: 0; transform: translateY(-60px) scale(1); }
+    }
+    .animate-float-xp {
+      animation: floatUp 1.2s ease-out forwards;
+    }
+
+    /* Streak pulse animation */
+    @keyframes pulseGlow {
+      0%, 100% { transform: scale(1); filter: drop-shadow(0 0 4px rgba(245, 158, 11, 0.6)); }
+      50% { transform: scale(1.1); filter: drop-shadow(0 0 12px rgba(239, 68, 68, 0.8)); }
+    }
+    .streak-pulse {
+      animation: pulseGlow 1.5s infinite;
+    }
+
+    /* Scrollbar Styling */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #f1f5f9;
+      border-radius: 8px;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #38bdf8;
+      border-radius: 8px;
+    }
+  </style>
+</head>
+<body class="min-h-screen text-slate-800 flex flex-col justify-between relative overflow-x-hidden">
+
+  <!-- Header / Navigation & Gamification Dashboard -->
+  <header class="bg-white/90 backdrop-blur-md border-b border-sky-100 sticky top-0 z-40 px-4 py-2.5 shadow-sm">
+    <div class="max-w-5xl mx-auto flex flex-col gap-2.5">
+      
+      <!-- Top Row: App Title & Gamification Stats (XP, Streak, Level, Sound, Trophies) -->
+      <div class="flex items-center justify-between gap-2">
+        <div class="flex items-center gap-2.5">
+          <div class="bg-gradient-to-tr from-amber-400 via-sky-500 to-indigo-600 p-2 rounded-2xl text-white shadow-md shadow-sky-200">
+            <i data-lucide="graduation-cap" class="w-6 h-6 sm:w-7 sm:h-7"></i>
+          </div>
+          <div>
+            <h1 class="font-display text-lg sm:text-2xl font-bold bg-gradient-to-r from-sky-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent">
+              Vocab Master
+            </h1>
+            <p class="text-[10px] sm:text-xs text-slate-500 font-semibold hidden sm:block">Secondary 1 • Unit 2: No Place like School</p>
+          </div>
+        </div>
+
+        <!-- Gamification Dashboard Badges -->
+        <div class="flex items-center gap-2">
+          <!-- Rank Badge -->
+          <div class="bg-gradient-to-r from-indigo-50 to-purple-50 border border-indigo-100 px-2.5 py-1 rounded-xl flex items-center gap-1.5 shadow-sm">
+            <span id="user-rank-emoji" class="text-base sm:text-lg">🐣</span>
+            <span id="user-rank-title" class="text-xs font-black text-indigo-700 hidden md:inline-block">Novice Learner</span>
+          </div>
+
+          <!-- XP Points Counter -->
+          <div class="bg-amber-50 border border-amber-200/80 px-2.5 py-1 rounded-xl flex items-center gap-1 shadow-sm">
+            <span class="text-amber-500 text-sm sm:text-base">⭐</span>
+            <span id="user-xp-text" class="font-black text-xs sm:text-sm text-amber-700">0 XP</span>
+          </div>
+
+          <!-- Streak Badge -->
+          <div id="streak-badge" class="bg-orange-50 border border-orange-200/80 px-2 py-1 rounded-xl flex items-center gap-1 shadow-sm">
+            <span class="text-xs sm:text-sm streak-pulse">🔥</span>
+            <span id="user-streak-text" class="font-black text-xs sm:text-sm text-orange-600">0</span>
+          </div>
+
+          <!-- Trophy Showcase Modal Button -->
+          <button onclick="toggleTrophyModal()" class="p-2 bg-gradient-to-tr from-amber-400 to-yellow-500 hover:from-amber-500 hover:to-yellow-600 text-white rounded-xl shadow-md transition active:scale-95" title="View Badges & Trophies">
+            <i data-lucide="trophy" class="w-4 h-4 sm:w-5 sm:h-5"></i>
+          </button>
+
+          <!-- Sound SFX Toggle -->
+          <button id="sfx-toggle-btn" onclick="toggleSoundSFX()" class="p-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl transition active:scale-95" title="Toggle Sound SFX">
+            <i data-lucide="volume-2" class="w-4 h-4 sm:w-5 sm:h-5"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Bottom Row: Main Navigation Tabs -->
+      <nav class="flex bg-slate-100/90 p-1 rounded-xl gap-1 w-full overflow-x-auto justify-center">
+        <button id="nav-flashcards" onclick="switchMainTab('flashcard')" class="px-3 py-1.5 rounded-lg font-bold text-xs sm:text-sm flex items-center gap-1.5 transition bg-white text-sky-600 shadow-sm shrink-0">
+          <i data-lucide="book-open" class="w-4 h-4"></i>
+          <span>Cards</span>
+        </button>
+        <button id="nav-game-syllable" onclick="switchMainTab('game-syllable')" class="px-3 py-1.5 rounded-lg font-bold text-xs sm:text-sm flex items-center gap-1.5 transition text-slate-600 hover:text-sky-600 shrink-0">
+          <i data-lucide="puzzle" class="w-4 h-4"></i>
+          <span>Syllables</span>
+        </button>
+        <button id="nav-game-spelling" onclick="switchMainTab('game-spelling')" class="px-3 py-1.5 rounded-lg font-bold text-xs sm:text-sm flex items-center gap-1.5 transition text-slate-600 hover:text-sky-600 shrink-0">
+          <i data-lucide="headphones" class="w-4 h-4"></i>
+          <span>Audio Spelling</span>
+        </button>
+        <button id="nav-game-cloze" onclick="switchMainTab('game-cloze')" class="px-3 py-1.5 rounded-lg font-bold text-xs sm:text-sm flex items-center gap-1.5 transition text-slate-600 hover:text-sky-600 shrink-0">
+          <i data-lucide="file-text" class="w-4 h-4"></i>
+          <span>Cloze Game</span>
+        </button>
+      </nav>
+
+    </div>
+  </header>
+
+  <!-- Main Content Container -->
+  <main class="max-w-5xl mx-auto w-full px-4 py-6 flex-1 flex flex-col justify-center">
+
+    <!-- FLASHCARD VIEW -->
+    <section id="view-flashcard" class="space-y-6">
+      <!-- Main Flashcard Container -->
+      <div class="bg-white/95 rounded-3xl p-6 sm:p-10 border border-sky-100 custom-shadow flex flex-col items-center relative overflow-hidden">
+        
+        <!-- Category Badge & Progress -->
+        <div class="w-full flex items-center justify-between mb-4">
+          <span id="card-category" class="px-3 py-1 bg-sky-100 text-sky-700 font-extrabold text-xs uppercase tracking-wider rounded-full shadow-sm">
+            Places in HK
+          </span>
+          <span id="card-index-indicator" class="text-xs font-bold text-slate-400">
+            Word 1 / 30
+          </span>
+        </div>
+
+        <!-- Target Word with Syllable Coloring -->
+        <div class="text-center my-6">
+          <div id="card-syllables" class="font-display text-4xl sm:text-6xl font-extrabold tracking-normal flex flex-wrap justify-center gap-x-4 gap-y-2">
+            <!-- Dynamically Populated -->
+          </div>
+          
+          <!-- Phonetic / Type Indicator -->
+          <div class="flex justify-center items-center gap-3 mt-3">
+            <span id="card-type" class="text-xs italic text-slate-400 font-semibold">noun</span>
+            <button onclick="speakWord()" class="p-2.5 bg-sky-500 hover:bg-sky-600 active:scale-95 text-white rounded-full transition shadow-md shadow-sky-200 flex items-center justify-center" title="Listen Word Pronunciation">
+              <i data-lucide="volume-2" class="w-6 h-6"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Traditional Chinese Word Translation -->
+        <div class="flex items-center gap-2 bg-indigo-50/80 px-4 py-2 rounded-xl mb-8 border border-indigo-100/50">
+          <span id="card-zh-word" class="font-bold text-lg text-indigo-900">阿伯丁 (香港仔)</span>
+        </div>
+
+        <!-- Sentence Container -->
+        <div class="w-full bg-slate-50/80 border border-slate-200/60 rounded-2xl p-4 sm:p-6 space-y-3">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <span class="text-xs font-extrabold text-slate-400 uppercase tracking-wider">Secondary 1 Context Sentence</span>
+              <button onclick="speakSentence()" class="p-1.5 bg-sky-100 hover:bg-sky-200 text-sky-700 rounded-lg transition active:scale-95 flex items-center gap-1 text-xs font-bold" title="Listen to Full English Sentence">
+                <i data-lucide="volume-2" class="w-4 h-4"></i>
+                <span>Listen Sentence</span>
+              </button>
+            </div>
+            <span class="text-[10px] text-sky-600 bg-sky-50 px-2 py-0.5 rounded font-semibold hidden sm:inline-block">Click word to listen</span>
+          </div>
+
+          <!-- English Sentence (Clickable Words) -->
+          <p id="card-en-sentence" class="text-base sm:text-lg text-slate-700 leading-relaxed font-medium">
+            <!-- Clickable sentence words rendered here -->
+          </p>
+
+          <hr class="border-slate-200/60 my-2">
+
+          <!-- Chinese Sentence Translation -->
+          <div class="flex items-start justify-between gap-2">
+            <p id="card-zh-sentence" class="text-sm text-slate-600 font-normal leading-relaxed">
+              <!-- Chinese translation -->
+            </p>
+          </div>
+        </div>
+
+        <!-- Flashcard Navigation Buttons -->
+        <div class="flex items-center justify-between w-full mt-8 gap-4">
+          <button onclick="prevWord()" class="flex-1 sm:flex-none px-5 py-3 rounded-2xl border border-slate-200 font-bold text-slate-600 hover:bg-slate-50 active:bg-slate-100 transition flex items-center justify-center gap-2 text-sm">
+            <i data-lucide="chevron-left" class="w-5 h-5"></i>
+            <span>Previous Word</span>
+          </button>
+
+          <button onclick="nextWord()" class="flex-1 sm:flex-none px-6 py-3 rounded-2xl bg-sky-500 hover:bg-sky-600 active:scale-95 text-white font-bold transition shadow-md shadow-sky-200 flex items-center justify-center gap-2 text-sm">
+            <span>Next Word</span>
+            <i data-lucide="chevron-right" class="w-5 h-5"></i>
+          </button>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- GAME VIEW -->
+    <section id="view-game" class="hidden space-y-6">
+      
+      <!-- Set Selection Header & Progress Bar -->
+      <div class="bg-white/95 rounded-2xl p-4 border border-sky-100 flex flex-col gap-3">
+        <div class="flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <h2 id="game-title-heading" class="font-display text-lg font-bold text-slate-800">Syllables Game</h2>
+            <p id="game-subtitle-heading" class="text-xs text-slate-500">5 words per set • Assemble syllable blocks correctly</p>
+          </div>
+
+          <!-- Set Selector Buttons -->
+          <div id="set-selector-container" class="flex flex-wrap gap-2">
+            <!-- Dynamically Populated Sets 1 to 6 -->
+          </div>
+        </div>
+
+        <!-- Level Progress Bar -->
+        <div class="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden p-0.5 border border-slate-200/50">
+          <div id="game-progress-bar" class="bg-gradient-to-r from-sky-400 via-indigo-500 to-amber-400 h-full rounded-full transition-all duration-500 w-1/5"></div>
+        </div>
+      </div>
+
+      <!-- Active Game Card Container -->
+      <div id="game-card" class="bg-white/95 rounded-3xl p-6 sm:p-10 border border-sky-100 custom-shadow min-h-[440px] flex flex-col justify-between relative overflow-hidden">
+        
+        <!-- Floating XP Popup Container -->
+        <div id="floating-xp-container" class="absolute inset-0 pointer-events-none z-30 flex items-center justify-center"></div>
+
+        <!-- Game Top Status Bar -->
+        <div class="flex items-center justify-between border-b border-slate-100 pb-4 gap-3">
+          <div class="flex items-center gap-2">
+            <span id="game-set-badge" class="px-3 py-1 bg-indigo-100 text-indigo-700 font-bold text-xs rounded-full">
+              Set 1
+            </span>
+            <span id="game-progress-text" class="text-xs font-bold text-slate-500">
+              Word 1 of 5
+            </span>
+          </div>
+
+          <span id="game-type-indicator" class="text-xs font-extrabold text-sky-600 bg-sky-50 px-3 py-1 rounded-full uppercase tracking-wider">
+            Syllables Mode
+          </span>
+        </div>
+
+        <!-- Clue / Audio Player Section -->
+        <div class="text-center my-4 space-y-3">
+          <!-- Chinese Meaning Display (Hidden in Cloze & Syllable modes) -->
+          <div id="game-clue-zh-container" class="flex items-center justify-center gap-2">
+            <h3 id="game-clue-zh" class="font-bold text-2xl text-slate-800">--</h3>
+          </div>
+
+          <!-- Syllable Audio Trigger Button -->
+          <div id="syllable-audio-controls" class="hidden flex justify-center py-2">
+            <button onclick="speakGameTargetWord()" class="px-6 py-3 bg-gradient-to-r from-sky-500 to-indigo-600 hover:from-sky-600 hover:to-indigo-700 text-white rounded-2xl shadow-lg font-extrabold text-base flex items-center gap-2 transition active:scale-95">
+              <i data-lucide="volume-2" class="w-6 h-6"></i>
+              <span>Listen Word Pronunciation</span>
+            </button>
+          </div>
+
+          <!-- Spelling Audio Trigger Button (visible specifically for Audio Spelling mode) -->
+          <div id="audio-spelling-controls" class="hidden flex flex-col items-center gap-2 py-2">
+            <button onclick="speakGameTargetWord()" class="px-6 py-3 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white rounded-2xl shadow-lg font-extrabold text-base flex items-center gap-2 transition active:scale-95">
+              <i data-lucide="volume-2" class="w-6 h-6"></i>
+              <span>Listen Word Pronunciation</span>
+            </button>
+            <p class="text-xs text-amber-700 font-semibold">Listen closely to the audio and select letter tiles to spell the word!</p>
+          </div>
+
+          <!-- Sentence Clue / Cloze Display -->
+          <p id="game-clue-sentence" class="text-base sm:text-lg text-slate-700 font-medium max-w-xl mx-auto leading-relaxed">
+            "Sentence clue appears here..."
+          </p>
+        </div>
+
+        <!-- Answer Slots / Option Selector Box -->
+        <div class="my-4">
+          <div id="answer-slots" class="min-h-[68px] p-3 bg-slate-50/90 border-2 border-dashed border-sky-200 rounded-2xl flex flex-wrap items-center justify-center gap-3 transition-all">
+            <!-- Tiles placed by user appear here -->
+          </div>
+          <p id="game-hint-text" class="text-center text-xs text-slate-400 mt-2 font-medium">
+            Tap tiles below to build the word
+          </p>
+        </div>
+
+        <!-- Pool of Pickable Tiles / Word Options -->
+        <div class="my-2">
+          <div id="tile-pool" class="flex flex-wrap items-center justify-center gap-2.5 min-h-[60px]">
+            <!-- Clickable source tiles generated here -->
+          </div>
+        </div>
+
+        <!-- Bottom Game Action Buttons -->
+        <div class="flex items-center justify-between mt-6 pt-4 border-t border-slate-100">
+          <button onclick="resetCurrentGameWord()" class="px-4 py-2.5 rounded-xl border border-slate-200 text-slate-600 font-bold text-sm hover:bg-slate-50 transition flex items-center gap-1.5">
+            <i data-lucide="rotate-ccw" class="w-4 h-4"></i>
+            <span>Clear</span>
+          </button>
+
+          <button id="submit-word-btn" onclick="checkGameAnswer()" class="px-8 py-3 rounded-xl bg-gradient-to-r from-sky-500 to-indigo-600 hover:from-sky-600 hover:to-indigo-700 active:scale-95 text-white font-extrabold text-sm transition shadow-md shadow-sky-200 flex items-center gap-2">
+            <span>Check Answer</span>
+            <i data-lucide="check" class="w-4 h-4"></i>
+          </button>
+        </div>
+
+      </div>
+
+      <!-- Set Completion Overlay Modal -->
+      <div id="completion-modal" class="hidden fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl p-8 max-w-md w-full text-center space-y-6 custom-shadow transform transition-all scale-100">
+          <div class="w-20 h-20 bg-amber-100 text-amber-500 rounded-full flex items-center justify-center mx-auto shadow-inner streak-pulse">
+            <i data-lucide="trophy" class="w-10 h-10"></i>
+          </div>
+
+          <div>
+            <h3 class="font-display text-2xl font-bold text-slate-800">Set Completed!</h3>
+            <p class="text-sm text-slate-500 mt-1">Awesome job! You earned bonus XP!</p>
+          </div>
+
+          <div class="bg-slate-50 rounded-2xl p-4 border border-slate-100 flex justify-around">
+            <div>
+              <div class="text-xs text-slate-400 font-bold uppercase">Set Completed</div>
+              <div id="modal-set-name" class="text-lg font-bold text-sky-600">Set 1</div>
+            </div>
+            <div class="border-r border-slate-200"></div>
+            <div>
+              <div class="text-xs text-slate-400 font-bold uppercase">Set Bonus</div>
+              <div class="text-lg font-bold text-amber-500">+100 ⭐ XP</div>
+            </div>
+          </div>
+
+          <div class="flex flex-col gap-3">
+            <button onclick="nextChallengeSet()" class="w-full py-3.5 bg-sky-500 hover:bg-sky-600 text-white rounded-xl font-bold transition shadow-md shadow-sky-200 flex items-center justify-center gap-2">
+              <span>Challenge Next Set</span>
+              <i data-lucide="arrow-right" class="w-4 h-4"></i>
+            </button>
+            <button onclick="repeatCurrentSet()" class="w-full py-3 border border-slate-200 hover:bg-slate-50 text-slate-600 rounded-xl font-bold transition">
+              Revise Set Again
+            </button>
+          </div>
+        </div>
+      </div>
+
+    </section>
+
+  </main>
+
+  <!-- Trophy & Sticker Showcase Modal -->
+  <div id="trophy-modal" class="hidden fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl p-6 sm:p-8 max-w-md w-full space-y-5 custom-shadow max-h-[90vh] overflow-y-auto">
+      <div class="flex items-center justify-between border-b pb-3">
+        <div class="flex items-center gap-2">
+          <span class="text-2xl">🏆</span>
+          <h3 class="font-display text-xl font-bold text-slate-800">Sticker & Trophy Hall</h3>
+        </div>
+        <button onclick="toggleTrophyModal()" class="p-1.5 text-slate-400 hover:text-slate-600 rounded-lg">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <div class="grid grid-cols-2 gap-3" id="badges-grid">
+        <!-- Dynamically rendered badge items -->
+      </div>
+
+      <button onclick="toggleTrophyModal()" class="w-full py-3 bg-slate-100 hover:bg-slate-200 font-bold text-slate-700 rounded-xl transition">
+        Close Showcase
+      </button>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="text-center py-4 text-xs text-slate-400 border-t border-slate-200/50 bg-white/50">
+    Secondary 1 English Vocabulary Practice • Unit 2: No Place like School
+  </footer>
+
+  <!-- DATA & SCRIPT LOGIC -->
+  <script>
+    /* ==========================================================================
+       VOCABULARY LIST: SEC 1 UNIT 2
+       ========================================================================== */
+    const vocabList = [
+      // Category 1: Places in Hong Kong
+      {
+        id: "v1",
+        word: "Aberdeen",
+        category: "Places in HK",
+        type: "noun",
+        syllables: [["Ab", "er", "deen"]],
+        distractorSyllables: ["ton", "val"],
+        distractorLetters: ["x", "m"],
+        zh: "香港仔 (Aberdeen)",
+        sentenceEn: "Aberdeen is famous for its traditional floating seafood restaurants.",
+        sentenceZh: "香港仔以其傳統的海上海鮮酒家而聞名。",
+        simpleCloze: "My family goes to ______ to see the old fishing boats."
+      },
+      {
+        id: "v2",
+        word: "Admiralty",
+        category: "Places in HK",
+        type: "noun",
+        syllables: [["Ad", "mi", "ral", "ty"]],
+        distractorSyllables: ["tion", "ble"],
+        distractorLetters: ["p", "k"],
+        zh: "金鐘 (Admiralty)",
+        sentenceEn: "Many office workers take the MTR to Admiralty every morning.",
+        sentenceZh: "許多上班族每天早晨搭乘地鐵前往金鐘。",
+        simpleCloze: "We take the MTR train to ______ station."
+      },
+      {
+        id: "v3",
+        word: "Causeway Bay",
+        category: "Places in HK",
+        type: "noun",
+        syllables: [["Cause", "way"], ["Bay"]],
+        distractorSyllables: ["ton", "side"],
+        distractorLetters: ["z", "v"],
+        zh: "銅鑼灣 (Causeway Bay)",
+        sentenceEn: "Causeway Bay is one of the busiest shopping districts in Hong Kong.",
+        sentenceZh: "銅鑼灣是香港最繁忙的購物區之一。",
+        simpleCloze: "Many people go shopping for new clothes in ______."
+      },
+      {
+        id: "v4",
+        word: "Central",
+        category: "Places in HK",
+        type: "noun",
+        syllables: [["Cen", "tral"]],
+        distractorSyllables: ["ter", "ment"],
+        distractorLetters: ["u", "w"],
+        zh: "中環 (Central)",
+        sentenceEn: "Central serves as the main business and financial center of Hong Kong.",
+        sentenceZh: "中環是香港主要的商業和金融中心。",
+        simpleCloze: "My father works in a big office in ______."
+      },
+      {
+        id: "v5",
+        word: "Fortress Hill",
+        category: "Places in HK",
+        type: "noun",
+        syllables: [["For", "tress"], ["Hill"]],
+        distractorSyllables: ["wood", "mount"],
+        distractorLetters: ["j", "q"],
+        zh: "炮台山 (Fortress Hill)",
+        sentenceEn: "Our secondary school is located near Fortress Hill MTR station.",
+        sentenceZh: "我們的中學位於炮台山地鐵站附近。",
+        simpleCloze: "Our secondary school is located near ______ station."
+      },
+      {
+        id: "v6",
+        word: "Kennedy Town",
+        category: "Places in HK",
+        type: "noun",
+        syllables: [["Ken", "ne", "dy"], ["Town"]],
+        distractorSyllables: ["port", "ville"],
+        distractorLetters: ["b", "g"],
+        zh: "堅尼地城 (Kennedy Town)",
+        sentenceEn: "We enjoyed watching the sunset near the harbor in Kennedy Town.",
+        sentenceZh: "我們喜歡在堅尼地城的海邊欣賞日落。",
+        simpleCloze: "We walk near the sea in ______ on Sunday."
+      },
+      {
+        id: "v7",
+        word: "Lantau Island",
+        category: "Places in HK",
+        type: "noun",
+        syllables: [["Lan", "tau"], ["Is", "land"]],
+        distractorSyllables: ["land", "sea"],
+        distractorLetters: ["f", "y"],
+        zh: "大嶼山 (Lantau Island)",
+        sentenceEn: "Hong Kong International Airport is built on Lantau Island.",
+        sentenceZh: "香港國際機場興建在大嶼山。",
+        simpleCloze: "The big airport and Disneyland are on ______."
+      },
+      {
+        id: "v8",
+        word: "Mongkok",
+        category: "Places in HK",
+        type: "noun",
+        syllables: [["Mong"], ["kok"]],
+        distractorSyllables: ["kong", "kow"],
+        distractorLetters: ["h", "x"],
+        zh: "旺角 (Mongkok)",
+        sentenceEn: "Mongkok is famous for its vibrant night markets and snack shops.",
+        sentenceZh: "旺角以其熱鬧的夜市和小食店而聞名。",
+        simpleCloze: "We buy cheap toys and snacks in ______."
+      },
+      {
+        id: "v9",
+        word: "Quarry Bay",
+        category: "Places in HK",
+        type: "noun",
+        syllables: [["Quar", "ry"], ["Bay"]],
+        distractorSyllables: ["ter", "ford"],
+        distractorLetters: ["c", "p"],
+        zh: "鰂魚涌 (Quarry Bay)",
+        sentenceEn: "Quarry Bay has many modern office buildings and cozy cafes.",
+        sentenceZh: "鰂魚涌有許多現代化的辦公大樓和舒適的咖啡館。",
+        simpleCloze: "My friend lives in a high building in ______."
+      },
+      {
+        id: "v10",
+        word: "Tsim Sha Tsui",
+        category: "Places in HK",
+        type: "noun",
+        syllables: [["Tsim"], ["Sha"], ["Tsui"]],
+        distractorSyllables: ["choi", "wan"],
+        distractorLetters: ["m", "k"],
+        zh: "尖沙咀 (Tsim Sha Tsui)",
+        sentenceEn: "Tourists love walking along the Tsim Sha Tsui promenade to view Victoria Harbour.",
+        sentenceZh: "遊客喜歡沿著尖沙咀海濱長廊散步，觀賞維多利亞港的景色。",
+        simpleCloze: "We watch the beautiful sea view from ______."
+      },
+
+      // Category 2: School Facilities
+      {
+        id: "v11",
+        word: "assembly hall",
+        category: "School Facilities",
+        type: "noun",
+        syllables: [["as", "sem", "bly"], ["hall"]],
+        distractorSyllables: ["room", "den"],
+        distractorLetters: ["e", "v"],
+        zh: "禮堂 (assembly hall)",
+        sentenceEn: "All students gathered in the assembly hall for the morning principal talk.",
+        sentenceZh: "全體學生聚集在禮堂聆聽早會校長講話。",
+        simpleCloze: "All students meet in the ______ for morning assembly."
+      },
+      {
+        id: "v12",
+        word: "basketball court",
+        category: "School Facilities",
+        type: "noun",
+        syllables: [["bas", "ket", "ball"], ["court"]],
+        distractorSyllables: ["field", "ground"],
+        distractorLetters: ["i", "w"],
+        zh: "籃球場 (basketball court)",
+        sentenceEn: "Our classmates play matches on the basketball court during recess.",
+        sentenceZh: "我們的同學在小息時間於籃球場打比賽。",
+        simpleCloze: "We play ball with friends on the ______."
+      },
+      {
+        id: "v13",
+        word: "cookery room",
+        category: "School Facilities",
+        type: "noun",
+        syllables: [["cook", "er", "y"], ["room"]],
+        distractorSyllables: ["lab", "house"],
+        distractorLetters: ["z", "q"],
+        zh: "烹飪室 (cookery room)",
+        sentenceEn: "We learned how to bake delicious cookies in the cookery room.",
+        sentenceZh: "我們在烹飪室學習了如何烘焙美味的曲奇餅。",
+        simpleCloze: "We bake cakes and make tea in the ______."
+      },
+      {
+        id: "v14",
+        word: "dormitories",
+        category: "School Facilities",
+        type: "noun",
+        syllables: [["dor", "mi", "to", "ries"]],
+        distractorSyllables: ["tions", "ments"],
+        distractorLetters: ["j", "u"],
+        zh: "宿舍 (dormitories)",
+        sentenceEn: "Boarding students live comfortably in the school dormitories.",
+        sentenceZh: "寄宿生舒適地生活在學校宿舍裡。",
+        simpleCloze: "Some students live and sleep in the school ______."
+      },
+      {
+        id: "v15",
+        word: "general office",
+        category: "School Facilities",
+        type: "noun",
+        syllables: [["gen", "er", "al"], ["of", "fice"]],
+        distractorSyllables: ["desk", "center"],
+        distractorLetters: ["x", "b"],
+        zh: "校務處 (general office)",
+        sentenceEn: "If you feel unwell, please report to the general office immediately.",
+        sentenceZh: "如果你感到身體不適，請立即前往校務處報告。",
+        simpleCloze: "Ask the clerk in the ______ when you need help."
+      },
+      {
+        id: "v16",
+        word: "science laboratory",
+        category: "School Facilities",
+        type: "noun",
+        syllables: [["sci", "ence"], ["lab", "o", "ra", "to", "ry"]],
+        distractorSyllables: ["room", "base"],
+        distractorLetters: ["p", "g"],
+        zh: "科學實驗室 (science laboratory)",
+        sentenceEn: "Students must wear safety goggles inside the science laboratory.",
+        sentenceZh: "學生在科學實驗室內必須佩戴安全護目鏡。",
+        simpleCloze: "We do fun science experiments in the ______."
+      },
+      {
+        id: "v17",
+        word: "tuck shop",
+        category: "School Facilities",
+        type: "noun",
+        syllables: [["tuck"], ["shop"]],
+        distractorSyllables: ["store", "bar"],
+        distractorLetters: ["d", "n"],
+        zh: "小食部 (tuck shop)",
+        sentenceEn: "I bought a snack and a juice box from the school tuck shop.",
+        sentenceZh: "我在學校小食部買了小食和一盒果汁。",
+        simpleCloze: "I buy juice and snacks from the school ______."
+      },
+      {
+        id: "v18",
+        word: "vending machine",
+        category: "School Facilities",
+        type: "noun",
+        syllables: [["vend", "ing"], ["ma", "chine"]],
+        distractorSyllables: ["box", "stand"],
+        distractorLetters: ["y", "l"],
+        zh: "自動售賣機 (vending machine)",
+        sentenceEn: "You can buy cold drinks from the vending machine near the gym.",
+        sentenceZh: "你可以從體育館附近的自動售賣機購買冷飲。",
+        simpleCloze: "Get a cold drink from the ______ in the hallway."
+      },
+
+      // Category 3: Clubs, Societies & Subjects
+      {
+        id: "v19",
+        word: "Astronomy Club",
+        category: "Clubs & Subjects",
+        type: "noun",
+        syllables: [["As", "tron", "o", "my"], ["Club"]],
+        distractorSyllables: ["star", "group"],
+        distractorLetters: ["k", "f"],
+        zh: "天文学會 (Astronomy Club)",
+        sentenceEn: "Members of the Astronomy Club observe stars using telescopes at night.",
+        sentenceZh: "天文学會的會員在晚上使用望遠鏡觀測星星。",
+        simpleCloze: "Join the ______ if you want to look at stars."
+      },
+      {
+        id: "v20",
+        word: "Cheerleading Club",
+        category: "Clubs & Subjects",
+        type: "noun",
+        syllables: [["Cheer", "lead", "ing"], ["Club"]],
+        distractorSyllables: ["team", "squad"],
+        distractorLetters: ["v", "w"],
+        zh: "啦啦隊 (Cheerleading Club)",
+        sentenceEn: "The Cheerleading Club performed an energetic dance on Sports Day.",
+        sentenceZh: "啦啦隊在陸運會上表演了活力四射的舞蹈。",
+        simpleCloze: "The ______ dances to cheer for our sports team."
+      },
+      {
+        id: "v21",
+        word: "Debating Society",
+        category: "Clubs & Subjects",
+        type: "noun",
+        syllables: [["De", "bat", "ing"], ["So", "ci", "e", "ty"]],
+        distractorSyllables: ["club", "group"],
+        distractorLetters: ["z", "q"],
+        zh: "辯論學會 (Debating Society)",
+        sentenceEn: "Joining the Debating Society improves public speaking and critical thinking.",
+        sentenceZh: "加入辯論學會能提升公開演講與批判性思考能力。",
+        simpleCloze: "Students practice talking and sharing ideas in the ______."
+      },
+      {
+        id: "v22",
+        word: "Environment Club",
+        category: "Clubs & Subjects",
+        type: "noun",
+        syllables: [["En", "vi", "ron", "ment"], ["Club"]],
+        distractorSyllables: ["eco", "green"],
+        distractorLetters: ["x", "j"],
+        zh: "環保學會 (Environment Club)",
+        sentenceEn: "The Environment Club organizes recycling programs every Friday.",
+        sentenceZh: "環保學會每個星期五都會舉辦回收活動。",
+        simpleCloze: "The ______ recycles plastic and paper to help Earth."
+      },
+      {
+        id: "v23",
+        word: "Mathematics",
+        category: "Clubs & Subjects",
+        type: "noun",
+        syllables: [["Math", "e", "mat", "ics"]],
+        distractorSyllables: ["tion", "ology"],
+        distractorLetters: ["p", "c"],
+        zh: "數學科 (Mathematics)",
+        sentenceEn: "Mathematics teaches us logical problem-solving skills.",
+        sentenceZh: "數學科教導我們邏輯解題技巧。",
+        simpleCloze: "We count numbers and do sums in ______ lesson."
+      },
+      {
+        id: "v24",
+        word: "Photography Club",
+        category: "Clubs & Subjects",
+        type: "noun",
+        syllables: [["Pho", "tog", "ra", "phy"], ["Club"]],
+        distractorSyllables: ["pic", "snap"],
+        distractorLetters: ["u", "g"],
+        zh: "攝影學會 (Photography Club)",
+        sentenceEn: "The Photography Club captured beautiful memories during school events.",
+        sentenceZh: "攝影學會記錄了校園活動中的美好回憶。",
+        simpleCloze: "Members of the ______ take photos with a camera."
+      },
+      {
+        id: "v25",
+        word: "Physical Education",
+        category: "Clubs & Subjects",
+        type: "noun",
+        syllables: [["Phys", "i", "cal"], ["Ed", "u", "ca", "tion"]],
+        distractorSyllables: ["sport", "gym"],
+        distractorLetters: ["k", "b"],
+        zh: "體育科 (Physical Education)",
+        sentenceEn: "We wear our sports uniforms on days with Physical Education lessons.",
+        sentenceZh: "上體育課的日子我們穿著運動服。",
+        simpleCloze: "We run and play games in ______ class."
+      },
+      {
+        id: "v26",
+        word: "School Choir",
+        category: "Clubs & Subjects",
+        type: "noun",
+        syllables: [["School"], ["Choir"]],
+        distractorSyllables: ["sing", "band"],
+        distractorLetters: ["m", "y"],
+        zh: "校園合唱團 (School Choir)",
+        sentenceEn: "The School Choir won first place in the inter-school music competition.",
+        sentenceZh: "校園合唱團校際音樂比賽中榮獲第一名。",
+        simpleCloze: "Students sing happy songs together in the ______."
+      },
+      {
+        id: "v27",
+        word: "School Orchestra",
+        category: "Clubs & Subjects",
+        type: "noun",
+        syllables: [["School"], ["Or", "ches", "tra"]],
+        distractorSyllables: ["group", "band"],
+        distractorLetters: ["x", "f"],
+        zh: "校園管弦樂團 (School Orchestra)",
+        sentenceEn: "Violinists in the School Orchestra practice every Thursday afternoon.",
+        sentenceZh: "校園管弦樂團的小提琴手逢星期四下午進行練習。",
+        simpleCloze: "Students play the violin and flute in the ______."
+      },
+      {
+        id: "v28",
+        word: "Social Services Club",
+        category: "Clubs & Subjects",
+        type: "noun",
+        syllables: [["So", "cial"], ["Ser", "vices"], ["Club"]],
+        distractorSyllables: ["care", "help"],
+        distractorLetters: ["z", "q"],
+        zh: "社會服務學會 (Social Services Club)",
+        sentenceEn: "Members of the Social Services Club visit elderly homes on weekends.",
+        sentenceZh: "社會服務學會的成員在週末探訪老人院。",
+        simpleCloze: "The ______ helps poor and old people in need."
+      },
+      {
+        id: "v29",
+        word: "Technology Club",
+        category: "Clubs & Subjects",
+        type: "noun",
+        syllables: [["Tech", "nol", "o", "gy"], ["Club"]],
+        distractorSyllables: ["code", "cyber"],
+        distractorLetters: ["v", "j"],
+        zh: "科技學會 (Technology Club)",
+        sentenceEn: "Students build and program robots in the Technology Club.",
+        sentenceZh: "學生們在科技學會裡製作並為機器人編程。",
+        simpleCloze: "We build robots and learn computers in the ______."
+      },
+      {
+        id: "v30",
+        word: "Visual Arts",
+        category: "Clubs & Subjects",
+        type: "noun",
+        syllables: [["Vis", "u", "al"], ["Arts"]],
+        distractorSyllables: ["draw", "craft"],
+        distractorLetters: ["w", "p"],
+        zh: "視覺藝術科 (Visual Arts)",
+        sentenceEn: "We created colorful paintings in our Visual Arts class.",
+        sentenceZh: "我們在視覺藝術課上創作了色彩斑斕的畫作。",
+        simpleCloze: "We paint and draw pictures in ______ class."
+      }
+    ];
+
+    /* ==========================================================================
+       GAMIFICATION & SYSTEM STATE
+       ========================================================================== */
+    let currentWordIndex = 0;
+    let activeMainMode = 'flashcard'; // 'flashcard', 'game-syllable', 'game-spelling', 'game-cloze'
+    
+    // Game State
+    let gameSetIndex = 0; // 0 to 5
+    let gameWordInSet = 0; // 0 to 4
+    let gameType = 'syllable';
+    let currentPlacedTiles = [];
+    let currentAvailableTiles = [];
+
+    // User XP, Streaks & Ranks
+    let userXP = 0;
+    let userStreak = 0;
+    let isSoundMuted = false;
+
+    // Badges List
+    const badgesData = [
+      { id: "badge-first", emoji: "🌱", title: "First Step", desc: "Answer your first word correctly", unlocked: false },
+      { id: "badge-streak3", emoji: "🔥", title: "On Fire", desc: "Reach a 3-word streak", unlocked: false },
+      { id: "badge-syl", emoji: "🧩", title: "Syllable Master", desc: "Complete a Syllables set", unlocked: false },
+      { id: "badge-spell", emoji: "🎧", title: "Spelling Wizard", desc: "Complete an Audio Spelling set", unlocked: false },
+      { id: "badge-cloze", emoji: "📝", title: "Cloze Champion", desc: "Complete a Cloze set", unlocked: false },
+      { id: "badge-legend", emoji: "👑", title: "Vocab Legend", desc: "Earn 300+ Total XP", unlocked: false }
+    ];
+
+    const ranksList = [
+      { minXP: 0, title: "Novice Learner", emoji: "🐣" },
+      { minXP: 50, title: "Vocab Cadet", emoji: "🚀" },
+      { minXP: 120, title: "Word Explorer", emoji: "🔍" },
+      { minXP: 200, title: "Syllable Star", emoji: "🌟" },
+      { minXP: 300, title: "Grammar Wizard", emoji: "🧙‍♂️" },
+      { minXP: 500, title: "Vocab Legend", emoji: "🏆" }
+    ];
+
+    const praisePhrases = [
+      "Excellent job! That is correct!",
+      "Fantastic work! Well done!",
+      "Superb! You nailed it!",
+      "Brilliant! Keep going!",
+      "Great job! That's right!"
+    ];
+
+    /* ==========================================================================
+       INITIALIZATION & EVENT LISTENERS
+       ========================================================================== */
+    window.addEventListener('DOMContentLoaded', () => {
+      lucide.createIcons();
+      renderFlashcard();
+      renderSetSelectors();
+      updateGamificationUI();
+      renderBadgesGrid();
+    });
+
+    /* ==========================================================================
+       SFX SOUND ENGINE (Web Audio API)
+       ========================================================================== */
+    function playAudioTone(freq, type = 'sine', duration = 0.15, volume = 0.2) {
+      if (isSoundMuted) return;
+      try {
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+
+        gain.gain.setValueAtTime(volume, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+
+        osc.start();
+        osc.stop(audioCtx.currentTime + duration);
+      } catch (e) {
+        console.log("Web Audio Context not active", e);
+      }
+    }
+
+    function playPopSFX() {
+      playAudioTone(440, 'sine', 0.08, 0.2);
+    }
+
+    function playWhooshSFX() {
+      playAudioTone(220, 'triangle', 0.12, 0.15);
+    }
+
+    function playWrongSFX() {
+      playAudioTone(150, 'sawtooth', 0.2, 0.25);
+    }
+
+    function toggleSoundSFX() {
+      isSoundMuted = !isSoundMuted;
+      const btn = document.getElementById('sfx-toggle-btn');
+      if (isSoundMuted) {
+        btn.className = 'p-2 bg-rose-100 text-rose-600 rounded-xl transition active:scale-95';
+        btn.innerHTML = `<i data-lucide="volume-x" class="w-4 h-4 sm:w-5 sm:h-5"></i>`;
+      } else {
+        btn.className = 'p-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl transition active:scale-95';
+        btn.innerHTML = `<i data-lucide="volume-2" class="w-4 h-4 sm:w-5 sm:h-5"></i>`;
+      }
+      lucide.createIcons();
+    }
+
+    /* ==========================================================================
+       GAMIFICATION LOGIC
+       ========================================================================== */
+    function addXP(points) {
+      userXP += points;
+      updateGamificationUI();
+      showFloatingXP(`+${points} ⭐ XP`);
+    }
+
+    function updateGamificationUI() {
+      document.getElementById('user-xp-text').innerText = `${userXP} XP`;
+      document.getElementById('user-streak-text').innerText = userStreak;
+
+      // Determine rank
+      let currentRank = ranksList[0];
+      ranksList.forEach(r => {
+        if (userXP >= r.minXP) currentRank = r;
+      });
+
+      document.getElementById('user-rank-emoji').innerText = currentRank.emoji;
+      document.getElementById('user-rank-title').innerText = currentRank.title;
+
+      // Check XP Legend badge
+      if (userXP >= 300) unlockBadge("badge-legend");
+    }
+
+    function showFloatingXP(text) {
+      const container = document.getElementById('floating-xp-container');
+      if (!container) return;
+
+      const xpElem = document.createElement('div');
+      xpElem.className = 'animate-float-xp font-display font-black text-2xl sm:text-3xl text-amber-500 drop-shadow-md bg-white/90 border border-amber-200 px-4 py-1.5 rounded-full shadow-lg';
+      xpElem.innerText = text;
+
+      container.appendChild(xpElem);
+      setTimeout(() => xpElem.remove(), 1200);
+    }
+
+    function unlockBadge(badgeId) {
+      const badge = badgesData.find(b => b.id === badgeId);
+      if (badge && !badge.unlocked) {
+        badge.unlocked = true;
+        renderBadgesGrid();
+      }
+    }
+
+    function toggleTrophyModal() {
+      const modal = document.getElementById('trophy-modal');
+      modal.classList.toggle('hidden');
+    }
+
+    function renderBadgesGrid() {
+      const container = document.getElementById('badges-grid');
+      if (!container) return;
+      container.innerHTML = '';
+
+      badgesData.forEach(badge => {
+        const item = document.createElement('div');
+        item.className = `p-3 rounded-2xl border flex flex-col items-center text-center gap-1 transition ${
+          badge.unlocked 
+            ? 'bg-amber-50/90 border-amber-200 text-amber-900 shadow-sm' 
+            : 'bg-slate-50 border-slate-200 text-slate-400 opacity-60'
+        }`;
+
+        item.innerHTML = `
+          <div class="text-3xl ${badge.unlocked ? 'streak-pulse' : 'grayscale'}">${badge.emoji}</div>
+          <div class="font-bold text-xs ${badge.unlocked ? 'text-amber-800' : 'text-slate-500'}">${badge.title}</div>
+          <div class="text-[10px] leading-tight text-slate-400">${badge.desc}</div>
+        `;
+        container.appendChild(item);
+      });
+    }
+
+    /* ==========================================================================
+       FLASHCARD LOGIC
+       ========================================================================== */
+    function renderFlashcard() {
+      const item = vocabList[currentWordIndex];
+
+      document.getElementById('card-category').innerText = item.category;
+      document.getElementById('card-index-indicator').innerText = `Word ${currentWordIndex + 1} / ${vocabList.length}`;
+      document.getElementById('card-type').innerText = item.type;
+
+      const sylContainer = document.getElementById('card-syllables');
+      sylContainer.innerHTML = '';
+
+      let colorIndex = 0;
+      item.syllables.forEach((wordSyllables, wIdx) => {
+        const wordSpan = document.createElement('span');
+        wordSpan.className = 'inline-block whitespace-nowrap';
+
+        wordSyllables.forEach((syl) => {
+          const sylSpan = document.createElement('span');
+          sylSpan.className = `syl-${colorIndex % 6}`;
+          sylSpan.innerText = syl;
+          wordSpan.appendChild(sylSpan);
+          colorIndex++;
+        });
+
+        sylContainer.appendChild(wordSpan);
+
+        if (wIdx < item.syllables.length - 1) {
+          const spaceSpan = document.createElement('span');
+          spaceSpan.className = 'w-3 sm:w-4 inline-block';
+          sylContainer.appendChild(spaceSpan);
+        }
+      });
+
+      document.getElementById('card-zh-word').innerText = item.zh;
+      document.getElementById('card-zh-sentence').innerText = item.sentenceZh;
+
+      const enSentenceElem = document.getElementById('card-en-sentence');
+      enSentenceElem.innerHTML = '';
+      
+      const words = item.sentenceEn.split(' ');
+      words.forEach((w) => {
+        const cleanWord = w.replace(/[^a-zA-Z]/g, "");
+        const wordBtn = document.createElement('span');
+        wordBtn.className = 'hover:text-sky-600 hover:bg-sky-100/70 rounded px-1 py-0.5 transition cursor-pointer inline-block';
+        wordBtn.innerText = w + ' ';
+        wordBtn.onclick = (e) => {
+          e.stopPropagation();
+          speakText(cleanWord, 'en-US');
+        };
+        enSentenceElem.appendChild(wordBtn);
+      });
+    }
+
+    function prevWord() {
+      playPopSFX();
+      currentWordIndex = (currentWordIndex > 0) ? currentWordIndex - 1 : vocabList.length - 1;
+      renderFlashcard();
+    }
+
+    function nextWord() {
+      playPopSFX();
+      currentWordIndex = (currentWordIndex < vocabList.length - 1) ? currentWordIndex + 1 : 0;
+      renderFlashcard();
+    }
+
+    /* ==========================================================================
+       TEXT-TO-SPEECH (TTS) HELPERS
+       ========================================================================== */
+    function speakText(text, lang = 'en-US', pitch = 1.05, rate = 0.88) {
+      if (!('speechSynthesis' in window)) return;
+      window.speechSynthesis.cancel();
+
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = lang;
+      utterance.pitch = pitch;
+      utterance.rate = rate;
+
+      const voices = window.speechSynthesis.getVoices();
+      if (voices.length > 0) {
+        const preferredVoice = voices.find(v => v.lang.startsWith('en') && 
+          (v.name.includes('Natural') || v.name.includes('Google') || v.name.includes('Enhanced') || v.name.includes('Premium') || v.name.includes('Samantha')));
+        if (preferredVoice) utterance.voice = preferredVoice;
+      }
+
+      window.speechSynthesis.speak(utterance);
+    }
+
+    function speakWord() {
+      const item = vocabList[currentWordIndex];
+      speakText(item.word, 'en-US', 1.05, 0.85);
+    }
+
+    function speakSentence() {
+      const item = vocabList[currentWordIndex];
+      speakText(item.sentenceEn, 'en-US', 1.02, 0.88);
+    }
+
+    function speakGameTargetWord() {
+      const item = getCurrentGameWordItem();
+      speakText(item.word, 'en-US', 1.05, 0.85);
+    }
+
+    function playAudioPraise() {
+      const randomPraise = praisePhrases[Math.floor(Math.random() * praisePhrases.length)];
+      speakText(randomPraise, 'en-US', 1.15, 0.92);
+
+      try {
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const now = audioCtx.currentTime;
+
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(523.25, now); // C5
+        osc.frequency.exponentialRampToValueAtTime(659.25, now + 0.1); // E5
+        osc.frequency.exponentialRampToValueAtTime(783.99, now + 0.2); // G5
+        osc.frequency.exponentialRampToValueAtTime(1046.50, now + 0.3); // C6
+
+        gain.gain.setValueAtTime(0.3, now);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.6);
+
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+
+        osc.start(now);
+        osc.stop(now + 0.6);
+      } catch (e) {
+        console.log("Web Audio API issue", e);
+      }
+    }
+
+    /* ==========================================================================
+       NAVIGATION & GAME LOGIC
+       ========================================================================== */
+    function switchMainTab(tabMode) {
+      playPopSFX();
+      activeMainMode = tabMode;
+      
+      const cardView = document.getElementById('view-flashcard');
+      const gameView = document.getElementById('view-game');
+
+      const navCards = document.getElementById('nav-flashcards');
+      const navSyllable = document.getElementById('nav-game-syllable');
+      const navSpelling = document.getElementById('nav-game-spelling');
+      const navCloze = document.getElementById('nav-game-cloze');
+
+      const inactiveClass = "px-3 py-1.5 rounded-lg font-bold text-xs sm:text-sm flex items-center gap-1.5 transition text-slate-600 hover:text-sky-600 shrink-0";
+      const activeClass = "px-3 py-1.5 rounded-lg font-bold text-xs sm:text-sm flex items-center gap-1.5 transition bg-white text-sky-600 shadow-sm shrink-0";
+
+      navCards.className = inactiveClass;
+      navSyllable.className = inactiveClass;
+      navSpelling.className = inactiveClass;
+      navCloze.className = inactiveClass;
+
+      if (tabMode === 'flashcard') {
+        cardView.classList.remove('hidden');
+        gameView.classList.add('hidden');
+        navCards.className = activeClass;
+      } else {
+        cardView.classList.add('hidden');
+        gameView.classList.remove('hidden');
+
+        if (tabMode === 'game-syllable') {
+          navSyllable.className = activeClass;
+          gameType = 'syllable';
+        } else if (tabMode === 'game-spelling') {
+          navSpelling.className = activeClass;
+          gameType = 'spelling';
+        } else if (tabMode === 'game-cloze') {
+          navCloze.className = activeClass;
+          gameType = 'cloze';
+        }
+        initGameLevel();
+      }
+    }
+
+    function renderSetSelectors() {
+      const container = document.getElementById('set-selector-container');
+      container.innerHTML = '';
+
+      const totalSets = Math.ceil(vocabList.length / 5);
+      for (let i = 0; i < totalSets; i++) {
+        const btn = document.createElement('button');
+        btn.id = `set-btn-${i}`;
+        btn.onclick = () => {
+          playPopSFX();
+          gameSetIndex = i;
+          gameWordInSet = 0;
+          initGameLevel();
+        };
+        btn.className = `px-3 py-1.5 rounded-xl font-bold text-xs transition ${
+          i === gameSetIndex
+            ? 'bg-indigo-600 text-white shadow-sm'
+            : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+        }`;
+        btn.innerText = `Set ${i + 1}`;
+        container.appendChild(btn);
+      }
+    }
+
+    function updateSetSelectorButtons() {
+      const totalSets = Math.ceil(vocabList.length / 5);
+      for (let i = 0; i < totalSets; i++) {
+        const btn = document.getElementById(`set-btn-${i}`);
+        if (!btn) continue;
+        if (i === gameSetIndex) {
+          btn.className = 'px-3 py-1.5 rounded-xl font-bold text-xs transition bg-indigo-600 text-white shadow-sm';
+        } else {
+          btn.className = 'px-3 py-1.5 rounded-xl font-bold text-xs transition bg-slate-100 text-slate-600 hover:bg-slate-200';
+        }
+      }
+    }
+
+    function getCurrentGameWordItem() {
+      const targetIndex = (gameSetIndex * 5) + gameWordInSet;
+      return vocabList[targetIndex] || vocabList[0];
+    }
+
+    function initGameLevel() {
+      updateSetSelectorButtons();
+
+      const item = getCurrentGameWordItem();
+      document.getElementById('game-set-badge').innerText = `Set ${gameSetIndex + 1}`;
+      document.getElementById('game-progress-text').innerText = `Word ${gameWordInSet + 1} of 5`;
+      
+      // Update progress bar percentage
+      const progressPercent = ((gameWordInSet + 1) / 5) * 100;
+      document.getElementById('game-progress-bar').style.width = `${progressPercent}%`;
+
+      const titleElem = document.getElementById('game-title-heading');
+      const subtitleElem = document.getElementById('game-subtitle-heading');
+      const typeIndicatorElem = document.getElementById('game-type-indicator');
+
+      const sylAudioControlsElem = document.getElementById('syllable-audio-controls');
+      const audioControlsElem = document.getElementById('audio-spelling-controls');
+      const clueSentenceElem = document.getElementById('game-clue-sentence');
+      const answerSlotsElem = document.getElementById('answer-slots');
+      const zhContainerElem = document.getElementById('game-clue-zh-container');
+
+      currentPlacedTiles = [];
+      currentAvailableTiles = [];
+
+      if (gameType === 'syllable') {
+        titleElem.innerText = "Syllables Game";
+        subtitleElem.innerText = "5 words per set • Assemble syllable blocks in correct order";
+        typeIndicatorElem.innerText = "Syllables Mode";
+
+        zhContainerElem.classList.add('hidden');
+        sylAudioControlsElem.classList.remove('hidden');
+        audioControlsElem.classList.add('hidden');
+        clueSentenceElem.classList.add('hidden');
+        answerSlotsElem.classList.remove('hidden');
+
+        document.getElementById('game-hint-text').innerText = 'Click speaker to listen, then tap colored syllable tiles to build the word!';
+        
+        let tileIdCounter = 0;
+        let globalSylColorIdx = 0;
+
+        item.syllables.forEach((wordSyls, wIdx) => {
+          wordSyls.forEach((syl) => {
+            const colorClass = `syl-${globalSylColorIdx % 6}`;
+            globalSylColorIdx++;
+            currentAvailableTiles.push({
+              id: `tile-${tileIdCounter++}`,
+              text: syl,
+              wordIdx: wIdx,
+              colorClass: colorClass,
+              type: 'syllable'
+            });
+          });
+        });
+
+        item.distractorSyllables.forEach((dist) => {
+          const colorClass = `syl-${globalSylColorIdx % 6}`;
+          globalSylColorIdx++;
+          currentAvailableTiles.push({
+            id: `tile-${tileIdCounter++}`,
+            text: dist,
+            wordIdx: -1,
+            colorClass: colorClass,
+            type: 'syllable'
+          });
+        });
+
+        setTimeout(() => speakGameTargetWord(), 300);
+
+      } else if (gameType === 'spelling') {
+        titleElem.innerText = "Audio Spelling Game";
+        subtitleElem.innerText = "5 words per set • Listen and select letters to spell the word";
+        typeIndicatorElem.innerText = "Audio Spelling Mode";
+
+        zhContainerElem.classList.add('hidden');
+        sylAudioControlsElem.classList.add('hidden');
+        audioControlsElem.classList.remove('hidden');
+        clueSentenceElem.classList.add('hidden');
+        answerSlotsElem.classList.remove('hidden');
+
+        document.getElementById('game-hint-text').innerText = 'Click the audio button to hear the word, then pick letters to spell it!';
+
+        let tileIdCounter = 0;
+        const targetCleanLetters = item.word.replace(/\s+/g, '').split('');
+
+        targetCleanLetters.forEach((letter) => {
+          currentAvailableTiles.push({
+            id: `tile-${tileIdCounter++}`,
+            text: letter,
+            type: 'letter'
+          });
+        });
+
+        item.distractorLetters.forEach((distLetter) => {
+          currentAvailableTiles.push({
+            id: `tile-${tileIdCounter++}`,
+            text: distLetter,
+            type: 'letter'
+          });
+        });
+
+        setTimeout(() => speakGameTargetWord(), 300);
+
+      } else if (gameType === 'cloze') {
+        titleElem.innerText = "Cloze Fill-In Game";
+        subtitleElem.innerText = "5 words per set • Fill in the blank using sentence context";
+        typeIndicatorElem.innerText = "Cloze Fill-In Mode";
+
+        zhContainerElem.classList.add('hidden');
+        sylAudioControlsElem.classList.add('hidden');
+        audioControlsElem.classList.add('hidden');
+        clueSentenceElem.classList.remove('hidden');
+        answerSlotsElem.classList.remove('hidden');
+
+        clueSentenceElem.innerHTML = item.simpleCloze.replace('______', `<span class="inline-block px-3 py-1 bg-amber-100 border-b-2 border-amber-500 font-bold text-amber-900 rounded mx-1">?</span>`);
+        document.getElementById('game-hint-text').innerText = 'Select the correct word from the options below to complete the sentence';
+
+        let options = [item.word];
+        const otherWords = vocabList.filter(v => v.word !== item.word).map(v => v.word);
+        
+        const shuffledOthers = otherWords.sort(() => Math.random() - 0.5);
+        options.push(shuffledOthers[0], shuffledOthers[1], shuffledOthers[2]);
+
+        let optionIdCounter = 0;
+        options.forEach((opt) => {
+          currentAvailableTiles.push({
+            id: `opt-${optionIdCounter++}`,
+            text: opt,
+            type: 'cloze-word'
+          });
+        });
+      }
+
+      currentAvailableTiles = currentAvailableTiles.sort(() => Math.random() - 0.5);
+      renderGameTiles();
+    }
+
+    function renderGameTiles() {
+      const slotContainer = document.getElementById('answer-slots');
+      const poolContainer = document.getElementById('tile-pool');
+
+      slotContainer.innerHTML = '';
+      poolContainer.innerHTML = '';
+
+      if (currentPlacedTiles.length === 0) {
+        slotContainer.innerHTML = `<span class="text-xs text-slate-300 font-semibold italic">Drop selection here...</span>`;
+      } else {
+        if (gameType === 'syllable') {
+          // GROUPING LOGIC FOR SYLLABLE MODE:
+          // Syllables belonging to the same word are displayed continuously inside ONE unified word box without extra spaces!
+          const chunks = [];
+          let currentChunk = [];
+
+          currentPlacedTiles.forEach((tile) => {
+            if (currentChunk.length === 0) {
+              currentChunk.push(tile);
+            } else {
+              const prevTile = currentChunk[currentChunk.length - 1];
+              if (tile.wordIdx >= 0 && tile.wordIdx === prevTile.wordIdx) {
+                currentChunk.push(tile);
+              } else {
+                chunks.push(currentChunk);
+                currentChunk = [tile];
+              }
+            }
+          });
+          if (currentChunk.length > 0) {
+            chunks.push(currentChunk);
+          }
+
+          // Render each chunk as ONE Word Box (NO spacing between syllable spans, e.g. Causeway)
+          chunks.forEach((chunk) => {
+            const wordBox = document.createElement('div');
+            wordBox.className = 'inline-flex items-center bg-white border-2 border-indigo-400 rounded-2xl px-4 py-2 shadow-sm font-extrabold text-lg sm:text-xl transition hover:border-indigo-600 tracking-normal';
+
+            chunk.forEach((tile) => {
+              const sylSpan = document.createElement('span');
+              sylSpan.className = `${tile.colorClass || 'text-indigo-900'} cursor-pointer hover:opacity-75 transition inline-block p-0 m-0`;
+              sylSpan.innerText = tile.text;
+              sylSpan.title = "Click to remove syllable";
+              sylSpan.onclick = (e) => {
+                e.stopPropagation();
+                removeTileFromSlot(tile);
+              };
+              wordBox.appendChild(sylSpan);
+            });
+
+            slotContainer.appendChild(wordBox);
+          });
+
+        } else {
+          currentPlacedTiles.forEach((tile) => {
+            const tileBtn = document.createElement('button');
+            tileBtn.className = 'tile-btn px-4 py-2.5 bg-gradient-to-tr from-sky-500 to-indigo-600 text-white font-bold text-base rounded-xl shadow-sm hover:opacity-90 flex items-center gap-1';
+            
+            tileBtn.innerText = tile.text;
+            tileBtn.onclick = () => removeTileFromSlot(tile);
+            slotContainer.appendChild(tileBtn);
+          });
+        }
+      }
+
+      currentAvailableTiles.forEach((tile) => {
+        const tileBtn = document.createElement('button');
+        
+        if (tile.type === 'cloze-word') {
+          tileBtn.className = 'tile-btn px-5 py-3 bg-white border-2 border-sky-300 text-sky-900 font-bold text-base rounded-2xl shadow-sm hover:border-sky-500 hover:bg-sky-50 active:scale-95';
+          tileBtn.innerText = tile.text;
+        } else if (tile.type === 'syllable') {
+          tileBtn.className = 'tile-btn px-4 py-2.5 bg-white border-2 border-sky-200 font-extrabold text-lg rounded-xl shadow-sm hover:border-sky-400 hover:bg-sky-50 active:scale-95 flex items-center';
+          const span = document.createElement('span');
+          span.className = tile.colorClass || 'text-sky-800';
+          span.innerText = tile.text;
+          tileBtn.appendChild(span);
+        } else {
+          tileBtn.className = 'tile-btn px-4 py-2.5 bg-white border-2 border-sky-200 text-sky-800 font-bold text-base rounded-xl shadow-sm hover:border-sky-400 hover:bg-sky-50 active:scale-95';
+          tileBtn.innerText = tile.text;
+        }
+        
+        tileBtn.onclick = () => placeTileInSlot(tile);
+        poolContainer.appendChild(tileBtn);
+      });
+    }
+
+    function placeTileInSlot(tile) {
+      playPopSFX();
+      if (gameType === 'cloze') {
+        if (currentPlacedTiles.length > 0) {
+          const previous = currentPlacedTiles.pop();
+          currentAvailableTiles.push(previous);
+        }
+      }
+      currentAvailableTiles = currentAvailableTiles.filter(t => t.id !== tile.id);
+      currentPlacedTiles.push(tile);
+      renderGameTiles();
+    }
+
+    function removeTileFromSlot(tile) {
+      playWhooshSFX();
+      currentPlacedTiles = currentPlacedTiles.filter(t => t.id !== tile.id);
+      currentAvailableTiles.push(tile);
+      renderGameTiles();
+    }
+
+    function resetCurrentGameWord() {
+      playWhooshSFX();
+      initGameLevel();
+    }
+
+    function checkGameAnswer() {
+      const item = getCurrentGameWordItem();
+      let userConstructedString = "";
+
+      if (gameType === 'syllable') {
+        userConstructedString = currentPlacedTiles.map(t => t.text.toLowerCase()).join('');
+        const targetCleanString = item.word.replace(/[\s-]/g, '').toLowerCase();
+
+        if (userConstructedString === targetCleanString) {
+          handleCorrectAnswer('badge-syl');
+        } else {
+          handleWrongAnswer();
+        }
+      } else if (gameType === 'spelling') {
+        userConstructedString = currentPlacedTiles.map(t => t.text.toLowerCase()).join('');
+        const targetCleanLetters = item.word.replace(/\s+/g, '').toLowerCase();
+
+        if (userConstructedString === targetCleanLetters) {
+          handleCorrectAnswer('badge-spell');
+        } else {
+          handleWrongAnswer();
+        }
+      } else if (gameType === 'cloze') {
+        if (currentPlacedTiles.length === 1 && currentPlacedTiles[0].text.toLowerCase() === item.word.toLowerCase()) {
+          handleCorrectAnswer('badge-cloze');
+        } else {
+          handleWrongAnswer();
+        }
+      }
+    }
+
+    function handleCorrectAnswer(modeBadgeId) {
+      // Award XP Points & Streaks
+      userStreak++;
+      const xpEarned = 20 + (userStreak >= 3 ? 10 : 0); // Streak Bonus XP!
+      addXP(xpEarned);
+
+      // Unlock achievements
+      unlockBadge("badge-first");
+      if (userStreak >= 3) unlockBadge("badge-streak3");
+
+      playAudioPraise();
+      
+      confetti({
+        particleCount: 80,
+        spread: 70,
+        origin: { y: 0.6 }
+      });
+
+      setTimeout(() => {
+        if (gameWordInSet < 4) {
+          gameWordInSet++;
+          initGameLevel();
+        } else {
+          // Complete full set
+          if (modeBadgeId) unlockBadge(modeBadgeId);
+          addXP(100); // Set completion big bonus!
+          showCompletionModal();
+        }
+      }, 1500);
+    }
+
+    function handleWrongAnswer() {
+      userStreak = 0; // Reset streak
+      updateGamificationUI();
+      playWrongSFX();
+
+      const card = document.getElementById('game-card');
+      card.classList.add('translate-x-2');
+      setTimeout(() => card.classList.remove('translate-x-2'), 100);
+      setTimeout(() => card.classList.add('-translate-x-2'), 200);
+      setTimeout(() => card.classList.remove('-translate-x-2'), 300);
+
+      speakText("Try again!", 'en-US', 1.0, 1.0);
+    }
+
+    function showCompletionModal() {
+      document.getElementById('modal-set-name').innerText = `Set ${gameSetIndex + 1}`;
+      document.getElementById('completion-modal').classList.remove('hidden');
+    }
+
+    function repeatCurrentSet() {
+      document.getElementById('completion-modal').classList.add('hidden');
+      gameWordInSet = 0;
+      initGameLevel();
+    }
+
+    function nextChallengeSet() {
+      document.getElementById('completion-modal').classList.add('hidden');
+      const totalSets = Math.ceil(vocabList.length / 5);
+      gameSetIndex = (gameSetIndex < totalSets - 1) ? gameSetIndex + 1 : 0;
+      gameWordInSet = 0;
+      initGameLevel();
+    }
+  </script>
+</body>
+</html>
