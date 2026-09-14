@@ -1,0 +1,1214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Grammar Quest: F.1 Tense Master</title>
+  <style>
+    :root {
+      --primary-color: #4F46E5;
+      --primary-hover: #4338CA;
+      --secondary-color: #10B981;
+      --accent-color: #F59E0B;
+      --danger-color: #EF4444;
+      --bg-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      --card-bg: #FFFFFF;
+      --text-main: #1F2937;
+      --text-muted: #4B5563;
+      --radius: 16px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    body {
+      background: var(--bg-gradient);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px 10px;
+      color: var(--text-main);
+    }
+
+    /* Top HUD / Header Bar */
+    .hud-bar {
+      width: 100%;
+      max-width: 800px;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      border-radius: var(--radius);
+      padding: 12px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+      margin-bottom: 20px;
+    }
+
+    .hud-stat {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 700;
+      font-size: 1.1rem;
+    }
+
+    .hud-badge {
+      background: #EEF2FF;
+      color: var(--primary-color);
+      padding: 6px 14px;
+      border-radius: 20px;
+      border: 1px solid #C7D2FE;
+    }
+
+    .streak-badge {
+      color: #D97706;
+      background: #FEF3C7;
+      border: 1px solid #FDE68A;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+      100% { transform: scale(1); }
+    }
+
+    .sound-toggle-btn {
+      background: #F3F4F6;
+      border: none;
+      font-size: 1.2rem;
+      padding: 8px 12px;
+      border-radius: 50%;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .sound-toggle-btn:hover { background: #E5E7EB; transform: scale(1.1); }
+
+    /* Container Screens */
+    .container {
+      width: 100%;
+      max-width: 800px;
+      background: var(--card-bg);
+      border-radius: var(--radius);
+      box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+
+    /* Screen Visibility */
+    .screen { display: none; padding: 30px 24px; }
+    .screen.active { display: block; }
+
+    /* Tier Selection Cards */
+    .tier-title {
+      text-align: center;
+      font-size: 2rem;
+      font-weight: 800;
+      color: var(--primary-color);
+      margin-bottom: 10px;
+    }
+
+    .subtitle {
+      text-align: center;
+      color: var(--text-muted);
+      margin-bottom: 30px;
+      font-size: 1rem;
+    }
+
+    .tier-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 20px;
+    }
+
+    @media (min-width: 640px) {
+      .tier-grid { grid-template-columns: repeat(3, 1fr); }
+    }
+
+    .tier-card {
+      background: #F9FAFB;
+      border: 2px solid #E5E7EB;
+      border-radius: var(--radius);
+      padding: 20px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      position: relative;
+    }
+
+    .tier-card:hover {
+      transform: translateY(-5px);
+      border-color: var(--primary-color);
+      box-shadow: 0 10px 20px rgba(79, 70, 229, 0.15);
+    }
+
+    .tier-icon { font-size: 2.5rem; margin-bottom: 10px; }
+    .tier-card h3 { font-size: 1.25rem; color: var(--text-main); margin-bottom: 8px; }
+    .tier-card p { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 15px; }
+    .tier-tag {
+      display: inline-block;
+      font-size: 0.75rem;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 12px;
+      text-transform: uppercase;
+    }
+    .tag-t1 { background: #E0E7FF; color: #3730A3; }
+    .tag-t2 { background: #FEF3C7; color: #92400E; }
+    .tag-t3 { background: #FCE7F3; color: #9D174D; }
+
+    /* Mascot Speech Bubble */
+    .mascot-container {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      background: #F3F4F6;
+      border-radius: var(--radius);
+      padding: 15px;
+      margin-bottom: 20px;
+    }
+    .mascot-avatar { font-size: 2.5rem; animation: bounce 2s infinite; }
+    @keyframes bounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-6px); }
+    }
+    .mascot-speech {
+      font-size: 1rem;
+      font-weight: 600;
+      color: #374151;
+      flex: 1;
+    }
+
+    /* Progress Bar */
+    .progress-wrapper {
+      margin-bottom: 20px;
+    }
+    .progress-header {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+    }
+    .progress-bar {
+      width: 100%;
+      height: 12px;
+      background: #E5E7EB;
+      border-radius: 6px;
+      overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #10B981, #059669);
+      transition: width 0.4s ease;
+    }
+
+    /* Question Box */
+    .question-box {
+      background: #FFFFFF;
+      border: 2px solid #E5E7EB;
+      border-radius: var(--radius);
+      padding: 24px;
+      margin-bottom: 20px;
+    }
+
+    .question-text {
+      font-size: 1.25rem;
+      font-weight: 700;
+      line-height: 1.5;
+      color: var(--text-main);
+      margin-bottom: 12px;
+    }
+
+    .target-prompt {
+      color: var(--primary-color);
+      background: #EEF2FF;
+      padding: 2px 8px;
+      border-radius: 6px;
+      font-weight: bold;
+    }
+
+    /* Teacher Hint Accordion */
+    .hint-btn {
+      background: none;
+      border: none;
+      color: var(--primary-color);
+      font-weight: 700;
+      cursor: pointer;
+      font-size: 0.9rem;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 10px;
+    }
+    .hint-btn:hover { text-decoration: underline; }
+    .hint-box {
+      display: none;
+      background: #FFFBEB;
+      border: 1px solid #FDE68A;
+      padding: 12px;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      color: #92400E;
+      margin-top: 10px;
+      line-height: 1.4;
+    }
+
+    /* MC Options */
+    .options-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+    @media (min-width: 500px) {
+      .options-grid { grid-template-columns: 1fr 1fr; }
+    }
+
+    .option-btn {
+      background: #FFFFFF;
+      border: 2px solid #D1D5DB;
+      border-radius: 12px;
+      padding: 14px 18px;
+      font-size: 1rem;
+      font-weight: 600;
+      text-align: left;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .option-btn:hover:not(:disabled) {
+      border-color: var(--primary-color);
+      background: #F5F3FF;
+      transform: translateY(-2px);
+    }
+
+    .option-btn.correct {
+      background: #D1FAE5 !important;
+      border-color: var(--secondary-color) !important;
+      color: #065F46 !important;
+    }
+
+    .option-btn.wrong {
+      background: #FEE2E2 !important;
+      border-color: var(--danger-color) !important;
+      color: #991B1B !important;
+    }
+
+    .option-btn:disabled { cursor: default; }
+
+    /* Rationale & Feedback Card */
+    .feedback-card {
+      display: none;
+      padding: 16px;
+      border-radius: 12px;
+      margin-bottom: 20px;
+      animation: fadeIn 0.3s forwards;
+    }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+    .feedback-card.correct-bg { background: #ECFDF5; border: 1px solid #A7F3D0; color: #065F46; }
+    .feedback-card.wrong-bg { background: #FEF2F2; border: 1px solid #FECACA; color: #991B1B; }
+
+    .feedback-title { font-size: 1.1rem; font-weight: 800; margin-bottom: 6px; display: flex; align-items: center; gap: 8px; }
+    .feedback-text { font-size: 0.95rem; line-height: 1.4; }
+
+    /* Action Buttons */
+    .btn-action {
+      background: var(--primary-color);
+      color: white;
+      border: none;
+      padding: 14px 28px;
+      font-size: 1rem;
+      font-weight: 700;
+      border-radius: 12px;
+      cursor: pointer;
+      width: 100%;
+      transition: background 0.2s;
+      box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+    }
+    .btn-action:hover { background: var(--primary-hover); }
+
+    /* Summary Modal/Screen */
+    .summary-card {
+      text-align: center;
+      padding: 20px 0;
+    }
+    .summary-badge-icon { font-size: 4rem; margin-bottom: 10px; }
+    .summary-score {
+      font-size: 2.5rem;
+      font-weight: 800;
+      color: var(--primary-color);
+      margin: 10px 0;
+    }
+    .review-list {
+      max-height: 250px;
+      overflow-y: auto;
+      text-align: left;
+      border: 1px solid #E5E7EB;
+      border-radius: 12px;
+      padding: 10px;
+      margin: 20px 0;
+    }
+    .review-item {
+      padding: 10px;
+      border-bottom: 1px solid #F3F4F6;
+      font-size: 0.9rem;
+    }
+    .review-item:last-child { border-bottom: none; }
+  </style>
+</head>
+<body>
+
+  <!-- Top Gamified HUD -->
+  <div class="hud-bar">
+    <div class="hud-stat">
+      <span>⭐ XP:</span>
+      <span id="total-xp" class="hud-badge">0</span>
+    </div>
+    <div class="hud-stat">
+      <span>🔥 Streak:</span>
+      <span id="streak-count" class="hud-badge streak-badge">0</span>
+    </div>
+    <div style="display: flex; gap: 8px;">
+      <button id="tts-btn" class="sound-toggle-btn" title="Toggle Praise Audio">🗣️ ON</button>
+      <button id="sfx-btn" class="sound-toggle-btn" title="Toggle Sound Effects">🔊 ON</button>
+    </div>
+  </div>
+
+  <!-- Main Container Screen Hub -->
+  <div class="container">
+
+    <!-- SCREEN 1: Tier Selection Hub -->
+    <div id="hub-screen" class="screen active">
+      <h1 class="tier-title">Grammar Quest 🎓</h1>
+      <p class="subtitle">Henrietta Secondary School F.1 Grammar Mastery</p>
+      
+      <div class="tier-grid">
+        <!-- Tier 1 -->
+        <div class="tier-card" onclick="startTier(1)">
+          <div class="tier-icon">🌱</div>
+          <h3>Tier 1</h3>
+          <p>Foundation Boost (Explicit Time Words)</p>
+          <span class="tier-tag tag-t1">20 Questions</span>
+        </div>
+        <!-- Tier 2 -->
+        <div class="tier-card" onclick="startTier(2)">
+          <div class="tier-icon">⚡</div>
+          <h3>Tier 2</h3>
+          <p>Skill Builder (Continuous vs. Simple)</p>
+          <span class="tier-tag tag-t2">20 Questions</span>
+        </div>
+        <!-- Tier 3 -->
+        <div class="tier-card" onclick="startTier(3)">
+          <div class="tier-icon">👑</div>
+          <h3>Tier 3</h3>
+          <p>Grammar Master (Tricky Rules & Contexts)</p>
+          <span class="tier-tag tag-t3">20 Questions</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- SCREEN 2: Quiz Gameplay -->
+    <div id="quiz-screen" class="screen">
+      <!-- Mascot Encouragement Header -->
+      <div class="mascot-container">
+        <div class="mascot-avatar" id="mascot-icon">🦉</div>
+        <div class="mascot-speech" id="mascot-text">Ready to conquer English grammar? Let's do this!</div>
+      </div>
+
+      <!-- Progress Indicator -->
+      <div class="progress-wrapper">
+        <div class="progress-header">
+          <span id="tier-indicator">Tier 1</span>
+          <span id="question-progress font-bold">Question 1 / 20</span>
+        </div>
+        <div class="progress-bar">
+          <div id="progress-fill" class="progress-fill"></div>
+        </div>
+      </div>
+
+      <!-- Question Box -->
+      <div class="question-box">
+        <div class="question-text" id="question-prompt">Loading question...</div>
+        
+        <!-- Expandable Teacher Hint -->
+        <button class="hint-btn" onclick="toggleHint()">
+          💡 Teacher Hint / Quick Rule
+        </button>
+        <div class="hint-box" id="hint-text">
+          Remember the signal word!
+        </div>
+      </div>
+
+      <!-- MC Options -->
+      <div class="options-grid" id="options-container">
+        <!-- Javascript dynamic rendering -->
+      </div>
+
+      <!-- Instant Feedback & Rationale -->
+      <div id="feedback-card" class="feedback-card">
+        <div class="feedback-title" id="feedback-title">Correct! 🎉</div>
+        <div class="feedback-text" id="feedback-explanation">Rationale explanation goes here.</div>
+      </div>
+
+      <!-- Next / Action Button -->
+      <button id="next-btn" class="btn-action" style="display: none;" onclick="nextQuestion()">Next Question ➔</button>
+    </div>
+
+    <!-- SCREEN 3: Tier Summary Report -->
+    <div id="summary-screen" class="screen">
+      <div class="summary-card">
+        <div class="summary-badge-icon" id="summary-icon">🏆</div>
+        <h2 id="summary-title">Tier Completed!</h2>
+        <p class="subtitle" id="summary-subtitle">Here is your overall performance breakdown</p>
+        
+        <div class="summary-score" id="summary-score">18 / 20</div>
+        <p id="summary-feedback" style="font-weight: 600; color: #4B5563; margin-bottom: 15px;">Awesome job!</p>
+
+        <h4 style="text-align: left; margin-bottom: 8px;">Review Rationale & Answers:</h4>
+        <div class="review-list" id="review-list">
+          <!-- Dynamic review list -->
+        </div>
+
+        <button class="btn-action" onclick="showHub()">Return to Main Menu 🏠</button>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    /* ==========================================================================
+       DATA: 60 MC Questions (20 per Tier) withHK Context & Verb Bracket Prompts
+       ========================================================================== */
+    const questionBank = {
+      1: [
+        {
+          prompt: "Look! The boys ___ (run) across the playground right now.",
+          options: ["runs", "are running", "ran", "will run"],
+          correct: 1,
+          hint: "Signal word: 'right now' -> Present Continuous (is/am/are + verb-ing).",
+          rationale: "Correct! 'Right now' signals an action happening at this exact moment, so we use the Present Continuous tense (are running)."
+        },
+        {
+          prompt: "She ___ (study) for her dictation test every night.",
+          options: ["studies", "is studying", "studied", "will study"],
+          correct: 0,
+          hint: "Signal word: 'every night' -> Simple Present tense habit.",
+          rationale: "Correct! 'Every night' indicates a repeated habit. For 'She', we add -es to study (studies)."
+        },
+        {
+          prompt: "My classmates ___ (not like) spicy curry fish balls in the past.",
+          options: ["don't like", "didn't like", "are not liking", "won't like"],
+          correct: 1,
+          hint: "Signal word: 'in the past' -> Simple Past tense negative.",
+          rationale: "Correct! 'In the past' refers to past time, so we use 'did not (didn't) + bare infinitive'."
+        },
+        {
+          prompt: "Mr. Wong ___ (buy) a sandwich at the tuck shop yesterday.",
+          options: ["buys", "is buying", "bought", "will buy"],
+          correct: 2,
+          hint: "Signal word: 'yesterday' -> Simple Past tense (irregular verb).",
+          rationale: "Correct! 'Yesterday' requires Simple Past. The past form of 'buy' is 'bought'."
+        },
+        {
+          prompt: "We ___ (visit) the science lab tomorrow morning.",
+          options: ["visited", "visit", "will visit", "are visited"],
+          correct: 2,
+          hint: "Signal word: 'tomorrow morning' -> Simple Future tense (will + bare verb).",
+          rationale: "Correct! 'Tomorrow morning' indicates future time, so we use 'will visit'."
+        },
+        {
+          prompt: "___ you ___ (listen) to the principal in the assembly hall at the moment?",
+          options: ["Do ... listen", "Are ... listening", "Did ... listen", "Will ... listen"],
+          correct: 1,
+          hint: "Signal word: 'at the moment' -> Present Continuous question form.",
+          rationale: "Correct! 'At the moment' requires Present Continuous question format: Are + subject + verb-ing."
+        },
+        {
+          prompt: "Peter ___ (not play) basketball every Sunday.",
+          options: ["isn't playing", "didn't play", "doesn't play", "won't play"],
+          correct: 2,
+          hint: "Signal word: 'every Sunday' -> Simple Present negative (doesn't + bare verb).",
+          rationale: "Correct! 'Every Sunday' is a regular habit. For singular subject 'Peter', use 'does not (doesn't) play'."
+        },
+        {
+          prompt: "They ___ (clean) the cookery room two hours ago.",
+          options: ["cleaned", "clean", "are cleaning", "will clean"],
+          correct: 0,
+          hint: "Signal word: 'two hours ago' -> Simple Past tense.",
+          rationale: "Correct! 'Ago' indicates a completed past event. Regular past tense of clean is 'cleaned'."
+        },
+        {
+          prompt: "I ___ (be) a Form 1 student at Henrietta Secondary School this year.",
+          options: ["was", "am", "will be", "is"],
+          correct: 1,
+          hint: "Signal word: 'this year' (present status) -> Simple Present verb 'to be'.",
+          rationale: "Correct! For subject 'I' describing present identity, the correct verb form is 'am'."
+        },
+        {
+          prompt: "Listen! The school choir ___ (sing) a beautiful song now.",
+          options: ["sings", "is singing", "sang", "will sing"],
+          correct: 1,
+          hint: "Signal word: 'Listen! / now' -> Present Continuous tense.",
+          rationale: "Correct! 'Listen!' commands attention to an event happening 'now'. Use 'is singing'."
+        },
+        {
+          prompt: "Miss Cheung ___ (not teach) us history next term.",
+          options: ["doesn't teach", "didn't teach", "won't teach", "isn't teaching"],
+          correct: 2,
+          hint: "Signal word: 'next term' -> Simple Future negative.",
+          rationale: "Correct! 'Next term' points to future time. We use 'will not (won't) + bare infinitive'."
+        },
+        {
+          prompt: "___ he ___ (do) his homework yesterday evening?",
+          options: ["Does ... do", "Is ... doing", "Did ... do", "Will ... do"],
+          correct: 2,
+          hint: "Signal word: 'yesterday evening' -> Simple Past question form.",
+          rationale: "Correct! Simple Past questions start with auxiliary 'Did' + subject + bare infinitive (do)."
+        },
+        {
+          prompt: "My mother ___ (cook) dinner for us every evening.",
+          options: ["cooks", "is cooking", "cooked", "will cook"],
+          correct: 0,
+          hint: "Signal word: 'every evening' -> Simple Present habit.",
+          rationale: "Correct! 'Every evening' is a daily routine. Singular subject 'My mother' takes 'cooks'."
+        },
+        {
+          prompt: "Look out! That student ___ (fall) off his bicycle right now!",
+          options: ["falls", "is falling", "fell", "will fall"],
+          correct: 1,
+          hint: "Signal word: 'Look out! / right now' -> Present Continuous action.",
+          rationale: "Correct! Something occurring right now requires Present Continuous (is falling)."
+        },
+        {
+          prompt: "We ___ (not watch) a movie in Causeway Bay last night.",
+          options: ["don't watch", "didn't watch", "are not watching", "won't watch"],
+          correct: 1,
+          hint: "Signal word: 'last night' -> Simple Past negative.",
+          rationale: "Correct! 'Last night' indicates past time. Simple past negative is 'did not (didn't) watch'."
+        },
+        {
+          prompt: "___ they ___ (meet) outside Fortress Hill MTR station tomorrow?",
+          options: ["Do ... meet", "Are ... meeting", "Did ... meet", "Will ... meet"],
+          correct: 3,
+          hint: "Signal word: 'tomorrow' -> Simple Future question.",
+          rationale: "Correct! 'Tomorrow' requires Simple Future: 'Will + subject + bare verb (meet)'."
+        },
+        {
+          prompt: "Look! A stray dog ___ (bark) at the stranger at the moment.",
+          options: ["barks", "is barking", "barked", "will bark"],
+          correct: 1,
+          hint: "Signal word: 'at the moment' -> Present Continuous.",
+          rationale: "Correct! 'At the moment' describes an action in progress right now (is barking)."
+        },
+        {
+          prompt: "I ___ (not go) to school on Saturdays.",
+          options: ["don't go", "didn't go", "am not going", "won't go"],
+          correct: 0,
+          hint: "Signal word: 'on Saturdays' (general rule/routine) -> Simple Present negative.",
+          rationale: "Correct! A general habit/routine takes Simple Present negative: 'don't go'."
+        },
+        {
+          prompt: "Jenny ___ (draw) a picture in art class last Friday.",
+          options: ["draws", "is drawing", "drew", "will draw"],
+          correct: 2,
+          hint: "Signal word: 'last Friday' -> Simple Past irregular verb.",
+          rationale: "Correct! Simple Past of 'draw' is irregular: 'drew'."
+        },
+        {
+          prompt: "___ you ___ (eat) breakfast every morning?",
+          options: ["Do ... eat", "Are ... eating", "Did ... eat", "Will ... eat"],
+          correct: 0,
+          hint: "Signal word: 'every morning' -> Simple Present question.",
+          rationale: "Correct! Simple Present question for 'you' uses 'Do + subject + bare verb'."
+        }
+      ],
+      2: [
+        {
+          prompt: "Listen! The bell ___ (ring), so the students ___ (walk) into the hall right now.",
+          options: ["rings / walk", "is ringing / are walking", "rang / walked", "will ring / will walk"],
+          correct: 1,
+          hint: "Action happening right now in real-time -> Present Continuous.",
+          rationale: "Correct! Both actions are currently happening simultaneously right now."
+        },
+        {
+          prompt: "I usually ___ (walk) to school, but today I ___ (take) the MTR.",
+          options: ["walk / am taking", "am walking / take", "walked / took", "will walk / take"],
+          correct: 0,
+          hint: "Habitual rule (usually) vs. temporary action today (Present Continuous).",
+          rationale: "Correct! 'Usually' needs Simple Present (walk), while temporary action 'today' takes Present Continuous (am taking)."
+        },
+        {
+          prompt: "We ___ (not have) a computer lesson yesterday because the network was down.",
+          options: ["don't have", "didn't have", "aren't having", "won't have"],
+          correct: 1,
+          hint: "Time signal: 'yesterday'. Negation needs 'did not'.",
+          rationale: "Correct! 'Yesterday' requires past tense auxiliary 'didn't' + bare verb 'have'."
+        },
+        {
+          prompt: "Look at those dark clouds! It ___ (rain) very soon.",
+          options: ["rains", "is going to rain", "rained", "rain"],
+          correct: 1,
+          hint: "Evidence in the present (dark clouds) -> 'be going to' for planned/imminent future.",
+          rationale: "Correct! When we have present evidence (dark clouds), we use 'is going to rain'."
+        },
+        {
+          prompt: "___ Miss Lee ___ (teach) in Room 302 right now?",
+          options: ["Does ... teach", "Is ... teaching", "Did ... teach", "Will ... teach"],
+          correct: 1,
+          hint: "'Right now' question format.",
+          rationale: "Correct! Present Continuous question form: Is + subject + teaching?"
+        },
+        {
+          prompt: "David ___ (not write) his reflection essay last night.",
+          options: ["doesn't write", "isn't writing", "didn't write", "won't write"],
+          correct: 2,
+          hint: "'Last night' past time indicator.",
+          rationale: "Correct! Past tense negation: didn't + bare verb (write)."
+        },
+        {
+          prompt: "The Tuck Shop auntie ___ (give) us fresh fruit juice every afternoon.",
+          options: ["gives", "is giving", "gave", "will give"],
+          correct: 0,
+          hint: "'Every afternoon' routine.",
+          rationale: "Correct! Third-person singular habit takes 'gives'."
+        },
+        {
+          prompt: "___ you ___ (join) the school English drama club next month?",
+          options: ["Do ... join", "Are ... going to join", "Did ... join", "Were ... joining"],
+          correct: 1,
+          hint: "Future plan for next month.",
+          rationale: "Correct! Future plans are expressed with 'Are you going to join'."
+        },
+        {
+          prompt: "Keep quiet! The teacher ___ (explain) the rules at the moment.",
+          options: ["explains", "is explaining", "explained", "will explain"],
+          correct: 1,
+          hint: "'Keep quiet!' + 'at the moment' -> Present Continuous.",
+          rationale: "Correct! An ongoing action at the present moment requires 'is explaining'."
+        },
+        {
+          prompt: "My brother ___ (forget) to bring his handbook to school yesterday morning.",
+          options: ["forgets", "is forgetting", "forgot", "will forget"],
+          correct: 2,
+          hint: "'Yesterday morning' past tense irregular verb.",
+          rationale: "Correct! Past form of 'forget' is 'forgot'."
+        },
+        {
+          prompt: "They ___ (not watch) TV right now because they are studying.",
+          options: ["don't watch", "aren't watching", "didn't watch", "won't watch"],
+          correct: 1,
+          hint: "Negative ongoing action at the moment.",
+          rationale: "Correct! Present Continuous negative for 'They' is 'aren't watching'."
+        },
+        {
+          prompt: "___ your father ___ (drive) you to school every morning?",
+          options: ["Does ... drive", "Is ... driving", "Did ... drive", "Will ... drive"],
+          correct: 0,
+          hint: "Simple Present routine question with 'your father' (singular).",
+          rationale: "Correct! Does + singular subject (your father) + bare verb (drive)."
+        },
+        {
+          prompt: "I ___ (buy) a new uniform next Saturday with my parents.",
+          options: ["buy", "am going to buy", "bought", "buys"],
+          correct: 1,
+          hint: "Intended future plan next Saturday.",
+          rationale: "Correct! Planned future action: am going to buy."
+        },
+        {
+          prompt: "Look! The prefects ___ (stand) near the school entrance.",
+          options: ["stand", "are standing", "stood", "will stand"],
+          correct: 1,
+          hint: "'Look!' indicates an immediate action happening now.",
+          rationale: "Correct! Action visible right now: are standing."
+        },
+        {
+          prompt: "She ___ (not eat) any snacks in the classroom this morning.",
+          options: ["doesn't eat", "didn't eat", "isn't eating", "won't eat"],
+          correct: 1,
+          hint: "Past action completed earlier this morning.",
+          rationale: "Correct! Simple Past negative: didn't eat."
+        },
+        {
+          prompt: "Why ___ you ___ (cry) right now, Tom?",
+          options: ["do ... cry", "are ... crying", "did ... cry", "will ... cry"],
+          correct: 1,
+          hint: "Question about an ongoing feeling/action 'right now'.",
+          rationale: "Correct! Why + are + subject + verb-ing (crying)."
+        },
+        {
+          prompt: "The school choir ___ (win) first prize in the competition last year.",
+          options: ["wins", "is winning", "won", "will win"],
+          correct: 2,
+          hint: "'Last year' past time signal.",
+          rationale: "Correct! Past form of 'win' is 'won'."
+        },
+        {
+          prompt: "Water ___ (boil) at 100 degrees Celsius.",
+          options: ["boils", "is boiling", "boiled", "will boil"],
+          correct: 0,
+          hint: "Scientific general fact -> Simple Present tense.",
+          rationale: "Correct! General truths and scientific facts always use Simple Present (boils)."
+        },
+        {
+          prompt: "We ___ (not perform) in the concert next week.",
+          options: ["don't perform", "didn't perform", "won't perform", "aren't perform"],
+          correct: 2,
+          hint: "'Next week' future negative.",
+          rationale: "Correct! Future negative is 'will not (won't) perform'."
+        },
+        {
+          prompt: "___ she ___ (understand) the lesson yesterday?",
+          options: ["Does ... understand", "Is ... understanding", "Did ... understand", "Will ... understand"],
+          correct: 2,
+          hint: "'Yesterday' question with auxiliary verb.",
+          rationale: "Correct! Did + subject + bare verb (understand)."
+        }
+      ],
+      3: [
+        {
+          prompt: "Did you ___ (see) the school principal in the corridor just now?",
+          options: ["saw", "see", "seeing", "seen"],
+          correct: 1,
+          hint: "Rule: auxiliary 'Did' must always be followed by a BARE INFINITIVE verb!",
+          rationale: "Correct! After 'did' or 'didn't', the main verb must return to its bare infinitive form (see), NEVER past tense (saw)."
+        },
+        {
+          prompt: "Look! The librarian ___ (catalogue) new books while pupils ___ (read) quietly.",
+          options: ["catalogues / read", "is cataloguing / are reading", "catalogued / read", "will catalogue / will read"],
+          correct: 1,
+          hint: "Both actions happening simultaneously right now.",
+          rationale: "Correct! Continuous actions happening now: 'is cataloguing' and 'are reading'."
+        },
+        {
+          prompt: "He ___ (wear) a raincoat today because it is raining outside.",
+          options: ["wears", "is wearing", "wore", "will wear"],
+          correct: 1,
+          hint: "Temporary state today vs permanent condition.",
+          rationale: "Correct! Wearing a raincoat today is a temporary state happening now, so Present Continuous (is wearing) is required."
+        },
+        {
+          prompt: "Which sentence has NO grammar error?",
+          options: [
+            "He didn't went to school yesterday.",
+            "Does she likes reading English novels?",
+            "Look! They are playing football now.",
+            "I will visiting my teacher tomorrow."
+          ],
+          correct: 2,
+          hint: "Check auxiliary rules: did+bare, does+bare, will+bare.",
+          rationale: "Correct! 'Look! They are playing football now' is 100% correct. Options A, B, D violate the bare infinitive rule after auxiliaries."
+        },
+        {
+          prompt: "Miss Tang does not ___ (like) students shouting in the cookery room.",
+          options: ["likes", "like", "liked", "liking"],
+          correct: 1,
+          hint: "Rule: 'does not' + bare infinitive.",
+          rationale: "Correct! After auxiliary 'does not', the verb MUST be bare infinitive (like), without 's'."
+        },
+        {
+          prompt: "Tomorrow, our class ___ (visit) the museum, so we must ___ (gather) early.",
+          options: ["will visit / gather", "visited / gathered", "visits / gathering", "is visiting / gathered"],
+          correct: 0,
+          hint: "'Will' + bare verb AND modal 'must' + bare verb.",
+          rationale: "Correct! Both 'will' and modal verb 'must' require bare infinitive verbs (visit / gather)."
+        },
+        {
+          prompt: "While the choir master ___ (play) piano right now, students ___ (sing).",
+          options: ["plays / sing", "is playing / are singing", "played / sang", "will play / will sing"],
+          correct: 1,
+          hint: "Ongoing concurrent present actions.",
+          rationale: "Correct! Both actions are currently in progress right now."
+        },
+        {
+          prompt: "Identify the correction: 'I didn't brought my English workbook today.'",
+          options: ["change 'didn't' to 'don't'", "change 'brought' to 'bring'", "change 'brought' to 'bringing'", "No change needed"],
+          correct: 1,
+          hint: "Check the verb following 'didn't'.",
+          rationale: "Correct! 'Didn't' must be followed by bare infinitive 'bring', not past tense 'brought'."
+        },
+        {
+          prompt: "Look at the dark sky! A heavy rainstorm ___ (come) very soon.",
+          options: ["comes", "is coming", "came", "come"],
+          correct: 1,
+          hint: "Imminent future change happening right now.",
+          rationale: "Correct! Present Continuous (is coming) expresses an imminent action approaching right now."
+        },
+        {
+          prompt: "Does your sister ___ (enjoy) playing table tennis after school every Friday?",
+          options: ["enjoys", "enjoy", "enjoyed", "enjoying"],
+          correct: 1,
+          hint: "'Does' auxiliary rule.",
+          rationale: "Correct! Question starting with 'Does' requires bare infinitive (enjoy)."
+        },
+        {
+          prompt: "Right now, the janitor ___ (clean) the hallway, so please do not ___ (step) on wet floor.",
+          options: ["cleans / step", "is cleaning / step", "cleaned / stepped", "will clean / stepping"],
+          correct: 1,
+          hint: "Present Continuous + imperative negative 'do not' + bare verb.",
+          rationale: "Correct! 'is cleaning' for right now, and 'do not step' (bare infinitive after do not)."
+        },
+        {
+          prompt: "Last week, our class ___ (take) a class photo outside Fortress Hill station.",
+          options: ["takes", "is taking", "took", "will take"],
+          correct: 2,
+          hint: "'Last week' past tense irregular verb.",
+          rationale: "Correct! Past form of take is 'took'."
+        },
+        {
+          prompt: "Will you ___ (help) me carry these science lab instruments to the staffroom?",
+          options: ["helps", "help", "helped", "helping"],
+          correct: 1,
+          hint: "'Will' + bare infinitive.",
+          rationale: "Correct! Modal/Auxiliary 'Will' requires bare infinitive 'help'."
+        },
+        {
+          prompt: "She usually ___ (drink) warm water, but right now she ___ (drink) iced tea.",
+          options: ["drinks / is drinking", "is drinking / drinks", "drank / drank", "will drink / drinks"],
+          correct: 0,
+          hint: "Contrast: Routine habit vs. Action happening right now.",
+          rationale: "Correct! Routine habit = Simple Present (drinks); action right now = Present Continuous (is drinking)."
+        },
+        {
+          prompt: "They ___ (not make) any noise in the self-study room at the moment.",
+          options: ["don't make", "aren't making", "didn't make", "won't make"],
+          correct: 1,
+          hint: "'at the moment' negative form.",
+          rationale: "Correct! Present Continuous negative: aren't making."
+        },
+        {
+          prompt: "Which sentence is grammatically CORRECT?",
+          options: [
+            "Did he went to the tuck shop?",
+            "Does he goes to school by bus?",
+            "Is he playing badminton right now?",
+            "Will he plays football tomorrow?"
+          ],
+          correct: 2,
+          hint: "Check auxiliary verb combinations.",
+          rationale: "Correct! 'Is he playing badminton right now?' is correct. The others misuse bare infinitives with Did, Does, and Will."
+        },
+        {
+          prompt: "The annual sports day ___ (take) place at the sports ground next month.",
+          options: ["takes", "is taking", "will take", "took"],
+          correct: 2,
+          hint: "Future event scheduled next month.",
+          rationale: "Correct! Simple Future 'will take' is used for future events."
+        },
+        {
+          prompt: "Mr. Chan ___ (not mark) our dictation papers yesterday because he was ill.",
+          options: ["doesn't mark", "didn't mark", "isn't marking", "won't mark"],
+          correct: 1,
+          hint: "'Yesterday' negative past.",
+          rationale: "Correct! Past negative: didn't mark."
+        },
+        {
+          prompt: "Look! The cats ___ (chase) each other across the playground right now.",
+          options: ["chase", "are chasing", "chased", "will chase"],
+          correct: 1,
+          hint: "'Look!' + 'right now' plural subject.",
+          rationale: "Correct! Plural subject 'cats' + are chasing."
+        },
+        {
+          prompt: "Do you ___ (know) where the Form 1 staffroom is located?",
+          options: ["knows", "know", "knew", "knowing"],
+          correct: 1,
+          hint: "'Do' + bare infinitive.",
+          rationale: "Correct! Question auxiliary 'Do' takes bare infinitive 'know'."
+        }
+      ]
+    };
+
+    /* Encouraging Vocal Praises (spoken out loud!) */
+    const praisePhrases = [
+      "Awesome work!",
+      "Bingo! You got it right!",
+      "Superstar grammar skills!",
+      "Fantastic job!",
+      "Spot on!",
+      "Brilliant answer!",
+      "You are on fire!",
+      "Keep it up!"
+    ];
+
+    /* ==========================================================================
+       APP STATE & GAMIFICATION VARIABLES
+       ========================================================================== */
+    let currentTier = 1;
+    let currentQIndex = 0;
+    let score = 0;
+    let totalXP = 0;
+    let streak = 0;
+    let soundEnabled = true;
+    let ttsEnabled = true;
+    let userAnswers = [];
+
+    // Web Audio Synthesizer setup
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    let audioCtx = null;
+
+    function initAudio() {
+      if (!audioCtx) {
+        audioCtx = new AudioContext();
+      }
+    }
+
+    function playSoundEffect(isCorrect) {
+      if (!soundEnabled) return;
+      initAudio();
+      if (!audioCtx) return;
+
+      const now = audioCtx.currentTime;
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+
+      if (isCorrect) {
+        // High pitch happy chord/beep
+        osc.frequency.setValueAtTime(523.25, now); // C5
+        osc.frequency.setValueAtTime(659.25, now + 0.1); // E5
+        osc.frequency.setValueAtTime(783.99, now + 0.2); // G5
+        gain.gain.setValueAtTime(0.2, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+        osc.start(now);
+        osc.stop(now + 0.35);
+      } else {
+        // Low pitch buzz
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(180, now);
+        osc.frequency.setValueAtTime(130, now + 0.15);
+        gain.gain.setValueAtTime(0.2, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
+        osc.start(now);
+        osc.stop(now + 0.3);
+      }
+    }
+
+    /* Speak Out Loud Praise using Web Speech API */
+    function speakPraise() {
+      if (!ttsEnabled || !('speechSynthesis' in window)) return;
+      window.speechSynthesis.cancel(); // Stop any ongoing speech
+      const randomPhrase = praisePhrases[Math.floor(Math.random() * praisePhrases.length)];
+      const utterance = new SpeechSynthesisUtterance(randomPhrase);
+      utterance.rate = 1.0;
+      utterance.pitch = 1.2; // Cheerful pitch
+      utterance.lang = 'en-US';
+      window.speechSynthesis.speak(utterance);
+    }
+
+    /* Toggle Audio Controls */
+    document.getElementById('tts-btn').addEventListener('click', function() {
+      ttsEnabled = !ttsEnabled;
+      this.textContent = ttsEnabled ? "🗣️ ON" : "🗣️ OFF";
+    });
+
+    document.getElementById('sfx-btn').addEventListener('click', function() {
+      soundEnabled = !soundEnabled;
+      this.textContent = soundEnabled ? "🔊 ON" : "🔊 OFF";
+    });
+
+    /* Screen Navigation */
+    function showScreen(screenId) {
+      document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+      document.getElementById(screenId).classList.add('active');
+    }
+
+    function showHub() {
+      showScreen('hub-screen');
+    }
+
+    /* Start Tier Quiz */
+    function startTier(tierNum) {
+      initAudio();
+      currentTier = tierNum;
+      currentQIndex = 0;
+      score = 0;
+      userAnswers = [];
+      document.getElementById('tier-indicator').textContent = `Tier ${tierNum}`;
+      showScreen('quiz-screen');
+      loadQuestion();
+    }
+
+    /* Load Question */
+    function loadQuestion() {
+      const questions = questionBank[currentTier];
+      const q = questions[currentQIndex];
+
+      // Update progress bar & counter
+      document.getElementById('question-progress font-bold').textContent = `Question ${currentQIndex + 1} / ${questions.length}`;
+      const progressPercent = ((currentQIndex) / questions.length) * 100;
+      document.getElementById('progress-fill').style.width = `${progressPercent}%`;
+
+      // Mascot Bubble Reset
+      document.getElementById('mascot-icon').textContent = "🦉";
+      document.getElementById('mascot-text').textContent = "Read carefully! Look for the target verb and time signal!";
+
+      // Question Prompt
+      document.getElementById('question-prompt').innerHTML = q.prompt.replace(/\((.*?)\)/g, '<span class="target-prompt">($1)</span>');
+
+      // Teacher Hint reset
+      document.getElementById('hint-text').style.display = 'none';
+      document.getElementById('hint-text').textContent = q.hint;
+
+      // Options rendering
+      const optionsContainer = document.getElementById('options-container');
+      optionsContainer.innerHTML = '';
+      
+      q.options.forEach((opt, idx) => {
+        const btn = document.createElement('button');
+        btn.className = 'option-btn';
+        btn.innerHTML = `<span><strong>${String.fromCharCode(65 + idx)}.</strong> ${opt}</span>`;
+        btn.onclick = () => checkAnswer(idx);
+        optionsContainer.appendChild(btn);
+      });
+
+      // Hide Feedback & Next Button
+      document.getElementById('feedback-card').style.display = 'none';
+      document.getElementById('next-btn').style.display = 'none';
+    }
+
+    /* Expand / Collapse Teacher Hint */
+    function toggleHint() {
+      const hintBox = document.getElementById('hint-text');
+      hintBox.style.display = (hintBox.style.display === 'block') ? 'none' : 'block';
+    }
+
+    /* Check Answer */
+    function checkAnswer(selectedIndex) {
+      const questions = questionBank[currentTier];
+      const q = questions[currentQIndex];
+      const optionBtns = document.querySelectorAll('.option-btn');
+
+      // Disable all option buttons
+      optionBtns.forEach(btn => btn.disabled = true);
+
+      const isCorrect = selectedIndex === q.correct;
+      userAnswers.push({
+        prompt: q.prompt,
+        userAns: q.options[selectedIndex],
+        correctAns: q.options[q.correct],
+        isCorrect: isCorrect,
+        rationale: q.rationale
+      });
+
+      const feedbackCard = document.getElementById('feedback-card');
+      const feedbackTitle = document.getElementById('feedback-title');
+      const feedbackText = document.getElementById('feedback-explanation');
+
+      if (isCorrect) {
+        score++;
+        streak++;
+        totalXP += 100 + (streak * 10); // Bonus XP for streaks!
+        playSoundEffect(true);
+        speakPraise();
+
+        optionBtns[selectedIndex].classList.add('correct');
+        feedbackCard.className = 'feedback-card correct-bg';
+        feedbackTitle.innerHTML = '🎉 Excellent!';
+        
+        // Mascot Praise
+        document.getElementById('mascot-icon').textContent = "🌟";
+        document.getElementById('mascot-text').textContent = praisePhrases[Math.floor(Math.random() * praisePhrases.length)];
+      } else {
+        streak = 0;
+        playSoundEffect(false);
+
+        optionBtns[selectedIndex].classList.add('wrong');
+        optionBtns[q.correct].classList.add('correct');
+        feedbackCard.className = 'feedback-card wrong-bg';
+        feedbackTitle.innerHTML = '❌ Not quite!';
+
+        // Mascot Hint/Encouragement
+        document.getElementById('mascot-icon').textContent = "💡";
+        document.getElementById('mascot-text').textContent = "Don't worry! Read the rationale below to learn why.";
+      }
+
+      // Update HUD
+      document.getElementById('total-xp').textContent = totalXP;
+      document.getElementById('streak-count').textContent = streak;
+
+      // Show Rationale & Next Button
+      feedbackText.textContent = q.rationale;
+      feedbackCard.style.display = 'block';
+      document.getElementById('next-btn').style.display = 'block';
+    }
+
+    /* Next Question or Finish Tier */
+    function nextQuestion() {
+      currentQIndex++;
+      const questions = questionBank[currentTier];
+      if (currentQIndex < questions.length) {
+        loadQuestion();
+      } else {
+        showSummary();
+      }
+    }
+
+    /* Show Summary Screen */
+    function showSummary() {
+      showScreen('summary-screen');
+      const questions = questionBank[currentTier];
+      const percentage = Math.round((score / questions.length) * 100);
+
+      document.getElementById('summary-score').textContent = `${score} / ${questions.length} (${percentage}%)`;
+
+      const summaryTitle = document.getElementById('summary-title');
+      const summaryIcon = document.getElementById('summary-icon');
+      const summaryFeedback = document.getElementById('summary-feedback');
+
+      if (percentage >= 80) {
+        summaryIcon.textContent = "🏆";
+        summaryTitle.textContent = "Mastery Achieved!";
+        summaryFeedback.textContent = "Outstanding work! You have mastered this tier's tenses!";
+      } else if (percentage >= 50) {
+        summaryIcon.textContent = "⭐";
+        summaryTitle.textContent = "Good Effort!";
+        summaryFeedback.textContent = "Great progress! Review your mistakes below to hit 100%!";
+      } else {
+        summaryIcon.textContent = "💪";
+        summaryTitle.textContent = "Keep Practicing!";
+        summaryFeedback.textContent = "Don't give up! Review the rationale for each item and try again.";
+      }
+
+      // Speak out summary congratulation
+      if (ttsEnabled && 'speechSynthesis' in window) {
+        const summarySpeech = new SpeechSynthesisUtterance(`Tier finished! You scored ${score} out of ${questions.length}`);
+        summarySpeech.lang = 'en-US';
+        window.speechSynthesis.speak(summarySpeech);
+      }
+
+      // Render Review List
+      const reviewList = document.getElementById('review-list');
+      reviewList.innerHTML = '';
+      userAnswers.forEach((item, i) => {
+        const div = document.createElement('div');
+        div.className = 'review-item';
+        div.innerHTML = `
+          <div><strong>Q${i+1}: ${item.prompt}</strong></div>
+          <div style="color: ${item.isCorrect ? '#065F46' : '#991B1B'}; font-weight: 600;">
+            Your answer: ${item.userAns} ${item.isCorrect ? '✅' : '❌'}
+          </div>
+          ${!item.isCorrect ? `<div style="color: #065F46;">Correct answer: <strong>${item.correctAns}</strong></div>` : ''}
+          <div style="color: #4B5563; font-size: 0.85rem; margin-top: 4px;">💡 ${item.rationale}</div>
+        `;
+        reviewList.appendChild(div);
+      });
+    }
+  </script>
+</body>
+</html>
