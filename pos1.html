@@ -1,0 +1,1177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Parts of Speech Master - F.1 English</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Lexend:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        heading: ['Fredoka', 'sans-serif'],
+                        body: ['Lexend', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#f0f9ff',
+                            100: '#e0f2fe',
+                            500: '#0284c7',
+                            600: '#0369a1',
+                            700: '#075985',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Lexend', sans-serif;
+            background-color: #f8fafc;
+        }
+        .target-word {
+            text-decoration: underline;
+            text-decoration-color: #2563eb;
+            text-decoration-thickness: 3px;
+            text-underline-offset: 6px;
+            background-color: #dbeafe;
+            padding: 2px 8px;
+            border-radius: 6px;
+            color: #1e40af;
+            font-weight: 700;
+            display: inline-block;
+        }
+        .modified-word-highlight {
+            background-color: #fef08a;
+            color: #854d0e;
+            border: 2px dashed #ca8a04;
+            padding: 2px 6px;
+            border-radius: 6px;
+            font-weight: 700;
+            display: inline-block;
+            animation: pulseHighlight 1.5s infinite;
+        }
+        @keyframes pulseHighlight {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        .btn-bounce {
+            transition: transform 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.275), background-color 0.2s;
+        }
+        .btn-bounce:active {
+            transform: scale(0.95);
+        }
+        .confetti-particle {
+            position: fixed;
+            pointer-events: none;
+            z-index: 99;
+            animation: fall 1.5s ease-out forwards;
+        }
+        @keyframes fall {
+            0% { opacity: 1; transform: translateY(0) rotate(0deg); }
+            100% { opacity: 0; transform: translateY(200px) rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="min-h-screen text-slate-800 flex flex-col justify-between selection:bg-sky-200">
+
+    <!-- Navigation Bar -->
+    <header class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm">
+        <div class="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between">
+            <div class="flex items-center gap-3 cursor-pointer" onclick="app.showTierSelect()">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-sky-500 to-indigo-600 text-white flex items-center justify-center font-heading font-bold text-xl shadow-md">
+                    <i class="fa-solid font-bold fa-book-open"></i>
+                </div>
+                <div>
+                    <h1 class="font-heading font-bold text-lg md:text-xl text-slate-800 leading-none">Parts of Speech Quest</h1>
+                    <p class="text-xs text-slate-500 font-medium">F.1 English Bridging Exercise</p>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-2">
+                <!-- Level & XP Badge -->
+                <div class="hidden sm:flex items-center gap-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white px-3 py-1.5 rounded-xl shadow-xs text-xs font-bold">
+                    <i class="fa-solid fa-crown text-amber-200"></i>
+                    <span id="playerLevelBadge">Lvl 1 Novice</span>
+                    <span class="bg-black/20 px-2 py-0.5 rounded-md text-[10px]" id="playerXPBadge">0 XP</span>
+                </div>
+                <button onclick="app.openAchievementsModal()" class="p-2.5 rounded-xl bg-purple-100 hover:bg-purple-200 text-purple-700 transition relative" title="Badges & Achievements">
+                    <i class="fa-solid fa-award text-lg"></i>
+                    <span id="badgeCountDot" class="hidden absolute -top-1 -right-1 w-3 h-3 bg-rose-500 rounded-full border-2 border-white"></span>
+                </button>
+                <button onclick="app.toggleSound()" id="soundToggleBtn" class="p-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 transition" title="Toggle Sound Effects">
+                    <i class="fa-solid fa-volume-high text-lg"></i>
+                </button>
+                <button onclick="app.openCheatSheet()" class="px-3.5 py-2 rounded-xl bg-amber-100 hover:bg-amber-200 text-amber-800 font-semibold text-sm flex items-center gap-2 transition border border-amber-200">
+                    <i class="fa-solid fa-lightbulb text-amber-600"></i>
+                    <span class="hidden sm:inline">Grammar Helper</span>
+                    <span class="sm:hidden">Tips</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="max-w-4xl mx-auto w-full px-4 py-6 flex-grow">
+        <!-- View 1: Tier Selection -->
+        <div id="tierSelectView" class="space-y-6">
+            <div class="bg-gradient-to-r from-indigo-900 via-slate-900 to-sky-900 text-white rounded-2xl p-5 shadow-lg flex flex-wrap items-center justify-between gap-4">
+                <div class="flex items-center gap-4">
+                    <div class="w-14 h-14 rounded-2xl bg-amber-400 text-slate-900 flex items-center justify-center font-heading font-extrabold text-2xl shadow-md border-2 border-amber-200">
+                        <i class="fa-solid fa-bolt"></i>
+                    </div>
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <h3 class="font-heading font-bold text-xl" id="profileTitle">Grammar Explorer</h3>
+                            <span class="px-2.5 py-0.5 rounded-full bg-amber-400/20 text-amber-300 border border-amber-400/30 text-xs font-bold" id="profileLevelText">Level 1</span>
+                        </div>
+                        <p class="text-xs text-slate-300 mt-0.5">Earn XP by identifying parts of speech correctly!</p>
+                    </div>
+                </div>
+                <div class="w-full sm:w-64 bg-slate-800/80 p-3 rounded-xl border border-slate-700 space-y-1.5">
+                    <div class="flex justify-between text-xs font-bold">
+                        <span class="text-slate-300">XP Progress</span>
+                        <span class="text-amber-400" id="xpTextDisplay">0 / 200 XP</span>
+                    </div>
+                    <div class="w-full bg-slate-700 h-2.5 rounded-full overflow-hidden">
+                        <div id="xpBarFill" class="bg-gradient-to-r from-amber-400 to-orange-500 h-full w-0 transition-all duration-500"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="text-center space-y-2 py-2">
+                <span class="px-3 py-1 rounded-full bg-sky-100 text-sky-700 font-semibold text-xs uppercase tracking-wider">Interactive Grammar Practice</span>
+                <h2 class="font-heading text-3xl sm:text-4xl font-bold text-slate-800">Choose Your Exercise Tier</h2>
+                <p class="text-slate-600 max-w-lg mx-auto text-sm sm:text-base">Focusing on <span class="font-semibold text-sky-600">Nouns, Verbs, Adjectives, Adverbs & Prepositions</span>. Each level has 20 questions.</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+                <!-- Tier 1 Card -->
+                <div onclick="app.startTier(1)" class="bg-white rounded-2xl p-6 border-2 border-emerald-200 hover:border-emerald-500 shadow-sm hover:shadow-lg transition cursor-pointer flex flex-col justify-between group relative overflow-hidden btn-bounce">
+                    <div class="absolute -right-4 -bottom-4 opacity-10 group-hover:opacity-20 transition">
+                        <i class="fa-solid fa-seedling text-8xl text-emerald-600"></i>
+                    </div>
+                    <div>
+                        <div class="flex justify-between items-start mb-4">
+                            <span class="px-3 py-1 bg-emerald-100 text-emerald-700 rounded-lg text-xs font-bold uppercase">Tier 1</span>
+                            <span id="tier1Stars" class="text-amber-400 text-sm"><i class="fa-regular fa-star"></i><i class="fa-regular fa-star"></i><i class="fa-regular fa-star"></i></span>
+                        </div>
+                        <h3 class="font-heading font-bold text-xl text-slate-800 group-hover:text-emerald-600 transition">Bronze Level</h3>
+                        <p class="text-xs text-slate-500 font-medium mb-3">Foundation Vocabulary</p>
+                        <p class="text-slate-600 text-sm leading-relaxed mb-4">Clear clues, basic school vocabulary, and standard sentence structures.</p>
+                    </div>
+                    <div class="pt-4 border-t border-slate-100 flex items-center justify-between text-xs font-semibold text-emerald-600">
+                        <span>20 Questions</span>
+                        <span id="tier1Best" class="text-slate-400 font-normal">Best: -/20</span>
+                        <i class="fa-solid fa-circle-play text-lg group-hover:translate-x-1 transition"></i>
+                    </div>
+                </div>
+
+                <!-- Tier 2 Card -->
+                <div onclick="app.startTier(2)" class="bg-white rounded-2xl p-6 border-2 border-sky-200 hover:border-sky-500 shadow-sm hover:shadow-lg transition cursor-pointer flex flex-col justify-between group relative overflow-hidden btn-bounce">
+                    <div class="absolute -right-4 -bottom-4 opacity-10 group-hover:opacity-20 transition">
+                        <i class="fa-solid fa-tree text-8xl text-sky-600"></i>
+                    </div>
+                    <div>
+                        <div class="flex justify-between items-start mb-4">
+                            <span class="px-3 py-1 bg-sky-100 text-sky-700 rounded-lg text-xs font-bold uppercase">Tier 2</span>
+                            <span id="tier2Stars" class="text-amber-400 text-sm"><i class="fa-regular fa-star"></i><i class="fa-regular fa-star"></i><i class="fa-regular fa-star"></i></span>
+                        </div>
+                        <h3 class="font-heading font-bold text-xl text-slate-800 group-hover:text-sky-600 transition">Silver Level</h3>
+                        <p class="text-xs text-slate-500 font-medium mb-3">Intermediate Daily Rules</p>
+                        <p class="text-slate-600 text-sm leading-relaxed mb-4">Slightly richer contexts, classroom language, and daily routine phrases.</p>
+                    </div>
+                    <div class="pt-4 border-t border-slate-100 flex items-center justify-between text-xs font-semibold text-sky-600">
+                        <span>20 Questions</span>
+                        <span id="tier2Best" class="text-slate-400 font-normal">Best: -/20</span>
+                        <i class="fa-solid fa-circle-play text-lg group-hover:translate-x-1 transition"></i>
+                    </div>
+                </div>
+
+                <!-- Tier 3 Card -->
+                <div onclick="app.startTier(3)" class="bg-white rounded-2xl p-6 border-2 border-indigo-200 hover:border-indigo-500 shadow-sm hover:shadow-lg transition cursor-pointer flex flex-col justify-between group relative overflow-hidden btn-bounce">
+                    <div class="absolute -right-4 -bottom-4 opacity-10 group-hover:opacity-20 transition">
+                        <i class="fa-solid fa-trophy text-8xl text-indigo-600"></i>
+                    </div>
+                    <div>
+                        <div class="flex justify-between items-start mb-4">
+                            <span class="px-3 py-1 bg-indigo-100 text-indigo-700 rounded-lg text-xs font-bold uppercase">Tier 3</span>
+                            <span id="tier3Stars" class="text-amber-400 text-sm"><i class="fa-regular fa-star"></i><i class="fa-regular fa-star"></i><i class="fa-regular fa-star"></i></span>
+                        </div>
+                        <h3 class="font-heading font-bold text-xl text-slate-800 group-hover:text-indigo-600 transition">Gold Challenge</h3>
+                        <p class="text-xs text-slate-500 font-medium mb-3">Context & Flexible Words</p>
+                        <p class="text-slate-600 text-sm leading-relaxed mb-4">Words that change part of speech based on sentence context (e.g., <i>run, hard, fast, work</i>).</p>
+                    </div>
+                    <div class="pt-4 border-t border-slate-100 flex items-center justify-between text-xs font-semibold text-indigo-600">
+                        <span>20 Questions</span>
+                        <span id="tier3Best" class="text-slate-400 font-normal">Best: -/20</span>
+                        <i class="fa-solid fa-circle-play text-lg group-hover:translate-x-1 transition"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Grammar Summary Box -->
+            <div class="bg-slate-900 text-white rounded-2xl p-6 shadow-md mt-6">
+                <div class="flex items-center gap-3 mb-4">
+                    <div class="w-8 h-8 rounded-lg bg-sky-500/20 text-sky-400 flex items-center justify-center font-bold">
+                        <i class="fa-solid fa-graduation-cap"></i>
+                    </div>
+                    <h3 class="font-heading text-lg font-bold">Target 5 Parts of Speech</h3>
+                </div>
+                <div class="grid grid-cols-2 sm:grid-cols-5 gap-3 text-xs sm:text-sm">
+                    <div class="bg-slate-800 p-3 rounded-xl border border-slate-700">
+                        <div class="font-bold text-emerald-400">Noun (名詞)</div>
+                        <div class="text-slate-400 text-xs">People, places, things</div>
+                        <div class="text-slate-300 font-mono text-xs mt-1">teacher, school</div>
+                    </div>
+                    <div class="bg-slate-800 p-3 rounded-xl border border-slate-700">
+                        <div class="font-bold text-sky-400">Verb (動詞)</div>
+                        <div class="text-slate-400 text-xs">Actions, states</div>
+                        <div class="text-slate-300 font-mono text-xs mt-1">runs, collect</div>
+                    </div>
+                    <div class="bg-slate-800 p-3 rounded-xl border border-slate-700">
+                        <div class="font-bold text-amber-400">Adjective (形容詞)</div>
+                        <div class="text-slate-400 text-xs">Describes nouns</div>
+                        <div class="text-slate-300 font-mono text-xs mt-1">delicious, quiet</div>
+                    </div>
+                    <div class="bg-slate-800 p-3 rounded-xl border border-slate-700">
+                        <div class="font-bold text-purple-400">Adverb (副詞)</div>
+                        <div class="text-slate-400 text-xs">Describes actions/adj</div>
+                        <div class="text-slate-300 font-mono text-xs mt-1">quickly, neatly</div>
+                    </div>
+                    <div class="bg-slate-800 p-3 rounded-xl border border-slate-700 col-span-2 sm:col-span-1">
+                        <div class="font-bold text-rose-400">Preposition (介詞)</div>
+                        <div class="text-slate-400 text-xs">Time, position</div>
+                        <div class="text-slate-300 font-mono text-xs mt-1">under, in, on</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- View 2: Exercise Quiz View -->
+        <div id="quizView" class="hidden space-y-5">
+            <!-- Quiz Progress Top Bar -->
+            <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-200 flex flex-wrap items-center justify-between gap-3">
+                <div class="flex items-center gap-3">
+                    <button onclick="app.showTierSelect()" class="w-9 h-9 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center transition" title="Back to menu">
+                        <i class="fa-solid fa-arrow-left"></i>
+                    </button>
+                    <div>
+                        <span id="quizTierBadge" class="px-2.5 py-0.5 rounded-md text-xs font-bold bg-emerald-100 text-emerald-700 uppercase">Tier 1</span>
+                        <h3 id="quizProgressText" class="font-heading font-bold text-slate-800 text-base sm:text-lg">Question 1 / 20</h3>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-3">
+                    <!-- Power Up Buttons -->
+                    <div class="flex items-center gap-1.5 bg-slate-100 p-1 rounded-xl">
+                        <button onclick="app.usePowerUp5050()" id="power5050Btn" class="px-2.5 py-1 bg-white hover:bg-amber-50 rounded-lg border border-slate-200 text-amber-700 text-xs font-bold flex items-center gap-1 shadow-xs transition" title="50/50 - Remove two wrong choices">
+                            <i class="fa-solid fa-scissors text-amber-500"></i> <span>50:50</span> (<span id="count5050">3</span>)
+                        </button>
+                        <button onclick="app.usePowerUpSpotlight()" id="powerSpotlightBtn" class="px-2.5 py-1 bg-white hover:bg-sky-50 rounded-lg border border-slate-200 text-sky-700 text-xs font-bold flex items-center gap-1 shadow-xs transition" title="Spotlight Hint - Highlight modified word in sentence">
+                            <i class="fa-solid fa-magnifying-glass text-sky-500"></i> <span>Spotlight</span> (<span id="countSpotlight">3</span>)
+                        </button>
+                    </div>
+
+                    <!-- Stats Badges -->
+                    <div class="flex items-center gap-2 text-sm font-semibold">
+                        <div class="flex items-center gap-1.5 text-amber-500 bg-amber-50 px-3 py-1.5 rounded-xl border border-amber-100">
+                            <i class="fa-solid fa-fire text-amber-500 animate-bounce"></i>
+                            <span><span id="quizStreak">0</span>x</span>
+                        </div>
+                        <div class="flex items-center gap-1.5 text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-xl border border-emerald-100">
+                            <i class="fa-solid fa-circle-check"></i>
+                            <span><span id="quizScore">0</span>/20</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Progress Bar -->
+            <div class="w-full bg-slate-200 h-2.5 rounded-full overflow-hidden">
+                <div id="quizProgressBar" class="bg-sky-500 h-full w-0 transition-all duration-300"></div>
+            </div>
+
+            <!-- Question Card -->
+            <div class="bg-white rounded-2xl p-6 sm:p-8 shadow-sm border border-slate-200 space-y-6">
+                <div class="flex items-center justify-between">
+                    <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Identify the underlined word:</span>
+                    <button onclick="app.speakSentence()" class="text-xs font-semibold bg-sky-50 hover:bg-sky-100 text-sky-600 px-3 py-1.5 rounded-xl flex items-center gap-1.5 transition">
+                        <i class="fa-solid fa-volume-high"></i>
+                        <span>Listen Sentence</span>
+                    </button>
+                </div>
+
+                <!-- The Sentence Box -->
+                <div class="bg-slate-50 border border-slate-200 rounded-2xl p-6 text-center min-h-[110px] flex items-center justify-center relative overflow-hidden">
+                    <p id="sentenceDisplay" class="text-xl sm:text-2xl font-body text-slate-800 leading-relaxed">
+                        <!-- Sentence loaded dynamically -->
+                    </p>
+                </div>
+
+                <div id="connectionDiagramBox" class="hidden bg-gradient-to-r from-amber-50 via-sky-50 to-indigo-50 border-2 border-dashed border-sky-300 rounded-xl p-4 text-center">
+                    <span class="text-[11px] font-bold text-slate-500 uppercase tracking-wider block mb-2">Word Relationship Visualization</span>
+                    <div id="connectionDiagramContent" class="flex items-center justify-center gap-2 flex-wrap text-sm sm:text-base">
+                        <!-- Filled dynamically -->
+                    </div>
+                </div>
+
+                <!-- Options Grid (5 Parts of Speech) -->
+                <div class="grid grid-cols-1 sm:grid-cols-5 gap-3" id="optionsContainer">
+                    <button onclick="app.selectAnswer('Noun')" class="btn-bounce option-btn p-3.5 sm:p-4 rounded-xl border-2 border-slate-200 hover:border-emerald-500 hover:bg-emerald-50/50 text-slate-700 font-heading font-bold text-base sm:text-sm flex flex-col items-center gap-1 transition">
+                        <span>Noun</span>
+                        <span class="text-[10px] font-normal text-slate-400">(名詞)</span>
+                    </button>
+                    <button onclick="app.selectAnswer('Verb')" class="btn-bounce option-btn p-3.5 sm:p-4 rounded-xl border-2 border-slate-200 hover:border-sky-500 hover:bg-sky-50/50 text-slate-700 font-heading font-bold text-base sm:text-sm flex flex-col items-center gap-1 transition">
+                        <span>Verb</span>
+                        <span class="text-[10px] font-normal text-slate-400">(動詞)</span>
+                    </button>
+                    <button onclick="app.selectAnswer('Adjective')" class="btn-bounce option-btn p-3.5 sm:p-4 rounded-xl border-2 border-slate-200 hover:border-amber-500 hover:bg-amber-50/50 text-slate-700 font-heading font-bold text-base sm:text-sm flex flex-col items-center gap-1 transition">
+                        <span>Adjective</span>
+                        <span class="text-[10px] font-normal text-slate-400">(形容詞)</span>
+                    </button>
+                    <button onclick="app.selectAnswer('Adverb')" class="btn-bounce option-btn p-3.5 sm:p-4 rounded-xl border-2 border-slate-200 hover:border-purple-500 hover:bg-purple-50/50 text-slate-700 font-heading font-bold text-base sm:text-sm flex flex-col items-center gap-1 transition">
+                        <span>Adverb</span>
+                        <span class="text-[10px] font-normal text-slate-400">(副詞)</span>
+                    </button>
+                    <button onclick="app.selectAnswer('Preposition')" class="btn-bounce option-btn p-3.5 sm:p-4 rounded-xl border-2 border-slate-200 hover:border-rose-500 hover:bg-rose-50/50 text-slate-700 font-heading font-bold text-base sm:text-sm flex flex-col items-center gap-1 transition">
+                        <span>Preposition</span>
+                        <span class="text-[10px] font-normal text-slate-400">(介詞)</span>
+                    </button>
+                </div>
+
+                <!-- Explanation / Feedback Box -->
+                <div id="feedbackBox" class="hidden rounded-xl p-4 border space-y-2 relative">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-2 font-bold text-base" id="feedbackTitle">
+                            <!-- Icon and Title -->
+                        </div>
+                        <button onclick="app.speakExplanation()" class="text-xs bg-white/80 hover:bg-white px-2.5 py-1 rounded-lg border border-slate-200 text-slate-700 font-semibold flex items-center gap-1.5 shadow-xs transition">
+                            <i class="fa-solid fa-volume-high text-sky-600"></i>
+                            <span>Speak Explanation</span>
+                        </button>
+                    </div>
+                    <p id="feedbackText" class="text-xs sm:text-sm text-slate-700 leading-relaxed"></p>
+                </div>
+
+                <!-- Action Button Container -->
+                <div class="flex justify-end pt-2">
+                    <button id="nextBtn" onclick="app.nextQuestion()" class="hidden px-6 py-3 rounded-xl bg-sky-600 hover:bg-sky-700 text-white font-heading font-bold text-base flex items-center gap-2 shadow-md transition btn-bounce">
+                        <span>Next Question</span>
+                        <i class="fa-solid fa-arrow-right"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- View 3: Tier Completion / Summary View -->
+        <div id="summaryView" class="hidden space-y-6">
+            <div class="bg-white rounded-2xl p-6 sm:p-10 shadow-sm border border-slate-200 text-center space-y-6 max-w-2xl mx-auto">
+                <div class="w-20 h-20 rounded-full bg-amber-100 text-amber-500 mx-auto flex items-center justify-center text-4xl shadow-inner">
+                    <i id="summaryTrophyIcon" class="fa-solid fa-trophy"></i>
+                </div>
+
+                <div>
+                    <span id="summaryTierBadge" class="px-3 py-1 rounded-full bg-sky-100 text-sky-700 font-bold text-xs uppercase">Tier 1 Completed</span>
+                    <h2 class="font-heading text-3xl font-bold text-slate-800 mt-2" id="summaryTitle">Awesome Effort!</h2>
+                    <p class="text-slate-500 text-sm mt-1" id="summarySubtitle">You completed 20 questions in this set.</p>
+                </div>
+
+                <!-- Score Display -->
+                <div class="bg-slate-50 rounded-2xl p-6 border border-slate-200 flex items-center justify-around">
+                    <div>
+                        <div class="text-xs text-slate-400 uppercase font-semibold">Your Score</div>
+                        <div class="font-heading text-4xl font-bold text-sky-600" id="summaryScore">18 / 20</div>
+                    </div>
+                    <div class="h-10 w-px bg-slate-200"></div>
+                    <div>
+                        <div class="text-xs text-slate-400 uppercase font-semibold">Accuracy</div>
+                        <div class="font-heading text-4xl font-bold text-emerald-600" id="summaryAccuracy">90%</div>
+                    </div>
+                </div>
+
+                <!-- Mistakes Breakdown -->
+                <div id="mistakesReviewContainer" class="hidden text-left space-y-3 pt-2">
+                    <h3 class="font-heading font-bold text-slate-800 text-base flex items-center gap-2">
+                        <i class="fa-solid fa-circle-exclamation text-rose-500"></i>
+                        <span>Review Mistakes (<span id="mistakeCount">0</span>)</span>
+                    </h3>
+                    <div id="mistakesList" class="space-y-2 max-h-60 overflow-y-auto pr-1">
+                        <!-- Filled dynamically -->
+                    </div>
+                </div>
+
+                <div class="flex flex-wrap items-center justify-center gap-3 pt-4 border-t border-slate-100">
+                    <button onclick="app.retryCurrentTier()" class="px-5 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-sm transition">
+                        <i class="fa-solid fa-rotate-right mr-1.5"></i> Try Again
+                    </button>
+                    <button onclick="app.showTierSelect()" class="px-6 py-2.5 rounded-xl bg-sky-600 hover:bg-sky-700 text-white font-semibold text-sm shadow-md transition">
+                        Back to Tiers
+                    </button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Modal: Achievements / Badges Drawer -->
+    <div id="achievementsModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-2xl max-w-lg w-full max-h-[90vh] overflow-hidden shadow-2xl flex flex-col">
+            <div class="p-5 border-b border-slate-200 flex items-center justify-between bg-purple-50">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-9 h-9 rounded-xl bg-purple-600 text-white flex items-center justify-center font-bold">
+                        <i class="fa-solid fa-trophy"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-heading font-bold text-lg text-slate-800">Grammar Badges</h3>
+                        <p class="text-xs text-slate-500">Unlock achievements as you learn</p>
+                    </div>
+                </div>
+                <button onclick="app.closeAchievementsModal()" class="w-8 h-8 rounded-full bg-slate-200 text-slate-600 hover:bg-slate-300 flex items-center justify-center transition">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div class="p-5 overflow-y-auto space-y-3" id="achievementsList">
+                <!-- Achievements loaded dynamically -->
+            </div>
+            <div class="p-4 border-t border-slate-200 bg-slate-50 text-right">
+                <button onclick="app.closeAchievementsModal()" class="px-5 py-2.5 bg-slate-800 hover:bg-slate-900 text-white font-semibold text-xs rounded-xl transition">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Grammar Cheat Sheet / Helper -->
+    <div id="cheatSheetModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden shadow-2xl flex flex-col">
+            <!-- Modal Header -->
+            <div class="p-5 border-b border-slate-200 flex items-center justify-between bg-slate-50">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-8 h-8 rounded-lg bg-amber-100 text-amber-600 flex items-center justify-center font-bold">
+                        <i class="fa-solid fa-lightbulb"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-heading font-bold text-lg text-slate-800">Grammar Quick Guide</h3>
+                        <p class="text-xs text-slate-500">5 Target Parts of Speech (F.1 Level)</p>
+                    </div>
+                </div>
+                <button onclick="app.closeCheatSheet()" class="w-8 h-8 rounded-full bg-slate-200 text-slate-600 hover:bg-slate-300 flex items-center justify-center transition">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <!-- Modal Content -->
+            <div class="p-6 overflow-y-auto space-y-5 text-sm">
+                <!-- Noun -->
+                <div class="p-4 rounded-xl border border-emerald-200 bg-emerald-50/40">
+                    <div class="flex items-center justify-between font-bold text-emerald-800 text-base mb-1">
+                        <span>1. Noun (名詞)</span>
+                        <span class="text-xs bg-emerald-100 px-2 py-0.5 rounded text-emerald-700">Who / What</span>
+                    </div>
+                    <p class="text-slate-600 leading-relaxed">Names of <b>people, places, things, or jobs</b>. Look for "a", "an", "the" in front!</p>
+                    <div class="mt-2 text-xs font-mono text-emerald-900 bg-white/80 p-2 rounded border border-emerald-100">
+                        <b>Examples:</b> principal, lab technician, janitor, school, book, run (as a noun: "go for a run")
+                    </div>
+                </div>
+
+                <!-- Verb -->
+                <div class="p-4 rounded-xl border border-sky-200 bg-sky-50/40">
+                    <div class="flex items-center justify-between font-bold text-sky-800 text-base mb-1">
+                        <span>2. Verb (動詞)</span>
+                        <span class="text-xs bg-sky-100 px-2 py-0.5 rounded text-sky-700">Action / State</span>
+                    </div>
+                    <p class="text-slate-600 leading-relaxed">Describes an <b>action, habit, or state</b> (what someone does or experiences).</p>
+                    <div class="mt-2 text-xs font-mono text-sky-900 bg-white/80 p-2 rounded border border-sky-100">
+                        <b>Examples:</b> collects, trains, listen, eat, decorated, lasted, snapped
+                    </div>
+                </div>
+
+                <!-- Adjective -->
+                <div class="p-4 rounded-xl border border-amber-200 bg-amber-50/40">
+                    <div class="flex items-center justify-between font-bold text-amber-800 text-base mb-1">
+                        <span>3. Adjective (形容詞)</span>
+                        <span class="text-xs bg-amber-100 px-2 py-0.5 rounded text-amber-700">Describes Noun</span>
+                    </div>
+                    <p class="text-slate-600 leading-relaxed">Describes or gives more detail about a <b>noun</b> (How is it? What kind?).</p>
+                    <div class="mt-2 text-xs font-mono text-amber-900 bg-white/80 p-2 rounded border border-amber-100">
+                        <b>Examples:</b> delicious cake, blue uniform, kind teacher, dangerous experiment, fast runner
+                    </div>
+                </div>
+
+                <!-- Adverb -->
+                <div class="p-4 rounded-xl border border-purple-200 bg-purple-50/40">
+                    <div class="flex items-center justify-between font-bold text-purple-800 text-base mb-1">
+                        <span>4. Adverb (副詞)</span>
+                        <span class="text-xs bg-purple-100 px-2 py-0.5 rounded text-purple-700">How / How much</span>
+                    </div>
+                    <p class="text-slate-600 leading-relaxed">Describes <b>HOW</b> an action is done (often ends in <b>-ly</b>) or modifies an adjective.</p>
+                    <div class="mt-2 text-xs font-mono text-purple-900 bg-white/80 p-2 rounded border border-purple-100">
+                        <b>Examples:</b> runs <u>quickly</u>, writes <u>neatly</u>, speak <u>politely</u>, arrived <u>late</u>, <u>pretty</u> big
+                    </div>
+                </div>
+
+                <!-- Preposition -->
+                <div class="p-4 rounded-xl border border-rose-200 bg-rose-50/40">
+                    <div class="flex items-center justify-between font-bold text-rose-800 text-base mb-1">
+                        <span>5. Preposition (介詞)</span>
+                        <span class="text-xs bg-rose-100 px-2 py-0.5 rounded text-rose-700">Time / Location</span>
+                    </div>
+                    <p class="text-slate-600 leading-relaxed">Shows position, place, direction, or time connection.</p>
+                    <div class="mt-2 text-xs font-mono text-rose-900 bg-white/80 p-2 rounded border border-rose-100">
+                        <b>Examples:</b> <u>under</u> the desk, <u>on</u> the wall, <u>in</u> the evening, <u>beside</u>, <u>for</u> 10 years, <u>by</u> Monday
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal Footer -->
+            <div class="p-4 border-t border-slate-200 bg-slate-50 text-right">
+                <button onclick="app.closeCheatSheet()" class="px-5 py-2.5 bg-slate-800 hover:bg-slate-900 text-white font-semibold text-xs rounded-xl transition">Got it!</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-slate-200 py-4 text-center text-xs text-slate-400">
+        <p>Form 1 English Bridging Exercise • Parts of Speech Master</p>
+    </footer>
+
+    <script>
+        const QUESTION_BANK = {
+            1: [
+                { id: 101, sentence: "The <u class='target-word'>principal</u> greeted all students at the school gate.", word: "principal", answer: "Noun", modifiedWord: "greeted", modifiedType: "Verb", relation: "performs action", explanation: "<b>Principal</b> is a <span class='px-1.5 py-0.5 rounded font-bold bg-emerald-100 text-emerald-800 border border-emerald-300'>Noun (名詞)</span>. It refers to the head person of a school who performs the action <span class='px-1.5 py-0.5 rounded font-bold bg-sky-100 text-sky-800 border border-sky-300'>greeted (Verb)</span>." },
+                { id: 102, sentence: "Peter runs <u class='target-word'>quickly</u> to catch the school bus.", word: "quickly", answer: "Adverb", modifiedWord: "runs", modifiedType: "Verb", relation: "modifies HOW", explanation: "<b>Quickly</b> is an <span class='px-1.5 py-0.5 rounded font-bold bg-purple-100 text-purple-800 border border-purple-300'>Adverb (副詞)</span>. It describes HOW Peter performs the action <span class='px-1.5 py-0.5 rounded font-bold bg-sky-100 text-sky-800 border border-sky-300'>runs (Verb)</span>." },
+                { id: 103, sentence: "The class monitor <u class='target-word'>collects</u> the homework every morning.", word: "collects", answer: "Verb", modifiedWord: "homework", modifiedType: "Noun", relation: "acts upon", explanation: "<b>Collects</b> is a <span class='px-1.5 py-0.5 rounded font-bold bg-sky-100 text-sky-800 border border-sky-300'>Verb (動詞)</span>. It describes the action performed on the <span class='px-1.5 py-0.5 rounded font-bold bg-emerald-100 text-emerald-800 border border-emerald-300'>homework (Noun)</span>." },
+                { id: 104, sentence: "Mary bought a <u class='target-word'>delicious</u> cake for her class teacher.", word: "delicious", answer: "Adjective", modifiedWord: "cake", modifiedType: "Noun", relation: "describes quality of", explanation: "<b>Delicious</b> is an <span class='px-1.5 py-0.5 rounded font-bold bg-amber-100 text-amber-800 border border-amber-300'>Adjective (形容詞)</span>. It describes the taste quality of the <span class='px-1.5 py-0.5 rounded font-bold bg-emerald-100 text-emerald-800 border border-emerald-300'>cake (Noun)</span>." },
+                { id: 105, sentence: "The dog is sleeping <u class='target-word'>under</u> the big desk.", word: "under", answer: "Preposition", modifiedWord: "desk", modifiedType: "Noun", relation: "shows location to", explanation: "<b>Under</b> is a <span class='px-1.5 py-0.5 rounded font-bold bg-rose-100 text-rose-800 border border-rose-300'>Preposition (介詞)</span>. It shows the position relative to the <span class='px-1.5 py-0.5 rounded font-bold bg-emerald-100 text-emerald-800 border border-emerald-300'>desk (Noun)</span>." },
+                { id: 106, sentence: "We should speak <u class='target-word'>politely</u> in the school library.", word: "politely", answer: "Adverb", modifiedWord: "speak", modifiedType: "Verb", relation: "modifies MANNER of", explanation: "<b>Politely</b> is an <span class='px-1.5 py-0.5 rounded font-bold bg-purple-100 text-purple-800 border border-purple-300'>Adverb (副詞)</span>. It describes the polite manner of how we should <span class='px-1.5 py-0.5 rounded font-bold bg-sky-100 text-sky-800 border border-sky-300'>speak (Verb)</span>." },
+                { id: 107, sentence: "The <u class='target-word'>janitor</u> cleans the classroom every evening.", word: "janitor", answer: "Noun", modifiedWord: "cleans", modifiedType: "Verb", relation: "performs action", explanation: "<b>Janitor</b> is a <span class='px-1.5 py-0.5 rounded font-bold bg-emerald-100 text-emerald-800 border border-emerald-300'>Noun (名詞)</span>. Refers to the person who performs <span class='px-1.5 py-0.5 rounded font-bold bg-sky-100 text-sky-800 border border-sky-300'>cleans (Verb)</span>." },
+                { id: 108, sentence: "Students must <u class='target-word'>listen</u> to the teacher carefully.", word: "listen", answer: "Verb", modifiedWord: "teacher", modifiedType: "Noun", relation: "action towards", explanation: "<b>Listen</b> is a <span class='px-1.5 py-0.5 rounded font-bold bg-sky-100 text-sky-800 border border-sky-300'>Verb (動詞)</span>. It expresses the action directed towards the <span class='px-1.5 py-0.5 rounded font-bold bg-emerald-100 text-emerald-800 border border-emerald-300'>teacher (Noun)</span>." },
+                { id: 109, sentence: "My sister wears a <u class='target-word'>blue</u> uniform to school.", word: "blue", answer: "Adjective", modifiedWord: "uniform", modifiedType: "Noun", relation: "describes color of", explanation: "<b>Blue</b> is an <span class='px-1.5 py-0.5 rounded font-bold bg-amber-100 text-amber-800 border border-amber-300'>Adjective (形容詞)</span>. It describes the color of the <span class='px-1.5 py-0.5 rounded font-bold bg-emerald-100 text-emerald-800 border border-emerald-300'>uniform (Noun)</span>." },
+                { id: 110, sentence: "Put your books <u class='target-word'>on</u> the desk before class starts.", word: "on", answer: "Preposition", modifiedWord: "desk", modifiedType: "Noun", relation: "shows position on", explanation: "<b>On</b> is a <span class='px-1.5 py-0.5 rounded font-bold bg-rose-100 text-rose-800 border border-rose-300'>Preposition (介詞)</span>. It connects books to the location of the <span class='px-1.5 py-0.5 rounded font-bold bg-emerald-100 text-emerald-800 border border-emerald-300'>desk (Noun)</span>." },
+                { id: 111, sentence: "The <u class='target-word'>lab technician</u> prepared the science equipment.", word: "lab technician", answer: "Noun", modifiedWord: "prepared", modifiedType: "Verb", relation: "performs action", explanation: "<b>Lab technician</b> is a <span class='px-1.5 py-0.5 rounded font-bold bg-emerald-100 text-emerald-800 border border-emerald-300'>Noun (名詞)</span>. Refers to the person doing the <span class='px-1.5 py-0.5 rounded font-bold bg-sky-100 text-sky-800 border border-sky-300'>prepared (Verb)</span> action." },
+                { id: 112, sentence: "They <u class='target-word'>eat</u> lunch together in the canteen.", word: "eat", answer: "Verb", modifiedWord: "lunch", modifiedType: "Noun", relation: "action on object", explanation: "<b>Eat</b> is a <span class='px-1.5 py-0.5 rounded font-bold bg-sky-100 text-sky-800 border border-sky-300'>Verb (動詞)</span>. It describes the physical action with <span class='px-1.5 py-0.5 rounded font-bold bg-emerald-100 text-emerald-800 border border-emerald-300'>lunch (Noun)</span>." },
+                { id: 113, sentence: "Our social worker is very <u class='target-word'>kind</u> to everyone.", word: "kind", answer: "Adjective", modifiedWord: "social worker", modifiedType: "Noun", relation: "describes character of", explanation: "<b>Kind</b> is an <span class='px-1.5 py-0.5 rounded font-bold bg-amber-100 text-amber-800 border border-amber-300'>Adjective (形容詞)</span>. It describes the personality of the <span class='px-1.5 py-0.5 rounded font-bold bg-emerald-100 text-emerald-800 border border-emerald-300'>social worker (Noun)</span>." },
+                { id: 114, sentence: "He writes <u class='target-word'>neatly</u> in his English workbook.", word: "neatly", answer: "Adverb", modifiedWord: "writes", modifiedType: "Verb", relation: "modifies HOW", explanation: "<b>Neatly</b> is an <span class='px-1.5 py-0.5 rounded font-bold bg-purple-100 text-purple-800 border border-purple-300'>Adverb (副詞)</span>. It modifies the action <span class='px-1.5 py-0.5 rounded font-bold bg-sky-100 text-sky-800 border border-sky-300'>writes (Verb)</span>." },
+                { id: 115, sentence: "There is a cat <u class='target-word'>behind</u> the computer room.", word: "behind", answer: "Preposition", modifiedWord: "computer room", modifiedType: "Noun", relation: "shows spatial relation to", explanation: "<b>Behind</b> is a <span class='px-1.5 py-0.5 rounded font-bold bg-rose-100 text-rose-800 border border-rose-300'>Preposition (介詞)</span> showing location relative to the <span class='px-1.5 py-0.5 rounded font-bold bg-emerald-100 text-emerald-800 border border-emerald-300'>computer room (Noun)</span>." },
+                { id: 116, sentence: "The <u class='target-word'>librarian</u> helps us find interesting storybooks.", word: "librarian", answer: "Noun", modifiedWord: "helps", modifiedType: "Verb", relation: "performs action", explanation: "<b>Librarian</b> is a <span class='px-1.5 py-0.5 rounded font-bold bg-emerald-100 text-emerald-800 border border-emerald-300'>Noun (名詞)</span>. Refers to the staff member who <span class='px-1.5 py-0.5 rounded font-bold bg-sky-100 text-sky-800 border border-sky-300'>helps (Verb)</span>." },
+                { id: 117, sentence: "Please <u class='target-word'>close</u> the window because it is cold.", word: "close", answer: "Verb", modifiedWord: "window", modifiedType: "Noun", relation: "action applied to", explanation: "<b>Close</b> is a <span class='px-1.5 py-0.5 rounded font-bold bg-sky-100 text-sky-800 border border-sky-300'>Verb (動詞)</span>. Action applied to the <span class='px-1.5 py-0.5 rounded font-bold bg-emerald-100 text-emerald-800 border border-emerald-300'>window (Noun)</span>." },
+                { id: 118, sentence: "She gave me a <u class='target-word'>sweet</u> smile.", word: "sweet", answer: "Adjective", modifiedWord: "smile", modifiedType: "Noun", relation: "describes trait of", explanation: "<b>Sweet</b> is an <span class='px-1.5 py-0.5 rounded font-bold bg-amber-100 text-amber-800 border border-amber-300'>Adjective (形容詞)</span>. It describes the noun <span class='px-1.5 py-0.5 rounded font-bold bg-emerald-100 text-emerald-800 border border-emerald-300'>smile (Noun)</span>." },
+                { id: 119, sentence: "The students waited <u class='target-word'>patiently</u> in a line.", word: "patiently", answer: "Adverb", modifiedWord: "waited", modifiedType: "Verb", relation: "modifies MANNER of", explanation: "<b>Patiently</b> is an <span class='px-1.5 py-0.5 rounded font-bold bg-purple-100 text-purple-800 border border-purple-300'>Adverb (副詞)</span>. It describes HOW they <span class='px-1.5 py-0.5 rounded font-bold bg-sky-100 text-sky-800 border border-sky-300'>waited (Verb)</span>." },
+                { id: 120, sentence: "We eat dinner at six o'clock <u class='target-word'>in</u> the evening.", word: "in", answer: "Preposition", modifiedWord: "evening", modifiedType: "Noun", relation: "connects time to", explanation: "<b>In</b> is a <span class='px-1.5 py-0.5 rounded font-bold bg-rose-100 text-rose-800 border border-rose-300'>Preposition (介詞)</span> connecting time to the <span class='px-1.5 py-0.5 rounded font-bold bg-emerald-100 text-emerald-800 border border-emerald-300'>evening (Noun)</span>." }
+            ],
+            2: [
+                { id: 201, sentence: "Don't be <u class='target-word'>late</u> for the morning assembly.", word: "late", answer: "Adjective", modifiedWord: "you (implied)", modifiedType: "Noun", relation: "describes condition of", explanation: "<b>Late</b> here is an <span class='px-1.5 py-0.5 rounded font-bold bg-amber-100 text-amber-800 border border-amber-300'>Adjective (形容詞)</span> following the linking verb 'be' describing your state." },
+                { id: 202, sentence: "Tom arrived <u class='target-word'>late</u> because of the heavy traffic.", word: "late", answer: "Adverb", modifiedWord: "arrived", modifiedType: "Verb", relation: "modifies TIME of", explanation: "<b>Late</b> here is an <span class='px-1.5 py-0.5 rounded font-bold bg-purple-100 text-purple-800 border border-purple-300'>Adverb (副詞)</span>. It modifies WHEN Tom <span class='px-1.5 py-0.5 rounded font-bold bg-sky-100 text-sky-800 border border-sky-300'>arrived (Verb)</span>." },
+                { id: 203, sentence: "The coach <u class='target-word'>trains</u> the basketball team every Tuesday.", word: "trains", answer: "Verb", modifiedWord: "team", modifiedType: "Noun", relation: "action directed at", explanation: "<b>Trains</b> is a <span class='px-1.5 py-0.5 rounded font-bold bg-sky-100 text-sky-800 border border-sky-300'>Verb (動詞)</span> directed at the <span class='px-1.5 py-0.5 rounded font-bold bg-emerald-100 text-emerald-800 border border-emerald-300'>team (Noun)</span>." },
+                { id: 204, sentence: "She sat <u class='target-word'>beside</u> her best friend during music class.", word: "beside", answer: "Preposition", modifiedWord: "friend", modifiedType: "Noun", relation: "shows position next to", explanation: "<b>Beside</b> is a <span class='px-1.5 py-0.5 rounded font-bold bg-rose-100 text-rose-800 border border-rose-300'>Preposition (介詞)</span> showing position next to her <span class='px-1.5 py-0.5 rounded font-bold bg-emerald-100 text-emerald-800 border border-emerald-300'>friend (Noun)</span>." },
+                { id: 205, sentence: "The science experiment was <u class='target-word'>dangerous</u>.", word: "dangerous", answer: "Adjective", modifiedWord: "experiment", modifiedType: "Noun", relation: "describes state of", explanation: "<b>Dangerous</b> is an <span class='px-1.5 py-0.5 rounded font-bold bg-amber-100 text-amber-800 border border-amber-300'>Adjective (形容詞)</span> describing the <span class='px-1.5 py-0.5 rounded font-bold bg-emerald-100 text-emerald-800 border border-emerald-300'>experiment (Noun)</span>." },
+                { id: 206, sentence: "The children played <u class='target-word'>happily</u> in the playground.", word: "happily", answer: "Adverb", modifiedWord: "played", modifiedType: "Verb", relation: "modifies MANNER of", explanation: "<b>Happily</b> is an <span class='px-1.5 py-0.5 rounded font-bold bg-purple-100 text-purple-800 border border-purple-300'>Adverb (副詞)</span> describing HOW children <span class='px-1.5 py-0.5 rounded font-bold bg-sky-100 text-sky-800 border border-sky-300'>played (Verb)</span>." },
+                { id: 207, sentence: "He forgot his <u class='target-word'>dictionary</u> in the general office.", word: "dictionary", answer: "Noun", modifiedWord: "forgot", modifiedType: "Verb", relation: "object of action", explanation: "<b>Dictionary</b> is a <span class='px-1.5 py-0.5 rounded font-bold bg-emerald-100 text-emerald-800 border border-emerald-300'>Noun (名詞)</span>. It is the object forgotten." },
+                { id: 208, sentence: "We should <u class='target-word'>respect</u> our teachers and classmates.", word: "respect", answer: "Verb", modifiedWord: "teachers", modifiedType: "Noun", relation: "attitude towards", explanation: "<b>Respect</b> is a <span class='px-1.5 py-0.5 rounded font-bold bg-sky-100 text-sky-800 border border-sky-300'>Verb (動詞)</span> directed towards <span class='px-1.5 py-0.5 rounded font-bold bg-emerald-100 text-emerald-800 border border-emerald-300'>teachers (Noun)</span>." },
+                { id: 209, sentence: "The room became very <u class='target-word'>quiet</u> when the teacher entered.", word: "quiet", answer: "Adjective", modifiedWord: "room", modifiedType: "Noun", relation: "describes state of", explanation: "<b>Quiet</b> is an <span class='px-1.5 py-0.5 rounded font-bold bg-amber-100 text-amber-800 border border-amber-300'>Adjective (形容詞)</span> describing the <span class='px-1.5 py-0.5 rounded font-bold bg-emerald-100 text-emerald-800 border border-emerald-300'>room (Noun)</span>." },
+                { id: 210, sentence: "The ball rolled <u class='target-word'>into</u> the classroom.", word: "into", answer: "Preposition", modifiedWord: "classroom", modifiedType: "Noun", relation: "shows motion to inside of", explanation: "<b>Into</b> is a <span class='px-1.5 py-0.5 rounded font-bold bg-rose-100 text-rose-800 border border-rose-300'>Preposition (介詞)</span> showing direction towards inside the <span class='px-1.5 py-0.5 rounded font-bold bg-emerald-100 text-emerald-800 border border-emerald-300'>classroom (Noun)</span>." },
+                { id: 211, sentence: "He solved the math problem <u class='target-word'>easily</u>.", word: "easily", answer: "Adverb", modifiedWord: "solved", modifiedType: "Verb", relation: "modifies MANNER of", explanation: "<b>Easily</b> is an <span class='px-1.5 py-0.5 rounded font-bold bg-purple-100 text-purple-800 border border-purple-300'>Adverb (副詞)</span> describing HOW he <span class='px-1.5 py-0.5 rounded font-bold bg-sky-100 text-sky-800 border border-sky-300'>solved (Verb)</span>." },
+                { id: 212, sentence: "The <u class='target-word'>discipline master</u> talked to the naughty student.", word: "discipline master", answer: "Noun", modifiedWord: "talked", modifiedType: "Verb", relation: "performs action", explanation: "<b>Discipline master</b> is a <span class='px-1.5 py-0.5 rounded font-bold bg-emerald-100 text-emerald-800 border border-emerald-300'>Noun (名詞)</span> who <span class='px-1.5 py-0.5 rounded font-bold bg-sky-100 text-sky-800 border border-sky-300'>talked (Verb)</span>." },
+                { id: 213, sentence: "I <u class='target-word'>understand</u> this difficult grammar topic now.", word: "understand", answer: "Verb", modifiedWord: "topic", modifiedType: "Noun", relation: "mental action on", explanation: "<b>Understand</b> is a <span class='px-1.5 py-0.5 rounded font-bold bg-sky-100 text-sky-800 border border-sky-300'>Verb (動詞)</span> representing mental action about the <span class='px-1.5 py-0.5 rounded font-bold bg-emerald-100 text-emerald-800 border border-emerald-300'>topic (Noun)</span>." },
+                { id: 214, sentence: "She wears a <u class='target-word'>warm</u> jacket on cold days.", word: "warm", answer: "Adjective", modifiedWord: "jacket", modifiedType: "Noun", relation: "describes type of", explanation: "<b>Warm</b> is an <span class='px-1.5 py-0.5 rounded font-bold bg-amber-100 text-amber-800 border border-amber-300'>Adjective (形容詞)</span> describing the <span class='px-1.5 py-0.5 rounded font-bold bg-emerald-100 text-emerald-800 border border-emerald-300'>jacket (Noun)</span>." },
+                { id: 215, sentence: "Walk <u class='target-word'>across</u> the road carefully.", word: "across", answer: "Preposition", modifiedWord: "road", modifiedType: "Noun", relation: "shows direction over", explanation: "<b>Across</b> is a <span class='px-1.5 py-0.5 rounded font-bold bg-rose-100 text-rose-800 border border-rose-300'>Preposition (介詞)</span> showing direction over the <span class='px-1.5 py-0.5 rounded font-bold bg-emerald-100 text-emerald-800 border border-emerald-300'>road (Noun)</span>." },
+                { id: 216, sentence: "They <u class='target-word'>decorated</u> the board with colorful pictures.", word: "decorated", answer: "Verb", modifiedWord: "board", modifiedType: "Noun", relation: "action applied to", explanation: "<b>Decorated</b> is a <span class='px-1.5 py-0.5 rounded font-bold bg-sky-100 text-sky-800 border border-sky-300'>Verb (動詞)</span> applied to the <span class='px-1.5 py-0.5 rounded font-bold bg-emerald-100 text-emerald-800 border border-emerald-300'>board (Noun)</span>." },
+                { id: 217, sentence: "This storybook is really <u class='target-word'>exciting</u>.", word: "exciting", answer: "Adjective", modifiedWord: "storybook", modifiedType: "Noun", relation: "describes feeling of", explanation: "<b>Exciting</b> is an <span class='px-1.5 py-0.5 rounded font-bold bg-amber-100 text-amber-800 border border-amber-300'>Adjective (形容詞)</span> describing the <span class='px-1.5 py-0.5 rounded font-bold bg-emerald-100 text-emerald-800 border border-emerald-300'>storybook (Noun)</span>." },
+                { id: 218, sentence: "He always speaks <u class='target-word'>softly</u> in the corridor.", word: "softly", answer: "Adverb", modifiedWord: "speaks", modifiedType: "Verb", relation: "modifies MANNER of", explanation: "<b>Softly</b> is an <span class='px-1.5 py-0.5 rounded font-bold bg-purple-100 text-purple-800 border border-purple-300'>Adverb (副詞)</span> describing HOW he <span class='px-1.5 py-0.5 rounded font-bold bg-sky-100 text-sky-800 border border-sky-300'>speaks (Verb)</span>." },
+                { id: 219, sentence: "The keys are <u class='target-word'>inside</u> the red bag.", word: "inside", answer: "Preposition", modifiedWord: "red bag", modifiedType: "Noun", relation: "shows position in", explanation: "<b>Inside</b> is a <span class='px-1.5 py-0.5 rounded font-bold bg-rose-100 text-rose-800 border border-rose-300'>Preposition (介詞)</span> showing position inside the <span class='px-1.5 py-0.5 rounded font-bold bg-emerald-100 text-emerald-800 border border-emerald-300'>red bag (Noun)</span>." },
+                { id: 220, sentence: "My brother wants to buy a new <u class='target-word'>pencil case</u>.", word: "pencil case", answer: "Noun", modifiedWord: "buy", modifiedType: "Verb", relation: "thing bought in", explanation: "<b>Pencil case</b> is a <span class='px-1.5 py-0.5 rounded font-bold bg-emerald-100 text-emerald-800 border border-emerald-300'>Noun (名詞)</span>. It is the item to <span class='px-1.5 py-0.5 rounded font-bold bg-sky-100 text-sky-800 border border-sky-300'>buy (Verb)</span>." }
+            ],
+            3: [
+                { id: 301, sentence: "Mum goes for a <u class='target-word'>run</u> every morning.", word: "run", answer: "Noun", modifiedWord: "goes", modifiedType: "Verb", relation: "activity taken in", explanation: "<b>Run</b> is used as a <span class='px-1.5 py-0.5 rounded font-bold bg-emerald-100 text-emerald-800 border border-emerald-300'>Noun (名詞)</span> here! Notice 'a run' — after article 'a', it is a noun meaning a jog." },
+                { id: 302, sentence: "I <u class='target-word'>run</u> five kilometers every Saturday morning.", word: "run", answer: "Verb", modifiedWord: "kilometers", modifiedType: "Noun", relation: "physical action covering", explanation: "<b>Run</b> here is a <span class='px-1.5 py-0.5 rounded font-bold bg-sky-100 text-sky-800 border border-sky-300'>Verb (動詞)</span> describing the physical action performed." },
+                { id: 303, sentence: "This house is <u class='target-word'>pretty</u> big.", word: "pretty", answer: "Adverb", modifiedWord: "big", modifiedType: "Adjective", relation: "modifies DEGREE of", explanation: "<b>Pretty</b> here is an <span class='px-1.5 py-0.5 rounded font-bold bg-purple-100 text-purple-800 border border-purple-300'>Adverb (副詞)</span> meaning 'quite'. It modifies the adjective <span class='px-1.5 py-0.5 rounded font-bold bg-amber-100 text-amber-800 border border-amber-300'>big (Adjective)</span>!" },
+                { id: 304, sentence: "She wore a <u class='target-word'>pretty</u> dress to the school party.", word: "pretty", answer: "Adjective", modifiedWord: "dress", modifiedType: "Noun", relation: "describes beauty of", explanation: "<b>Pretty</b> here is an <span class='px-1.5 py-0.5 rounded font-bold bg-amber-100 text-amber-800 border border-amber-300'>Adjective (形容詞)</span> describing the <span class='px-1.5 py-0.5 rounded font-bold bg-emerald-100 text-emerald-800 border border-emerald-300'>dress (Noun)</span>." },
+                { id: 305, sentence: "The school exams <u class='target-word'>lasted</u> for two hours.", word: "lasted", answer: "Verb", modifiedWord: "exams", modifiedType: "Noun", relation: "duration action of", explanation: "<b>Lasted</b> is a <span class='px-1.5 py-0.5 rounded font-bold bg-sky-100 text-sky-800 border border-sky-300'>Verb (動詞)</span> expressing duration of the <span class='px-1.5 py-0.5 rounded font-bold bg-emerald-100 text-emerald-800 border border-emerald-300'>exams (Noun)</span>." },
+                { id: 306, sentence: "He works <u class='target-word'>hard</u> to get good grades.", word: "hard", answer: "Adverb", modifiedWord: "works", modifiedType: "Verb", relation: "modifies EFFORT of", explanation: "<b>Hard</b> is an <span class='px-1.5 py-0.5 rounded font-bold bg-purple-100 text-purple-800 border border-purple-300'>Adverb (副詞)</span> modifying HOW he <span class='px-1.5 py-0.5 rounded font-bold bg-sky-100 text-sky-800 border border-sky-300'>works (Verb)</span>." },
+                { id: 307, sentence: "The math exercise was very <u class='target-word'>hard</u>.", word: "hard", answer: "Adjective", modifiedWord: "math exercise", modifiedType: "Noun", relation: "describes difficulty of", explanation: "<b>Hard</b> here is an <span class='px-1.5 py-0.5 rounded font-bold bg-amber-100 text-amber-800 border border-amber-300'>Adjective (形容詞)</span> describing the <span class='px-1.5 py-0.5 rounded font-bold bg-emerald-100 text-emerald-800 border border-emerald-300'>math exercise (Noun)</span>." },
+                { id: 308, sentence: "I have known her <u class='target-word'>for</u> ten years.", word: "for", answer: "Preposition", modifiedWord: "ten years", modifiedType: "Noun", relation: "connects time period to", explanation: "<b>For</b> is a <span class='px-1.5 py-0.5 rounded font-bold bg-rose-100 text-rose-800 border border-rose-300'>Preposition (介詞)</span> showing duration of time." },
+                { id: 309, sentence: "Their parents <u class='target-word'>work</u> in a school nearby.", word: "work", answer: "Verb", modifiedWord: "parents", modifiedType: "Noun", relation: "action done by", explanation: "<b>Work</b> is a <span class='px-1.5 py-0.5 rounded font-bold bg-sky-100 text-sky-800 border border-sky-300'>Verb (動詞)</span> describing action of <span class='px-1.5 py-0.5 rounded font-bold bg-emerald-100 text-emerald-800 border border-emerald-300'>parents (Noun)</span>." },
+                { id: 310, sentence: "They go home happily together after <u class='target-word'>work</u>.", word: "work", answer: "Noun", modifiedWord: "after", modifiedType: "Preposition", relation: "event noun following", explanation: "<b>Work</b> here is a <span class='px-1.5 py-0.5 rounded font-bold bg-emerald-100 text-emerald-800 border border-emerald-300'>Noun (名詞)</span> referring to their period of work." },
+                { id: 311, sentence: "He is a <u class='target-word'>fast</u> runner in our sports team.", word: "fast", answer: "Adjective", modifiedWord: "runner", modifiedType: "Noun", relation: "describes speed of", explanation: "<b>Fast</b> is an <span class='px-1.5 py-0.5 rounded font-bold bg-amber-100 text-amber-800 border border-amber-300'>Adjective (形容詞)</span> modifying the <span class='px-1.5 py-0.5 rounded font-bold bg-emerald-100 text-emerald-800 border border-emerald-300'>runner (Noun)</span>." },
+                { id: 312, sentence: "He runs <u class='target-word'>fast</u> to catch the school bus.", word: "fast", answer: "Adverb", modifiedWord: "runs", modifiedType: "Verb", relation: "modifies SPEED of", explanation: "<b>Fast</b> is an <span class='px-1.5 py-0.5 rounded font-bold bg-purple-100 text-purple-800 border border-purple-300'>Adverb (副詞)</span> modifying the action <span class='px-1.5 py-0.5 rounded font-bold bg-sky-100 text-sky-800 border border-sky-300'>runs (Verb)</span>!" },
+                { id: 313, sentence: "Please wait <u class='target-word'>before</u> entering the staff room.", word: "before", answer: "Preposition", modifiedWord: "entering", modifiedType: "Verb", relation: "connects timing before", explanation: "<b>Before</b> is a <span class='px-1.5 py-0.5 rounded font-bold bg-rose-100 text-rose-800 border border-rose-300'>Preposition (介詞)</span> connecting time order." },
+                { id: 314, sentence: "The students performed <u class='target-word'>well</u> in the singing contest.", word: "well", answer: "Adverb", modifiedWord: "performed", modifiedType: "Verb", relation: "modifies QUALITY of", explanation: "<b>Well</b> is an <span class='px-1.5 py-0.5 rounded font-bold bg-purple-100 text-purple-800 border border-purple-300'>Adverb (副詞)</span> modifying HOW they <span class='px-1.5 py-0.5 rounded font-bold bg-sky-100 text-sky-800 border border-sky-300'>performed (Verb)</span>." },
+                { id: 315, sentence: "I do not feel <u class='target-word'>well</u> today.", word: "well", answer: "Adjective", modifiedWord: "I", modifiedType: "Noun", relation: "describes health state of", explanation: "<b>Well</b> here is an <span class='px-1.5 py-0.5 rounded font-bold bg-amber-100 text-amber-800 border border-amber-300'>Adjective (形容詞)</span> meaning healthy in health state." },
+                { id: 316, sentence: "Please finish this project <u class='target-word'>by</u> next Monday.", word: "by", answer: "Preposition", modifiedWord: "Monday", modifiedType: "Noun", relation: "deadline limit to", explanation: "<b>By</b> is a time <span class='px-1.5 py-0.5 rounded font-bold bg-rose-100 text-rose-800 border border-rose-300'>Preposition (介詞)</span> meaning 'not later than'." },
+                { id: 317, sentence: "The sun shines <u class='target-word'>brightly</u> through the classroom window.", word: "brightly", answer: "Adverb", modifiedWord: "shines", modifiedType: "Verb", relation: "modifies INTENSITY of", explanation: "<b>Brightly</b> is an <span class='px-1.5 py-0.5 rounded font-bold bg-purple-100 text-purple-800 border border-purple-300'>Adverb (副詞)</span> describing HOW the sun <span class='px-1.5 py-0.5 rounded font-bold bg-sky-100 text-sky-800 border border-sky-300'>shines (Verb)</span>." },
+                { id: 318, sentence: "She <u class='target-word'>snapped</u> angrily when the boy dropped her book.", word: "snapped", answer: "Verb", modifiedWord: "angrily", modifiedType: "Adverb", relation: "action performed", explanation: "<b>Snapped</b> is a <span class='px-1.5 py-0.5 rounded font-bold bg-sky-100 text-sky-800 border border-sky-300'>Verb (動詞)</span> meaning spoke suddenly in anger." },
+                { id: 319, sentence: "There is a large map <u class='target-word'>above</u> the blackboard.", word: "above", answer: "Preposition", modifiedWord: "blackboard", modifiedType: "Noun", relation: "shows position higher than", explanation: "<b>Above</b> is a <span class='px-1.5 py-0.5 rounded font-bold bg-rose-100 text-rose-800 border border-rose-300'>Preposition (介詞)</span> showing relative higher position." },
+                { id: 320, sentence: "Our family bought a <u class='target-word'>fancy</u> dinner for my birthday.", word: "fancy", answer: "Adjective", modifiedWord: "dinner", modifiedType: "Noun", relation: "describes type of", explanation: "<b>Fancy</b> is an <span class='px-1.5 py-0.5 rounded font-bold bg-amber-100 text-amber-800 border border-amber-300'>Adjective (形容詞)</span> describing <span class='px-1.5 py-0.5 rounded font-bold bg-emerald-100 text-emerald-800 border border-emerald-300'>dinner (Noun)</span>." }
+            ]
+        };
+
+        const ACHIEVEMENTS = [
+            { id: "first_win", title: "First Step", desc: "Complete 1 practice question correctly.", icon: "fa-seedling text-emerald-500", req: state => state.totalCorrect >= 1 },
+            { id: "streak_5", title: "On Fire!", desc: "Reach a 5-question streak multiplier.", icon: "fa-fire text-amber-500", req: state => state.maxStreak >= 5 },
+            { id: "power_user", title: "Power-up Pro", desc: "Use 50:50 or Spotlight hint.", icon: "fa-wand-magic-sparkles text-sky-500", req: state => state.usedPowerups >= 1 },
+            { id: "lvl_2", title: "Rising Scholar", desc: "Reach Player Level 2 (200 XP).", icon: "fa-graduation-cap text-indigo-500", req: state => state.xp >= 200 },
+            { id: "tier_gold", title: "Grammar Master", desc: "Score 18+ in Gold Challenge.", icon: "fa-trophy text-amber-400", req: state => (state.bestScores[3] || 0) >= 18 }
+        ];
+
+        class SpeechAndSoundController {
+            constructor() {
+                this.soundEnabled = true;
+                this.audioCtx = null;
+            }
+
+            initAudio() {
+                if (!this.audioCtx) {
+                    this.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                }
+            }
+
+            playCorrect() {
+                if (!this.soundEnabled) return;
+                this.initAudio();
+                const now = this.audioCtx.currentTime;
+                const osc = this.audioCtx.createOscillator();
+                const gain = this.audioCtx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(523.25, now);
+                osc.frequency.exponentialRampToValueAtTime(659.25, now + 0.1);
+                osc.frequency.exponentialRampToValueAtTime(783.99, now + 0.2);
+                gain.gain.setValueAtTime(0.15, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.35);
+                osc.connect(gain);
+                gain.connect(this.audioCtx.destination);
+                osc.start(now);
+                osc.stop(now + 0.35);
+            }
+
+            playIncorrect() {
+                if (!this.soundEnabled) return;
+                this.initAudio();
+                const now = this.audioCtx.currentTime;
+                const osc = this.audioCtx.createOscillator();
+                const gain = this.audioCtx.createGain();
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(220, now);
+                osc.frequency.exponentialRampToValueAtTime(164.81, now + 0.2);
+                gain.gain.setValueAtTime(0.15, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+                osc.connect(gain);
+                gain.connect(this.audioCtx.destination);
+                osc.start(now);
+                osc.stop(now + 0.3);
+            }
+
+            playLevelUp() {
+                if (!this.soundEnabled) return;
+                this.initAudio();
+                const now = this.audioCtx.currentTime;
+                [440, 554.37, 659.25, 880].forEach((freq, idx) => {
+                    const osc = this.audioCtx.createOscillator();
+                    const gain = this.audioCtx.createGain();
+                    osc.frequency.value = freq;
+                    gain.gain.setValueAtTime(0.1, now + idx * 0.08);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + idx * 0.08 + 0.25);
+                    osc.connect(gain);
+                    gain.connect(this.audioCtx.destination);
+                    osc.start(now + idx * 0.08);
+                    osc.stop(now + idx * 0.08 + 0.25);
+                });
+            }
+
+            speak(text) {
+                if ('speechSynthesis' in window) {
+                    window.speechSynthesis.cancel();
+                    const cleanText = text.replace(/<[^>]*>/g, '').replace(/\([^)]*\)/g, '');
+                    const utterance = new SpeechSynthesisUtterance(cleanText);
+                    utterance.lang = 'en-US';
+                    utterance.rate = 0.9;
+                    window.speechSynthesis.speak(utterance);
+                }
+            }
+        }
+
+        class AppState {
+            constructor() {
+                this.soundController = new SpeechAndSoundController();
+                this.currentTier = 1;
+                this.currentIndex = 0;
+                this.score = 0;
+                this.streak = 0;
+                this.maxStreak = 0;
+                this.totalCorrect = 0;
+                this.usedPowerups = 0;
+                this.answered = false;
+                this.userAnswers = [];
+                this.lastExplanationSpoken = "";
+                
+                // Gamification State
+                this.xp = parseInt(localStorage.getItem('pos_player_xp') || '0');
+                this.powerups = JSON.parse(localStorage.getItem('pos_powerups') || '{"count5050": 3, "countSpotlight": 3}');
+                this.bestScores = JSON.parse(localStorage.getItem('pos_best_scores') || '{"1":0,"2":0,"3":0}');
+                this.unlockedBadges = JSON.parse(localStorage.getItem('pos_unlocked_badges') || '[]');
+
+                this.updateBestDisplay();
+                this.updateXPUI();
+                this.updatePowerUpCountDisplay();
+            }
+
+            get level() {
+                return Math.floor(this.xp / 200) + 1;
+            }
+
+            get levelTitle() {
+                const titles = ["Novice", "Scholar", "Grammar Knight", "Word Wizard", "Language Legend"];
+                return titles[Math.min(this.level - 1, titles.length - 1)];
+            }
+
+            addXP(amount) {
+                const prevLevel = this.level;
+                this.xp += amount;
+                localStorage.setItem('pos_player_xp', this.xp.toString());
+                this.updateXPUI();
+
+                if (this.level > prevLevel) {
+                    this.soundController.playLevelUp();
+                    this.triggerConfetti();
+                }
+                this.checkAchievements();
+            }
+
+            updateXPUI() {
+                const lvl = this.level;
+                const progressInLvl = this.xp - (lvl - 1) * 200;
+                const pct = Math.min(100, Math.max(0, (progressInLvl / 200) * 100));
+
+                document.getElementById('playerLevelBadge').innerText = `Lvl ${lvl} ${this.levelTitle}`;
+                document.getElementById('playerXPBadge').innerText = `${this.xp} XP`;
+
+                document.getElementById('profileLevelText').innerText = `Level ${lvl}`;
+                document.getElementById('xpTextDisplay').innerText = `${progressInLvl} / 200 XP`;
+                document.getElementById('xpBarFill').style.width = `${pct}%`;
+            }
+
+            updatePowerUpCountDisplay() {
+                document.getElementById('count5050').innerText = this.powerups.count5050;
+                document.getElementById('countSpotlight').innerText = this.powerups.countSpotlight;
+            }
+
+            usePowerUp5050() {
+                if (this.answered || this.powerups.count5050 <= 0) return;
+                const q = QUESTION_BANK[this.currentTier][this.currentIndex];
+                const btnContainer = document.getElementById('optionsContainer');
+                const buttons = Array.from(btnContainer.querySelectorAll('.option-btn'));
+
+                const wrongButtons = buttons.filter(btn => {
+                    const txt = btn.querySelector('span').innerText.trim();
+                    return txt !== q.answer;
+                });
+
+                wrongButtons.sort(() => Math.random() - 0.5);
+                wrongButtons.slice(0, 2).forEach(btn => {
+                    btn.disabled = true;
+                    btn.classList.add('opacity-20', 'pointer-events-none');
+                });
+
+                this.powerups.count5050--;
+                this.usedPowerups++;
+                localStorage.setItem('pos_powerups', JSON.stringify(this.powerups));
+                this.updatePowerUpCountDisplay();
+                this.checkAchievements();
+            }
+
+            usePowerUpSpotlight() {
+                if (this.answered || this.powerups.countSpotlight <= 0) return;
+                const q = QUESTION_BANK[this.currentTier][this.currentIndex];
+                
+                if (q.modifiedWord) {
+                    const displayEl = document.getElementById('sentenceDisplay');
+                    const regex = new RegExp(`\\b(${q.modifiedWord})\\b`, 'gi');
+                    displayEl.innerHTML = q.sentence.replace(regex, `<span class="modified-word-highlight">$1</span>`);
+                }
+
+                this.powerups.countSpotlight--;
+                this.usedPowerups++;
+                localStorage.setItem('pos_powerups', JSON.stringify(this.powerups));
+                this.updatePowerUpCountDisplay();
+                this.checkAchievements();
+            }
+
+            triggerConfetti() {
+                for (let i = 0; i < 25; i++) {
+                    const p = document.createElement('div');
+                    p.className = 'confetti-particle';
+                    p.style.left = Math.random() * 100 + 'vw';
+                    p.style.top = '10vh';
+                    p.style.width = (Math.random() * 8 + 6) + 'px';
+                    p.style.height = (Math.random() * 8 + 6) + 'px';
+                    p.style.backgroundColor = ['#f59e0b', '#10b981', '#3b82f6', '#8b5cf6', '#ec4899'][Math.floor(Math.random() * 5)];
+                    document.body.appendChild(p);
+                    setTimeout(() => p.remove(), 1500);
+                }
+            }
+
+            toggleSound() {
+                this.soundController.soundEnabled = !this.soundController.soundEnabled;
+                const btn = document.getElementById('soundToggleBtn');
+                if (this.soundController.soundEnabled) {
+                    btn.classList.remove('text-slate-400');
+                    btn.classList.add('text-slate-600');
+                    btn.innerHTML = '<i class="fa-solid fa-volume-high text-lg"></i>';
+                } else {
+                    btn.classList.add('text-slate-400');
+                    btn.classList.remove('text-slate-600');
+                    btn.innerHTML = '<i class="fa-solid fa-volume-xmark text-lg"></i>';
+                }
+            }
+
+            updateBestDisplay() {
+                for (let t = 1; t <= 3; t++) {
+                    const score = this.bestScores[t] || 0;
+                    document.getElementById(`tier${t}Best`).innerText = `Best: ${score}/20`;
+                    
+                    let starsHtml = '';
+                    if (score >= 18) starsHtml = '<i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i>';
+                    else if (score >= 12) starsHtml = '<i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-regular fa-star"></i>';
+                    else if (score >= 5) starsHtml = '<i class="fa-solid fa-star"></i><i class="fa-regular fa-star"></i><i class="fa-regular fa-star"></i>';
+                    else starsHtml = '<i class="fa-regular fa-star"></i><i class="fa-regular fa-star"></i><i class="fa-regular fa-star"></i>';
+                    document.getElementById(`tier${t}Stars`).innerHTML = starsHtml;
+                }
+            }
+
+            showTierSelect() {
+                document.getElementById('tierSelectView').classList.remove('hidden');
+                document.getElementById('quizView').classList.add('hidden');
+                document.getElementById('summaryView').classList.add('hidden');
+                this.updateBestDisplay();
+                this.updateXPUI();
+            }
+
+            startTier(tierNumber) {
+                this.currentTier = tierNumber;
+                this.currentIndex = 0;
+                this.score = 0;
+                this.streak = 0;
+                this.answered = false;
+                this.userAnswers = [];
+
+                document.getElementById('tierSelectView').classList.add('hidden');
+                document.getElementById('quizView').classList.remove('hidden');
+                document.getElementById('summaryView').classList.add('hidden');
+
+                const tierNames = {1: 'Tier 1 • Foundation', 2: 'Tier 2 • Intermediate', 3: 'Tier 3 • Challenge'};
+                const badgeColors = {
+                    1: 'bg-emerald-100 text-emerald-700',
+                    2: 'bg-sky-100 text-sky-700',
+                    3: 'bg-indigo-100 text-indigo-700'
+                };
+
+                const badgeEl = document.getElementById('quizTierBadge');
+                badgeEl.innerText = tierNames[tierNumber];
+                badgeEl.className = `px-2.5 py-0.5 rounded-md text-xs font-bold uppercase ${badgeColors[tierNumber]}`;
+
+                this.renderQuestion();
+            }
+
+            renderQuestion() {
+                this.answered = false;
+                if ('speechSynthesis' in window) {
+                    window.speechSynthesis.cancel();
+                }
+                const qList = QUESTION_BANK[this.currentTier];
+                const q = qList[this.currentIndex];
+
+                // Progress UI
+                document.getElementById('quizProgressText').innerText = `Question ${this.currentIndex + 1} / ${qList.length}`;
+                document.getElementById('quizScore').innerText = this.score;
+                document.getElementById('quizStreak').innerText = this.streak;
+                
+                const pct = ((this.currentIndex + 1) / qList.length) * 100;
+                document.getElementById('quizProgressBar').style.width = `${pct}%`;
+
+                // Render sentence
+                document.getElementById('sentenceDisplay').innerHTML = q.sentence;
+
+                // Reset relationship diagram box
+                document.getElementById('connectionDiagramBox').classList.add('hidden');
+
+                // Reset feedback & next button
+                document.getElementById('feedbackBox').classList.add('hidden');
+                document.getElementById('nextBtn').classList.add('hidden');
+
+                // Enable option buttons
+                const btnContainer = document.getElementById('optionsContainer');
+                const buttons = btnContainer.querySelectorAll('.option-btn');
+                buttons.forEach(btn => {
+                    btn.disabled = false;
+                    btn.className = "btn-bounce option-btn p-3.5 sm:p-4 rounded-xl border-2 border-slate-200 hover:border-slate-400 text-slate-700 font-heading font-bold text-base sm:text-sm flex flex-col items-center gap-1 transition bg-white";
+                });
+            }
+
+            speakSentence() {
+                const q = QUESTION_BANK[this.currentTier][this.currentIndex];
+                this.soundController.speak(q.sentence);
+            }
+
+            speakExplanation() {
+                if (this.lastExplanationSpoken) {
+                    this.soundController.speak(this.lastExplanationSpoken);
+                }
+            }
+
+            selectAnswer(userChoice) {
+                if (this.answered) return;
+                this.answered = true;
+
+                const q = QUESTION_BANK[this.currentTier][this.currentIndex];
+                const isCorrect = (userChoice === q.answer);
+
+                if (isCorrect) {
+                    this.score++;
+                    this.streak++;
+                    this.totalCorrect++;
+                    if (this.streak > this.maxStreak) this.maxStreak = this.streak;
+                    this.soundController.playCorrect();
+
+                    const bonusXP = 15 + (this.streak > 2 ? 10 : 0);
+                    this.addXP(bonusXP);
+
+                    if (this.streak >= 4) this.triggerConfetti();
+                } else {
+                    this.streak = 0;
+                    this.soundController.playIncorrect();
+                }
+
+                // Render Modified Word Highlight inside Sentence Display
+                if (q.modifiedWord) {
+                    const displayEl = document.getElementById('sentenceDisplay');
+                    const regex = new RegExp(`\\b(${q.modifiedWord})\\b`, 'gi');
+                    displayEl.innerHTML = q.sentence.replace(regex, `<span class="modified-word-highlight">$1</span>`);
+                }
+
+                // Render Relationship Diagram Banner
+                const diagramBox = document.getElementById('connectionDiagramBox');
+                const diagramContent = document.getElementById('connectionDiagramContent');
+                diagramBox.classList.remove('hidden');
+
+                const posColors = {
+                    'Noun': 'bg-emerald-100 text-emerald-800 border-emerald-300',
+                    'Verb': 'bg-sky-100 text-sky-800 border-sky-300',
+                    'Adjective': 'bg-amber-100 text-amber-800 border-amber-300',
+                    'Adverb': 'bg-purple-100 text-purple-800 border-purple-300',
+                    'Preposition': 'bg-rose-100 text-rose-800 border-rose-300'
+                };
+
+                const targetBadgeColor = posColors[q.answer] || 'bg-slate-100 text-slate-800';
+                const modifiedBadgeColor = posColors[q.modifiedType] || 'bg-slate-100 text-slate-800';
+
+                diagramContent.innerHTML = `
+                    <span class="px-3 py-1 rounded-xl font-bold border ${targetBadgeColor} shadow-xs">
+                        <u class="underline decoration-2">${q.word}</u> (${q.answer})
+                    </span>
+                    <i class="fa-solid fa-arrow-right text-slate-400"></i>
+                    <span class="text-xs font-bold text-slate-500 uppercase px-1">${q.relation || 'modifies'}</span>
+                    <i class="fa-solid fa-arrow-right text-slate-400"></i>
+                    <span class="px-3 py-1 rounded-xl font-bold border ${modifiedBadgeColor} shadow-xs">
+                        ${q.modifiedWord} (${q.modifiedType})
+                    </span>
+                `;
+
+                // Record user answer
+                this.userAnswers.push({
+                    question: q,
+                    userChoice: userChoice,
+                    isCorrect: isCorrect
+                });
+
+                // Option styling update
+                const btnContainer = document.getElementById('optionsContainer');
+                const buttons = btnContainer.querySelectorAll('.option-btn');
+                buttons.forEach(btn => {
+                    btn.disabled = true;
+                    const choiceText = btn.querySelector('span').innerText.trim();
+
+                    if (choiceText === q.answer) {
+                        btn.className = "option-btn p-3.5 sm:p-4 rounded-xl border-2 border-emerald-500 bg-emerald-100 text-emerald-800 font-heading font-bold text-base sm:text-sm flex flex-col items-center gap-1 shadow-sm";
+                    } else if (choiceText === userChoice && !isCorrect) {
+                        btn.className = "option-btn p-3.5 sm:p-4 rounded-xl border-2 border-rose-500 bg-rose-100 text-rose-800 font-heading font-bold text-base sm:text-sm flex flex-col items-center gap-1 shadow-sm";
+                    } else {
+                        btn.className = "option-btn p-3.5 sm:p-4 rounded-xl border-2 border-slate-100 bg-slate-50 opacity-50 text-slate-400 font-heading font-bold text-base sm:text-sm flex flex-col items-center gap-1";
+                    }
+                });
+
+                // Show Feedback
+                const feedbackBox = document.getElementById('feedbackBox');
+                const feedbackTitle = document.getElementById('feedbackTitle');
+                const feedbackText = document.getElementById('feedbackText');
+
+                feedbackBox.classList.remove('hidden');
+                
+                // Construct clean spoken text for voice feedback
+                const cleanExplanation = q.explanation.replace(/<[^>]*>/g, '');
+                
+                if (isCorrect) {
+                    feedbackBox.className = "rounded-xl p-4 border border-emerald-200 bg-emerald-50 text-emerald-900 space-y-1 relative";
+                    feedbackTitle.innerHTML = `<i class="fa-solid fa-circle-check text-emerald-600"></i> Correct! It is a <b>${q.answer}</b>.`;
+                    this.lastExplanationSpoken = `Correct! ${q.word} is a ${q.answer}. ${cleanExplanation}`;
+                } else {
+                    feedbackBox.className = "rounded-xl p-4 border border-rose-200 bg-rose-50 text-rose-900 space-y-1 relative";
+                    feedbackTitle.innerHTML = `<i class="fa-solid fa-circle-xmark text-rose-600"></i> Incorrect! The word "${q.word}" is a <b>${q.answer}</b>.`;
+                    this.lastExplanationSpoken = `Incorrect. You chose ${userChoice}. The correct answer is ${q.answer}. ${cleanExplanation}`;
+                    
+                    // AUTOMATIC VOICE EXPLANATION FOR MISTAKES
+                    setTimeout(() => {
+                        this.soundController.speak(this.lastExplanationSpoken);
+                    }, 400);
+                }
+                feedbackText.innerHTML = q.explanation;
+
+                document.getElementById('nextBtn').classList.remove('hidden');
+                document.getElementById('quizScore').innerText = this.score;
+                document.getElementById('quizStreak').innerText = this.streak;
+
+                this.checkAchievements();
+            }
+
+            nextQuestion() {
+                const qList = QUESTION_BANK[this.currentTier];
+                if (this.currentIndex < qList.length - 1) {
+                    this.currentIndex++;
+                    this.renderQuestion();
+                } else {
+                    this.finishTier();
+                }
+            }
+
+            finishTier() {
+                if (this.score > (this.bestScores[this.currentTier] || 0)) {
+                    this.bestScores[this.currentTier] = this.score;
+                    localStorage.setItem('pos_best_scores', JSON.stringify(this.bestScores));
+                }
+
+                document.getElementById('quizView').classList.add('hidden');
+                document.getElementById('summaryView').classList.remove('hidden');
+
+                const total = QUESTION_BANK[this.currentTier].length;
+                const accuracy = Math.round((this.score / total) * 100);
+
+                document.getElementById('summaryTierBadge').innerText = `Tier ${this.currentTier} Summary`;
+                document.getElementById('summaryScore').innerText = `${this.score} / ${total}`;
+                document.getElementById('summaryAccuracy').innerText = `${accuracy}%`;
+
+                const titleEl = document.getElementById('summaryTitle');
+                const trophyIcon = document.getElementById('summaryTrophyIcon');
+
+                if (accuracy >= 90) {
+                    titleEl.innerText = "Mastery Level Accomplished!";
+                    trophyIcon.className = "fa-solid fa-trophy text-amber-500";
+                    this.triggerConfetti();
+                } else if (accuracy >= 70) {
+                    titleEl.innerText = "Great Job! Keep Practicing!";
+                    trophyIcon.className = "fa-solid fa-star text-amber-500";
+                } else {
+                    titleEl.innerText = "Good Effort! Review & Try Again!";
+                    trophyIcon.className = "fa-solid fa-seedling text-emerald-500";
+                }
+
+                // Render mistakes
+                const mistakes = this.userAnswers.filter(a => !a.isCorrect);
+                const mistakeContainer = document.getElementById('mistakesReviewContainer');
+                const mistakeList = document.getElementById('mistakesList');
+
+                if (mistakes.length > 0) {
+                    mistakeContainer.classList.remove('hidden');
+                    document.getElementById('mistakeCount').innerText = mistakes.length;
+
+                    mistakeList.innerHTML = mistakes.map((m, idx) => `
+                        <div class="p-3.5 bg-slate-50 border border-slate-200 rounded-xl space-y-2 text-sm">
+                            <div class="flex items-start justify-between gap-2">
+                                <p class="font-body text-slate-800">${m.question.sentence}</p>
+                                <button onclick="app.speakMistakeExplanation(${idx})" class="shrink-0 text-xs px-2 py-1 bg-white border border-slate-200 rounded-md text-sky-600 font-semibold hover:bg-sky-50 transition">
+                                    <i class="fa-solid fa-volume-high"></i>
+                                </button>
+                            </div>
+                            <div class="flex flex-wrap gap-2 text-xs">
+                                <span class="px-2 py-0.5 rounded bg-rose-100 text-rose-700 font-semibold">Your choice: ${m.userChoice}</span>
+                                <span class="px-2 py-0.5 rounded bg-emerald-100 text-emerald-700 font-semibold">Correct answer: ${m.question.answer}</span>
+                            </div>
+                            <p class="text-xs text-slate-600 bg-white p-2 rounded border border-slate-100">${m.question.explanation}</p>
+                        </div>
+                    `).join('');
+                } else {
+                    mistakeContainer.classList.add('hidden');
+                }
+
+                this.checkAchievements();
+            }
+
+            speakMistakeExplanation(idx) {
+                const mistakes = this.userAnswers.filter(a => !a.isCorrect);
+                if (mistakes[idx]) {
+                    const m = mistakes[idx];
+                    const cleanExp = m.question.explanation.replace(/<[^>]*>/g, '');
+                    this.soundController.speak(`In the sentence: ${m.question.sentence}. The correct answer for ${m.question.word} is ${m.question.answer}. ${cleanExp}`);
+                }
+            }
+
+            checkAchievements() {
+                ACHIEVEMENTS.forEach(ach => {
+                    if (!this.unlockedBadges.includes(ach.id) && ach.req(this)) {
+                        this.unlockedBadges.push(ach.id);
+                        localStorage.setItem('pos_unlocked_badges', JSON.stringify(this.unlockedBadges));
+                        document.getElementById('badgeCountDot').classList.remove('hidden');
+                    }
+                });
+            }
+
+            openAchievementsModal() {
+                document.getElementById('badgeCountDot').classList.add('hidden');
+                const list = document.getElementById('achievementsList');
+                list.innerHTML = ACHIEVEMENTS.map(ach => {
+                    const isUnlocked = this.unlockedBadges.includes(ach.id);
+                    return `
+                        <div class="p-3.5 rounded-xl border flex items-center gap-3.5 ${isUnlocked ? 'bg-purple-50/60 border-purple-200' : 'bg-slate-50 border-slate-200 opacity-60'}">
+                            <div class="w-10 h-10 rounded-xl ${isUnlocked ? 'bg-white shadow-xs' : 'bg-slate-200'} flex items-center justify-center text-xl">
+                                <i class="fa-solid ${ach.icon}"></i>
+                            </div>
+                            <div class="flex-grow">
+                                <div class="flex items-center justify-between">
+                                    <h4 class="font-bold text-sm ${isUnlocked ? 'text-slate-800' : 'text-slate-500'}">${ach.title}</h4>
+                                    ${isUnlocked ? '<span class="text-[10px] bg-purple-200 text-purple-800 font-bold px-2 py-0.5 rounded">Unlocked</span>' : '<span class="text-[10px] bg-slate-200 text-slate-600 font-bold px-2 py-0.5 rounded">Locked</span>'}
+                                </div>
+                                <p class="text-xs text-slate-500 mt-0.5">${ach.desc}</p>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+                document.getElementById('achievementsModal').classList.remove('hidden');
+            }
+
+            closeAchievementsModal() {
+                document.getElementById('achievementsModal').classList.add('hidden');
+            }
+
+            retryCurrentTier() {
+                this.startTier(this.currentTier);
+            }
+
+            openCheatSheet() {
+                document.getElementById('cheatSheetModal').classList.remove('hidden');
+            }
+
+            closeCheatSheet() {
+                document.getElementById('cheatSheetModal').classList.add('hidden');
+            }
+        }
+
+        // Initialize App
+        let app;
+        window.onload = function() {
+            app = new AppState();
+        };
+    </script>
+</body>
+</html>
