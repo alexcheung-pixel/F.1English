@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Grammar Quest: Adjectives vs. Adverbs</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Nunito:wght@400;600;700;800&display=swap');
+    
+    body {
+      font-family: 'Nunito', sans-serif;
+      background-color: #0f172a;
+      background-image: radial-gradient(circle at 50% 0%, #1e293b 0%, #0f172a 100%);
+      color: #f8fafc;
+      min-height: 100vh;
+    }
+
+    h1, h2, h3, .font-heading {
+      font-family: 'Fredoka', cursive, sans-serif;
+    }
+
+    .highlight-verb {
+      background-color: rgba(99, 102, 241, 0.2);
+      color: #818cf8;
+      padding: 0.15rem 0.5rem;
+      border-radius: 0.375rem;
+      font-weight: 700;
+      border-bottom: 2px solid #6366f1;
+      display: inline-block;
+    }
+
+    .highlight-noun {
+      background-color: rgba(34, 197, 94, 0.2);
+      color: #4ade80;
+      padding: 0.15rem 0.5rem;
+      border-radius: 0.375rem;
+      font-weight: 700;
+      border-bottom: 2px solid #22c55e;
+      display: inline-block;
+    }
+
+    .game-card {
+      background: #1e293b;
+      border: 2px solid #334155;
+      box-shadow: 0 8px 0 #0f172a, 0 15px 20px rgba(0,0,0,0.4);
+      border-radius: 1rem;
+      transition: transform 0.1s;
+    }
+
+    .btn-game {
+      background: #334155;
+      border: 2px solid #475569;
+      border-bottom: 4px solid #1e293b;
+      border-radius: 0.75rem;
+      transition: all 0.1s;
+    }
+    
+    .btn-game:hover:not(:disabled) {
+      transform: translateY(2px);
+      border-bottom-width: 2px;
+      margin-top: 2px;
+      background: #475569;
+    }
+
+    .btn-correct {
+      background: #059669 !important;
+      border-color: #34d399 !important;
+      border-bottom-color: #065f46 !important;
+      color: white !important;
+    }
+
+    .btn-wrong {
+      background: #e11d48 !important;
+      border-color: #fb7185 !important;
+      border-bottom-color: #be123c !important;
+      color: white !important;
+    }
+
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-5px); }
+      50% { transform: translateX(5px); }
+      75% { transform: translateX(-5px); }
+    }
+    .animate-shake { animation: shake 0.4s; }
+
+    @keyframes pop {
+      0% { transform: scale(0.9); }
+      50% { transform: scale(1.05); }
+      100% { transform: scale(1); }
+    }
+    .animate-pop { animation: pop 0.3s ease-out; }
+
+    @keyframes floatUp {
+      0% { opacity: 1; transform: translateY(0) scale(1); }
+      100% { opacity: 0; transform: translateY(-40px) scale(1.5); }
+    }
+    
+    .floating-xp {
+      position: fixed;
+      color: #fbbf24;
+      font-weight: 900;
+      font-family: 'Fredoka', sans-serif;
+      font-size: 1.5rem;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+      pointer-events: none;
+      animation: floatUp 1s ease-out forwards;
+      z-index: 100;
+    }
+
+    .streak-fire {
+      background: linear-gradient(to top, #ef4444, #f59e0b, #fbbf24);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      animation: pop 0.5s infinite alternate;
+    }
+  </style>
+</head>
+<body class="flex flex-col">
+
+  <header class="bg-slate-800/80 backdrop-blur-md border-b border-slate-700 sticky top-0 z-50">
+    <div class="max-w-4xl mx-auto px-4 py-3">
+      <div class="flex items-center justify-between">
+        
+        <div class="flex items-center space-x-4">
+          <div class="relative">
+            <div id="player-avatar" class="w-12 h-12 rounded-full bg-indigo-500 border-2 border-indigo-300 flex items-center justify-center text-2xl shadow-lg">
+              🥚
+            </div>
+            <div id="level-badge" class="absolute -bottom-2 -right-2 bg-amber-500 text-xs font-black px-2 py-0.5 rounded-full border-2 border-slate-800">
+              Lv.1
+            </div>
+          </div>
+          <div>
+            <div class="font-heading font-bold text-lg text-white" id="player-rank">Grammar Novice</div>
+            <div class="w-32 h-2.5 bg-slate-700 rounded-full mt-1 overflow-hidden border border-slate-600">
+              <div id="xp-bar" class="h-full bg-gradient-to-r from-indigo-400 to-purple-500 w-0 transition-all duration-500"></div>
+            </div>
+            <div class="text-[10px] text-slate-400 font-bold mt-0.5 text-right uppercase tracking-wider" id="xp-text">0 / 50 XP</div>
+          </div>
+        </div>
+
+        <div class="flex items-center space-x-6">
+          <div class="text-center">
+            <div class="text-xl h-6 flex items-center justify-center">
+              <i id="streak-icon" class="fa-solid fa-fire text-slate-600 transition-colors duration-300"></i>
+            </div>
+            <div class="text-xs font-bold text-slate-400 mt-1 uppercase" id="streak-text">0 Streak</div>
+          </div>
+          <button onclick="resetGame()" class="bg-slate-700 hover:bg-slate-600 text-slate-300 w-10 h-10 rounded-xl flex items-center justify-center transition border-b-2 border-slate-900 active:border-b-0 active:translate-y-[2px]">
+            <i class="fa-solid fa-rotate-right"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-4xl mx-auto px-4 py-6 w-full flex-grow">
+    
+    <div class="grid grid-cols-3 gap-3 mb-8">
+      <button id="tab-tier1" onclick="switchTier(1)" class="game-card p-3 text-center transition flex flex-col items-center gap-2 border-indigo-500">
+        <span class="text-2xl">🌱</span>
+        <span class="text-xs sm:text-sm font-heading font-bold">World 1: Basics</span>
+      </button>
+
+      <button id="tab-tier2" onclick="switchTier(2)" class="game-card p-3 text-center transition flex flex-col items-center gap-2 opacity-75 hover:opacity-100 border-slate-600">
+        <span class="text-2xl">🏫</span>
+        <span class="text-xs sm:text-sm font-heading font-bold">World 2: School</span>
+      </button>
+
+      <button id="tab-tier3" onclick="switchTier(3)" class="game-card p-3 text-center transition flex flex-col items-center gap-2 opacity-75 hover:opacity-100 border-slate-600">
+        <span class="text-2xl">🐉</span>
+        <span class="text-xs sm:text-sm font-heading font-bold">World 3: Boss</span>
+      </button>
+    </div>
+
+    <div class="game-card p-5 mb-6 relative overflow-hidden">
+      <i class="fa-solid fa-star absolute -right-4 -top-4 text-6xl text-slate-700 opacity-20 rotate-12"></i>
+      
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 relative z-10">
+        <div>
+          <div class="flex items-center space-x-2">
+            <span id="tier-badge" class="px-2.5 py-0.5 rounded-md text-xs font-black uppercase tracking-wide bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">World 1</span>
+            <h2 id="tier-title" class="text-xl md:text-2xl font-heading text-white"></h2>
+          </div>
+          <p id="tier-description" class="text-sm text-slate-400 mt-1"></p>
+        </div>
+      </div>
+
+      <div class="mt-4 pt-4 border-t border-slate-700 flex items-center justify-between">
+        <div id="tier-legend" class="flex items-center space-x-4 text-xs">
+          <span class="text-slate-500 font-bold uppercase tracking-wider">Clues:</span>
+          <span class="flex items-center space-x-1 bg-green-500/10 px-2 py-1 rounded border border-green-500/30">
+            <span class="font-bold text-green-400">Noun <i class="fa-solid fa-tag"></i></span>
+          </span>
+          <span class="flex items-center space-x-1 bg-indigo-500/10 px-2 py-1 rounded border border-indigo-500/30">
+            <span class="font-bold text-indigo-400">Verb <i class="fa-solid fa-bolt"></i></span>
+          </span>
+        </div>
+        <div class="text-xs font-bold text-slate-400 bg-slate-800 px-3 py-1 rounded-full border border-slate-600">
+          Quest Progress: <span id="quest-progress" class="text-white">0/15</span>
+        </div>
+      </div>
+    </div>
+
+    <div id="questions-container" class="space-y-6">
+      <!-- Questions injected via JS -->
+    </div>
+
+    <div id="tier-score-box" class="mt-8 game-card p-8 text-center hidden animate-pop border-amber-500">
+      <div class="text-5xl mb-4">🏆</div>
+      <h3 class="text-3xl font-heading text-white mb-2">World Cleared!</h3>
+      <p id="tier-score-text" class="text-lg text-slate-300 mb-6"></p>
+      <div class="flex flex-wrap justify-center gap-4">
+        <button onclick="generateNewQuestionsForCurrentTier()" class="btn-game bg-slate-700 hover:bg-slate-600 text-white font-bold py-3 px-6 text-sm flex items-center">
+          <i class="fa-solid fa-arrows-rotate mr-2"></i> Replay Level
+        </button>
+        <button id="next-tier-btn" onclick="goToNextTier()" class="btn-game bg-indigo-600 hover:bg-indigo-500 border-indigo-700 border-b-indigo-900 text-white font-bold py-3 px-8 text-sm flex items-center">
+          Enter Next World <i class="fa-solid fa-sword ml-2"></i>
+        </button>
+      </div>
+    </div>
+
+  </main>
+
+  <div id="floating-layer"></div>
+
+  <script>
+    let player = {
+      xp: 0,
+      streak: 0,
+      level: 1,
+      rankIndex: 0
+    };
+
+    const RANKS = [
+      { name: "Grammar Novice", emoji: "🥚", xpReq: 0 },
+      { name: "Apprentice", emoji: "🐥", xpReq: 100 },
+      { name: "Word Warrior", emoji: "🥷", xpReq: 250 },
+      { name: "Syntax Scholar", emoji: "🦉", xpReq: 450 },
+      { name: "Grammar Master", emoji: "🐉", xpReq: 700 }
+    ];
+
+    const BASE_XP = 15;
+    const STREAK_BONUS = 5;
+
+    const PRAISE_PHRASES = ["Great job!", "Excellent!", "Awesome!", "Perfect!", "You got it!", "Brilliant!", "Fantastic!"];
+    const ENCOURAGEMENT_PHRASES = [
+      "Nice try! Keep going.", 
+      "Almost had it! Don't give up.", 
+      "Oops, not quite. You'll get the next one!", 
+      "Good effort! Let's learn from this.", 
+      "That's okay, keep trying!", 
+      "Learning takes practice, you're doing great!"
+    ];
+
+    function speakPraise() {
+      if ('speechSynthesis' in window) {
+        const phrase = PRAISE_PHRASES[Math.floor(Math.random() * PRAISE_PHRASES.length)];
+        const utterance = new SpeechSynthesisUtterance(phrase);
+        utterance.rate = 1.1; // Slightly faster and higher pitch for excitement
+        utterance.pitch = 1.1;
+        window.speechSynthesis.cancel(); // Prevent overlapping speech
+        window.speechSynthesis.speak(utterance);
+      }
+    }
+
+    function speakEncouragement() {
+      if ('speechSynthesis' in window) {
+        const phrase = ENCOURAGEMENT_PHRASES[Math.floor(Math.random() * ENCOURAGEMENT_PHRASES.length)];
+        const utterance = new SpeechSynthesisUtterance(phrase);
+        utterance.rate = 0.95; // Slightly slower, calmer rate
+        utterance.pitch = 1.0; // Normal pitch for a supportive tone
+        window.speechSynthesis.cancel();
+        window.speechSynthesis.speak(utterance);
+      }
+    }
+
+    const RAW_TEMPLATES = {
+      tier1: [
+        { sentence: "I like this <span class='highlight-noun'>pillow</span> because it is really [BLANK].", options: ["soft", "softly"], correct: "soft", target: "pillow (Noun)", explanation: "'Pillow' is a noun. We use the adjective 'soft'." },
+        { sentence: "She <span class='highlight-verb'>speaks</span> [BLANK] to her baby sister.", options: ["soft", "softly"], correct: "softly", target: "speaks (Verb)", explanation: "'Speaks' is an action verb. We use the adverb 'softly'." },
+        { sentence: "Don is a [BLANK] <span class='highlight-noun'>swimmer</span>.", options: ["fast", "fastly"], correct: "fast", target: "swimmer (Noun)", explanation: "'Swimmer' is a noun. 'Fast' acts as an adjective here." },
+        { sentence: "Be careful! Don't <span class='highlight-verb'>run</span> too [BLANK]!", options: ["fast", "fastly"], correct: "fast", target: "run (Verb)", explanation: "'Run' is an action verb. 'Fast' is an irregular adverb." },
+        { sentence: "<span class='highlight-noun'>I</span> was [BLANK] for school today.", options: ["early", "earlily"], correct: "early", target: "I (Noun)", explanation: "'Early' describes the person ('I')." },
+        { sentence: "We should <span class='highlight-verb'>go</span> to bed [BLANK] every night.", options: ["early", "earlily"], correct: "early", target: "go (Verb)", explanation: "'Go' is an action verb. 'Early' tells us when." },
+        { sentence: "Don't <span class='highlight-verb'>get</span> to school [BLANK].", options: ["late", "lately"], correct: "late", target: "get (Verb)", explanation: "'Get' (arrive) is a verb. We use 'late'." },
+        { sentence: "Kitty's <span class='highlight-noun'>desk</span> is very [BLANK].", options: ["neat", "neatly"], correct: "neat", target: "desk (Noun)", explanation: "'Desk' is a noun. Use 'neat'." },
+        { sentence: "She <span class='highlight-verb'>keeps</span> her books [BLANK] on the shelf.", options: ["neat", "neatly"], correct: "neatly", target: "keeps (Verb)", explanation: "'Keeps' is an action verb. Use 'neatly'." },
+        { sentence: "His <span class='highlight-noun'>voice</span> is very [BLANK] on his phone.", options: ["loud", "loudly"], correct: "loud", target: "voice (Noun)", explanation: "Describes the noun 'voice'." },
+        { sentence: "He shouldn't <span class='highlight-verb'>talk</span> so [BLANK] on the train.", options: ["loud", "loudly"], correct: "loudly", target: "talk (Verb)", explanation: "Describes how he talks." },
+        { sentence: "The <span class='highlight-noun'>sun</span> is very [BLANK] today.", options: ["bright", "brightly"], correct: "bright", target: "sun (Noun)", explanation: "Describes the noun 'sun'." },
+        { sentence: "The stars <span class='highlight-verb'>shine</span> [BLANK] in the sky.", options: ["bright", "brightly"], correct: "brightly", target: "shine (Verb)", explanation: "Describes the action of shining." },
+        { sentence: "She is a [BLANK] <span class='highlight-noun'>singer</span>.", options: ["beautiful", "beautifully"], correct: "beautiful", target: "singer (Noun)", explanation: "Describes the noun 'singer'." },
+        { sentence: "She <span class='highlight-verb'>sings</span> [BLANK] on the stage.", options: ["beautiful", "beautifully"], correct: "beautifully", target: "sings (Verb)", explanation: "Describes how she sings." }
+      ],
+      tier2: [
+        { sentence: "We should <span class='highlight-verb'>talk</span> on the phone [BLANK].", options: ["soft", "softly"], correct: "softly", explanation: "'Talk' is a verb. Use 'softly'." },
+        { sentence: "We shouldn't <span class='highlight-verb'>eat</span> [BLANK] in the class.", options: ["noisy", "noisily"], correct: "noisily", explanation: "Adverb form of 'noisy' is 'noisily'." },
+        { sentence: "We should <span class='highlight-verb'>wait</span> [BLANK] in line.", options: ["patient", "patiently"], correct: "patiently", explanation: "Describes the verb 'wait'." },
+        { sentence: "We should <span class='highlight-verb'>speak</span> [BLANK] when we borrow books.", options: ["polite", "politely"], correct: "politely", explanation: "Add -ly to 'polite'." },
+        { sentence: "We shouldn't <span class='highlight-verb'>dress</span> [BLANK] when we go to school.", options: ["untidy", "untidily"], correct: "untidily", explanation: "For 'untidy', change y to i + ly." },
+        { sentence: "The <span class='highlight-noun'>children</span> are very [BLANK] during recess.", options: ["noisy", "noisily"], correct: "noisy", explanation: "Describes the noun 'children'." },
+        { sentence: "Tortoises <span class='highlight-verb'>walk</span> very [BLANK].", options: ["slow", "slowly"], correct: "slowly", explanation: "Describes the verb 'walk'." },
+        { sentence: "Hurry up! Don't <span class='highlight-verb'>be</span> [BLANK]!", options: ["slow", "slowly"], correct: "slow", explanation: "After linking verb 'be', use adjective 'slow'." },
+        { sentence: "We should <span class='highlight-verb'>read</span> [BLANK] in the school library.", options: ["quiet", "quietly"], correct: "quietly", explanation: "Describes 'read'." },
+        { sentence: "Your <span class='highlight-noun'>bedroom</span> is very [BLANK]!", options: ["messy", "messily"], correct: "messy", explanation: "Describes the 'bedroom'." },
+        { sentence: "Don't <span class='highlight-verb'>write</span> so [BLANK] in your homework!", options: ["messy", "messily"], correct: "messily", explanation: "Describes 'write'." },
+        { sentence: "We should <span class='highlight-verb'>listen</span> [BLANK] to the teacher.", options: ["careful", "carefully"], correct: "carefully", explanation: "Describes the verb 'listen'." },
+        { sentence: "The math <span class='highlight-noun'>homework</span> was very [BLANK].", options: ["easy", "easily"], correct: "easy", explanation: "Describes the noun 'homework'." },
+        { sentence: "We can <span class='highlight-verb'>solve</span> this problem [BLANK].", options: ["easy", "easily"], correct: "easily", explanation: "Describes the verb 'solve'." },
+        { sentence: "You should <span class='highlight-verb'>sit</span> [BLANK] on your chair.", options: ["proper", "properly"], correct: "properly", explanation: "Describes how you sit." }
+      ],
+      tier3: [
+        { sentence: "She is a _____ student, so she always does her work _____.", options: ["good / well", "well / good", "good / good"], correct: "good / well", explanation: "Noun 'student' needs 'good'. Verb 'does' needs 'well'." },
+        { sentence: "Why are you running so _____? You will fall over!", options: ["fastly", "fast", "more fast"], correct: "fast", explanation: "'Fastly' does not exist! 'Fast' is the adverb." },
+        { sentence: "Peter arrived _____ at the cinema, so he didn't miss the movie.", options: ["early", "earlily", "in early"], correct: "early", explanation: "'Early' acts as the adverb." },
+        { sentence: "Identify the sentence with the CORRECT grammar:", options: ["We should talk softly.", "We should talk soft.", "We should talk softliness."], correct: "We should talk softly.", explanation: "'Talk' requires the adverb 'softly'." },
+        { sentence: "Identify the sentence with the CORRECT grammar:", options: ["Don is a fastly swimmer.", "Don swims fastly.", "Don is a fast swimmer."], correct: "Don is a fast swimmer.", explanation: "Never add -ly to fast!" },
+        { sentence: "Don't be _____ for school! The bell rings at 8:00 a.m.", options: ["late", "lately", "lateliness"], correct: "late", explanation: "'Late' is used after 'be'. 'Lately' means 'recently'." },
+        { sentence: "The children were playing _____ in the garden.", options: ["happily", "happy", "happier"], correct: "happily", explanation: "'Playing' is a verb. Use 'happily'." },
+        { sentence: "He is a _____ worker who completes every task _____.", options: ["patient / patiently", "patiently / patient", "patient / patient"], correct: "patient / patiently", explanation: "Worker (patient). Completes (patiently)." },
+        { sentence: "She worked _____ on her project all weekend.", options: ["hard", "hardly", "hardily"], correct: "hard", explanation: "'Hard' is an irregular adverb meaning with a lot of effort." },
+        { sentence: "I can _____ hear you over this loud music!", options: ["hard", "hardly", "hardily"], correct: "hardly", explanation: "'Hardly' means barely. It changes the meaning completely!" },
+        { sentence: "Have you seen any good movies _____?", options: ["late", "lately", "lateliness"], correct: "lately", explanation: "'Lately' means recently, not delayed." },
+        { sentence: "The eagle flies _____ in the sky.", options: ["high", "highly", "in high"], correct: "high", explanation: "'High' is an irregular adverb for physical height." },
+        { sentence: "She is _____ respected by her peers.", options: ["high", "highly", "higher"], correct: "highly", explanation: "'Highly' means to a great degree." },
+        { sentence: "He plays the piano _____, bringing joy to everyone.", options: ["good", "well", "goodly"], correct: "well", explanation: "'Well' is the adverb form of 'good'." },
+        { sentence: "That soup smells _____! I can't wait to eat it.", options: ["good", "well", "goodly"], correct: "good", explanation: "After verbs of sense (smell, taste), we use adjectives like 'good'." }
+      ]
+    };
+
+    let currentTier = 1;
+    let questionsState = { 1: [], 2: [], 3: [] };
+    let userAnswers = { 1: {}, 2: {}, 3: {} };
+    
+    function shuffleArray(array) {
+      return array.sort(() => Math.random() - 0.5);
+    }
+
+    function initTier(tierNum) {
+      let pool = [...RAW_TEMPLATES[`tier${tierNum}`]];
+      questionsState[tierNum] = shuffleArray(pool).slice(0, 15).map((q, idx) => ({
+        ...q, id: `t${tierNum}_q${idx}`, options: tierNum !== 3 ? shuffleArray([...q.options]) : q.options
+      }));
+      userAnswers[tierNum] = {};
+    }
+
+    function switchTier(tierNum) {
+      currentTier = tierNum;
+      if (!questionsState[tierNum].length) initTier(tierNum);
+      updateUI();
+    }
+
+    function generateNewQuestionsForCurrentTier() {
+      initTier(currentTier);
+      updateUI();
+    }
+
+    function resetGame() {
+      player = { xp: 0, streak: 0, level: 1, rankIndex: 0 };
+      initTier(1); initTier(2); initTier(3);
+      currentTier = 1;
+      updateHUD();
+      updateUI();
+    }
+
+    function updateHUD() {
+      let currentRank = RANKS[player.rankIndex];
+      let nextRank = RANKS[Math.min(player.rankIndex + 1, RANKS.length - 1)];
+      
+      if (player.rankIndex < RANKS.length - 1 && player.xp >= nextRank.xpReq) {
+        player.rankIndex++;
+        player.level++;
+        currentRank = RANKS[player.rankIndex];
+        nextRank = RANKS[Math.min(player.rankIndex + 1, RANKS.length - 1)];
+      }
+
+      document.getElementById('player-avatar').innerText = currentRank.emoji;
+      document.getElementById('level-badge').innerText = `Lv.${player.level}`;
+      document.getElementById('player-rank').innerText = currentRank.name;
+      
+      let xpInCurrentLevel = player.xp - currentRank.xpReq;
+      let xpNeededForNext = nextRank.xpReq - currentRank.xpReq;
+      
+      if (player.rankIndex === RANKS.length - 1) { 
+        document.getElementById('xp-bar').style.width = '100%';
+        document.getElementById('xp-text').innerText = `${player.xp} XP (MAX)`;
+      } else {
+        let percent = Math.min(100, Math.max(0, (xpInCurrentLevel / xpNeededForNext) * 100));
+        document.getElementById('xp-bar').style.width = `${percent}%`;
+        document.getElementById('xp-text').innerText = `${player.xp} / ${nextRank.xpReq} XP`;
+      }
+
+      const streakIcon = document.getElementById('streak-icon');
+      document.getElementById('streak-text').innerText = `${player.streak} Streak`;
+      if (player.streak >= 3) {
+        streakIcon.classList.add('streak-fire', 'text-orange-500');
+        streakIcon.classList.remove('text-slate-600');
+      } else {
+        streakIcon.classList.remove('streak-fire', 'text-orange-500');
+        streakIcon.classList.add('text-slate-600');
+      }
+    }
+
+    function showFloatingText(text, x, y, color = "#4ade80") {
+      const el = document.createElement('div');
+      el.className = 'floating-xp';
+      el.innerText = text;
+      el.style.left = `${x}px`;
+      el.style.top = `${y}px`;
+      el.style.color = color;
+      document.getElementById('floating-layer').appendChild(el);
+      setTimeout(() => el.remove(), 1000);
+    }
+
+    function selectAnswer(event, qIndex, selectedOption) {
+      if (userAnswers[currentTier][qIndex] !== undefined) return; 
+
+      const q = questionsState[currentTier][qIndex];
+      const isCorrect = selectedOption === q.correct;
+      userAnswers[currentTier][qIndex] = selectedOption;
+      
+      let xpGained = 0;
+      if (isCorrect) {
+        player.streak++;
+        xpGained = BASE_XP + (player.streak > 1 ? STREAK_BONUS * Math.min(player.streak, 5) : 0);
+        player.xp += xpGained;
+        showFloatingText(`+${xpGained} XP`, event.clientX, event.clientY);
+        speakPraise();
+      } else {
+        player.streak = 0;
+        showFloatingText(`Miss!`, event.clientX, event.clientY, "#fb7185");
+        speakEncouragement();
+      }
+
+      updateHUD();
+      renderQuestions();
+      checkTierCompletion();
+    }
+
+    function renderQuestions() {
+      const container = document.getElementById('questions-container');
+      container.innerHTML = '';
+      let answeredCount = 0;
+      const qList = questionsState[currentTier];
+
+      qList.forEach((q, idx) => {
+        const userAnswer = userAnswers[currentTier][idx];
+        const isAnswered = userAnswer !== undefined;
+        const isCorrect = isAnswered && userAnswer === q.correct;
+
+        if(isAnswered) answeredCount++;
+
+        const card = document.createElement('div');
+        card.className = `game-card p-5 ${isAnswered ? (isCorrect ? 'border-emerald-500/50 bg-emerald-900/10' : 'border-rose-500/50 bg-rose-900/10') : 'border-slate-700'}`;
+        if(isAnswered && !isCorrect && userAnswer !== q.correct) card.classList.add('animate-shake');
+        if(isAnswered && isCorrect) card.classList.add('animate-pop');
+
+        let html = `
+          <div class="flex items-start justify-between gap-3 mb-4">
+            <div class="flex items-center space-x-3">
+              <span class="w-8 h-8 rounded-lg bg-slate-800 text-slate-300 border border-slate-600 flex items-center justify-center font-heading font-bold text-sm">
+                Q${idx + 1}
+              </span>
+              ${q.target ? `<span class="text-[10px] uppercase font-bold px-2 py-1 rounded bg-slate-800 text-slate-400 border border-slate-700">Target: ${q.target}</span>` : ''}
+            </div>
+            ${isAnswered ? `
+              <span class="text-sm font-bold px-3 py-1 rounded flex items-center space-x-1 ${isCorrect ? 'bg-emerald-500/20 text-emerald-400' : 'bg-rose-500/20 text-rose-400'}">
+                <i class="fa-solid ${isCorrect ? 'fa-check' : 'fa-xmark'}"></i>
+                <span>${isCorrect ? 'Perfect!' : 'Miss!'}</span>
+              </span>
+            ` : ''}
+          </div>
+          <p class="text-base sm:text-lg font-medium text-white mb-5 leading-relaxed">${q.sentence}</p>
+          <div class="grid grid-cols-1 sm:grid-cols-${q.options.length > 2 ? '3' : '2'} gap-3 mb-2">
+        `;
+
+        q.options.forEach(opt => {
+          let btnClass = "btn-game text-slate-300 font-medium py-3 px-4 flex justify-between items-center";
+          if (isAnswered) {
+            if (opt === q.correct) btnClass += " btn-correct font-bold";
+            else if (opt === userAnswer) btnClass += " btn-wrong font-bold";
+            else btnClass += " opacity-50 cursor-not-allowed";
+          }
+          
+          html += `
+            <button ${isAnswered ? 'disabled' : ''} onclick="selectAnswer(event, ${idx}, '${opt}')" class="${btnClass}">
+              <span>${opt}</span>
+              ${isAnswered && opt === q.correct ? '<i class="fa-solid fa-check-circle"></i>' : ''}
+              ${isAnswered && opt === userAnswer && !isCorrect ? '<i class="fa-solid fa-times-circle"></i>' : ''}
+            </button>
+          `;
+        });
+
+        html += `</div>`;
+
+        if (isAnswered) {
+          html += `
+            <div class="mt-4 p-3 rounded-lg ${isCorrect ? 'bg-emerald-900/40 border-emerald-700/50' : 'bg-rose-900/40 border-rose-700/50'} border text-sm text-slate-300 flex items-start space-x-3">
+              <i class="fa-solid fa-lightbulb mt-0.5 ${isCorrect ? 'text-emerald-400' : 'text-rose-400'}"></i>
+              <div><strong class="text-white font-heading tracking-wide">Lore:</strong> ${q.explanation}</div>
+            </div>
+          `;
+        }
+        card.innerHTML = html;
+        container.appendChild(card);
+      });
+
+      document.getElementById('quest-progress').innerText = `${answeredCount}/${qList.length}`;
+    }
+
+    function checkTierCompletion() {
+      const qList = questionsState[currentTier];
+      const answeredCount = Object.keys(userAnswers[currentTier]).length;
+      const scoreBox = document.getElementById('tier-score-box');
+      
+      if (answeredCount === qList.length) {
+        let correctCount = Object.values(userAnswers[currentTier]).filter((ans, i) => ans === qList[i].correct).length;
+        document.getElementById('tier-score-text').innerHTML = `You correctly answered <span class="text-amber-400 font-black text-2xl">${correctCount}/${qList.length}</span> quests!`;
+        
+        const nextBtn = document.getElementById('next-tier-btn');
+        if (currentTier === 3) nextBtn.classList.add('hidden');
+        else nextBtn.classList.remove('hidden');
+
+        scoreBox.classList.remove('hidden');
+        setTimeout(() => scoreBox.scrollIntoView({ behavior: 'smooth', block: 'center' }), 300);
+      } else {
+        scoreBox.classList.add('hidden');
+      }
+    }
+
+    function goToNextTier() {
+      if (currentTier < 3) {
+        switchTier(currentTier + 1);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    }
+
+    function updateUI() {
+      for (let i = 1; i <= 3; i++) {
+        const tab = document.getElementById(`tab-tier${i}`);
+        if (i === currentTier) {
+          tab.classList.add('border-indigo-500', 'bg-indigo-900/30', 'scale-105');
+          tab.classList.remove('opacity-75', 'border-slate-600', 'hover:opacity-100');
+        } else {
+          tab.classList.remove('border-indigo-500', 'bg-indigo-900/30', 'scale-105');
+          tab.classList.add('opacity-75', 'border-slate-600', 'hover:opacity-100');
+        }
+      }
+
+      const tb = document.getElementById('tier-badge');
+      const tt = document.getElementById('tier-title');
+      const td = document.getElementById('tier-description');
+      const tl = document.getElementById('tier-legend');
+
+      if (currentTier === 1) {
+        tb.innerText = "World 1"; tt.innerText = "Forest of Foundations";
+        td.innerText = "Match basic adjectives to nouns and adverbs to verbs.";
+        tl.style.display = "flex";
+      } else if (currentTier === 2) {
+        tb.innerText = "World 2"; tt.innerText = "School of Manners";
+        td.innerText = "Apply adverbs properly to action verbs in school rules.";
+        tl.style.display = "flex";
+      } else {
+        tb.innerText = "World 3"; tt.innerText = "The Irregular Dragon";
+        td.innerText = "No highlights! Defeat tricky words like fast, early, late, and well.";
+        tl.style.display = "none";
+      }
+
+      renderQuestions();
+      checkTierCompletion();
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      initTier(1); initTier(2); initTier(3);
+      updateHUD();
+      updateUI();
+    });
+  </script>
+</body>
+</html>
