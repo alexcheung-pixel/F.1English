@@ -1,0 +1,1245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Article Master - Gamified F.1 Grammar App</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Canvas Confetti -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        display: ['Fredoka', 'sans-serif'],
+                        body: ['Plus Jakarta Sans', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#f0f7ff',
+                            100: '#e0effe',
+                            500: '#3b82f6',
+                            600: '#2563eb',
+                            700: '#1d4ed8',
+                        },
+                        game: {
+                            gold: '#fbbf24',
+                            purple: '#8b5cf6',
+                            green: '#22c55e',
+                            red: '#ef4444'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 50%, #f3e8ff 100%);
+            min-height: 100vh;
+        }
+        .font-display {
+            font-family: 'Fredoka', sans-serif;
+        }
+        .blank-space {
+            display: inline-block;
+            min-width: 52px;
+            padding: 2px 8px;
+            margin: 0 3px;
+            border-bottom: 3px solid #3b82f6;
+            background-color: #eff6ff;
+            color: #1d4ed8;
+            font-weight: 800;
+            text-align: center;
+            border-radius: 8px;
+            transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
+        }
+        .blank-space.filled {
+            background-color: #dbeafe;
+            border-bottom-color: #2563eb;
+        }
+        .blank-space.correct {
+            background-color: #dcfce7;
+            color: #15803d;
+            border-bottom-color: #22c55e;
+            transform: scale(1.05);
+        }
+        .blank-space.wrong {
+            background-color: #fee2e2;
+            color: #b91c1c;
+            border-bottom-color: #ef4444;
+            animation: shake 0.4s ease-in-out;
+        }
+        .option-btn {
+            transition: all 0.18s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        .option-btn:hover:not(:disabled) {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 15px -3px rgba(59, 130, 246, 0.2);
+        }
+        .option-btn:active:not(:disabled) {
+            transform: translateY(1px) scale(0.97);
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-8px) rotate(2deg); }
+        }
+        .animate-float {
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-6px); }
+            40%, 80% { transform: translateX(6px); }
+        }
+
+        @keyframes popUp {
+            0% { opacity: 0; transform: translateY(10px) scale(0.8); }
+            50% { opacity: 1; transform: translateY(-15px) scale(1.2); }
+            100% { opacity: 0; transform: translateY(-30px) scale(1); }
+        }
+        .xp-popup {
+            position: absolute;
+            animation: popUp 1s ease-out forwards;
+            pointer-events: none;
+            font-family: 'Fredoka', sans-serif;
+            font-weight: bold;
+            color: #f59e0b;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.15);
+        }
+
+        @keyframes speakingPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.08); }
+        }
+        .mascot-speaking {
+            animation: speakingPulse 0.5s ease-in-out infinite;
+        }
+
+        /* Custom Scrollbar for Badges & Rulebook */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body class="text-slate-800 flex flex-col justify-between relative overflow-x-hidden">
+
+    <!-- Top Gamified Header -->
+    <header class="bg-white/90 backdrop-blur-md border-b-2 border-slate-200 sticky top-0 z-30 shadow-sm">
+        <div class="max-w-5xl mx-auto px-4 py-2.5 flex items-center justify-between">
+            
+            <!-- Logo & Title -->
+            <div class="flex items-center gap-3">
+                <div class="bg-gradient-to-tr from-amber-400 via-orange-500 to-amber-500 text-white p-2.5 rounded-2xl shadow-md border-2 border-amber-300 animate-float">
+                    <i data-lucide="award" class="w-6 h-6"></i>
+                </div>
+                <div>
+                    <h1 class="font-display font-bold text-xl text-slate-800 leading-none flex items-center gap-1.5">
+                        Article Master <span class="bg-amber-100 text-amber-800 text-[10px] px-2 py-0.5 rounded-full font-bold border border-amber-300">VOICE ED.</span>
+                    </h1>
+                    <p class="text-[11px] text-slate-500 font-medium">Form 1 Grammar Adventure</p>
+                </div>
+            </div>
+
+            <!-- Player XP & Level Bar (Gamified Center) -->
+            <div class="hidden md:flex items-center gap-3 bg-slate-100/80 px-3 py-1.5 rounded-2xl border border-slate-200">
+                <div class="flex items-center gap-1.5">
+                    <span class="bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-display text-xs px-2.5 py-1 rounded-xl font-bold shadow-sm" id="playerLevelBadge">
+                        Lvl 1
+                    </span>
+                    <div class="flex flex-col w-28">
+                        <div class="flex justify-between text-[10px] font-bold text-slate-600">
+                            <span>XP</span>
+                            <span id="xpText">0/100</span>
+                        </div>
+                        <div class="w-full bg-slate-200 h-2 rounded-full overflow-hidden border border-slate-300">
+                            <div id="xpBar" class="bg-gradient-to-r from-amber-400 to-amber-500 h-full rounded-full transition-all duration-300 w-0"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="h-6 w-[1px] bg-slate-300"></div>
+
+                <!-- Coins Counter -->
+                <div class="flex items-center gap-1 text-amber-600 font-display font-bold text-sm bg-amber-50 px-2.5 py-1 rounded-xl border border-amber-200">
+                    <i data-lucide="coins" class="w-4 h-4 fill-amber-400 text-amber-500"></i>
+                    <span id="coinCount">0</span>
+                </div>
+            </div>
+
+            <!-- Header Controls -->
+            <div class="flex items-center gap-2">
+                <!-- Badges Button -->
+                <button onclick="openBadgesModal()" title="View Achievements" class="bg-purple-50 text-purple-700 hover:bg-purple-100 border border-purple-200/80 px-3 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm">
+                    <i data-lucide="trophy" class="w-4 h-4 text-purple-600"></i>
+                    <span class="hidden sm:inline">Badges</span>
+                </button>
+
+                <!-- Sound Toggle -->
+                <button onclick="toggleSound()" id="soundToggleBtn" title="Toggle Sound" class="p-2 text-slate-600 hover:bg-slate-100 rounded-xl transition flex items-center gap-1 text-xs font-semibold">
+                    <i data-lucide="volume-2" class="w-5 h-5 text-blue-600" id="soundIcon"></i>
+                    <span class="hidden lg:inline" id="soundText">Sound On</span>
+                </button>
+
+                <!-- Rule Book -->
+                <button onclick="openRuleBook()" class="bg-amber-50 text-amber-700 hover:bg-amber-100 border border-amber-200/80 px-3 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm">
+                    <i data-lucide="book-marked" class="w-4 h-4 text-amber-600"></i>
+                    <span class="hidden sm:inline">Rule Book (秘笈)</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Container -->
+    <main class="max-w-4xl mx-auto px-4 py-5 w-full flex-grow">
+
+        <!-- Tier Selection Arcade Bar -->
+        <section class="mb-5">
+            <div class="bg-white/80 backdrop-blur-sm p-2 rounded-2xl shadow-sm border border-slate-200 flex flex-wrap gap-2">
+                <button onclick="selectTier(1)" id="tierBtn1" class="flex-1 min-w-[120px] py-2.5 px-3 rounded-xl font-display font-bold text-sm transition flex flex-col items-center justify-center gap-0.5 border">
+                    <span class="flex items-center gap-1">
+                        <i data-lucide="zap" class="w-4 h-4"></i> Tier 1: Novice
+                    </span>
+                    <span class="text-[11px] font-normal opacity-80">Short Sentences (基礎篇)</span>
+                </button>
+
+                <button onclick="selectTier(2)" id="tierBtn2" class="flex-1 min-w-[120px] py-2.5 px-3 rounded-xl font-display font-bold text-sm transition flex flex-col items-center justify-center gap-0.5 border">
+                    <span class="flex items-center gap-1">
+                        <i data-lucide="target" class="w-4 h-4"></i> Tier 2: Champion
+                    </span>
+                    <span class="text-[11px] font-normal opacity-80">Context & Rules (進階篇)</span>
+                </button>
+
+                <button onclick="selectTier(3)" id="tierBtn3" class="flex-1 min-w-[120px] py-2.5 px-3 rounded-xl font-display font-bold text-sm transition flex flex-col items-center justify-center gap-0.5 border">
+                    <span class="flex items-center gap-1">
+                        <i data-lucide="sparkles" class="w-4 h-4"></i> Tier 3: Legend
+                    </span>
+                    <span class="text-[11px] font-normal opacity-80">Tricky Exceptions (高階挑戰)</span>
+                </button>
+            </div>
+        </section>
+
+        <!-- Dynamic Game HUD: Progress, Combo Multiplier & Score -->
+        <section class="mb-5 bg-white p-4 rounded-2xl shadow-sm border border-slate-200 flex flex-col gap-3 relative overflow-hidden">
+            <div class="flex items-center justify-between text-sm">
+                <div class="flex items-center gap-2">
+                    <span id="tierBadge" class="bg-blue-100 text-blue-800 font-bold px-3 py-1 rounded-xl text-xs border border-blue-200">
+                        Tier 1
+                    </span>
+                    <span class="text-slate-500 font-semibold text-xs sm:text-sm">
+                        Q <strong id="currentQNum" class="text-slate-800 text-base">1</strong>/<span id="totalQNum">20</span>
+                    </span>
+                </div>
+
+                <!-- Gamified Streak & Combo Badge -->
+                <div class="flex items-center gap-3">
+                    <div id="comboContainer" class="hidden sm:flex items-center gap-1 bg-gradient-to-r from-amber-500 to-red-500 text-white font-display px-2.5 py-0.5 rounded-lg text-xs font-bold shadow-sm animate-pulse">
+                        <i data-lucide="flame" class="w-3.5 h-3.5 fill-white"></i>
+                        <span id="comboMultiplier">2x COMBO!</span>
+                    </div>
+
+                    <div class="flex items-center gap-1 text-amber-600 font-bold text-xs sm:text-sm bg-amber-50 px-2.5 py-1 rounded-xl border border-amber-200">
+                        <i data-lucide="flame" class="w-4 h-4 fill-amber-500 text-amber-500"></i>
+                        <span>Streak: <span id="streakCount">0</span></span>
+                    </div>
+                    
+                    <div class="flex items-center gap-1 text-emerald-600 font-bold text-xs sm:text-sm bg-emerald-50 px-2.5 py-1 rounded-xl border border-emerald-200">
+                        <i data-lucide="check-circle-2" class="w-4 h-4"></i>
+                        <span>Score: <span id="scoreCount">0</span></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Gamified Progress Bar -->
+            <div class="w-full bg-slate-100 h-3.5 rounded-full overflow-hidden p-0.5 border border-slate-200">
+                <div id="progressBar" class="bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-600 h-full rounded-full transition-all duration-300 w-0 shadow-inner"></div>
+            </div>
+        </section>
+
+        <!-- Question Card with Grammy Mascot Interaction -->
+        <section id="quizCard" class="bg-white p-6 sm:p-8 rounded-3xl shadow-md border-2 border-slate-200 relative overflow-hidden transition-all duration-300">
+            
+            <!-- Category Tag & Read Aloud -->
+            <div class="flex items-center justify-between mb-4">
+                <span id="ruleCategoryTag" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-slate-100 text-slate-700 border border-slate-200">
+                    <i data-lucide="sparkles" class="w-3.5 h-3.5 text-amber-500"></i> Vowel Sound Rule
+                </span>
+
+                <button onclick="speakSentence()" title="Listen to sentence" class="text-blue-600 bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-xl transition flex items-center gap-1.5 text-xs font-bold border border-blue-200 shadow-sm">
+                    <i data-lucide="volume-2" class="w-4 h-4"></i>
+                    <span>Read Sentence</span>
+                </button>
+            </div>
+
+            <!-- Mascot & Speech Bubble Banner -->
+            <div class="bg-gradient-to-r from-amber-50 via-orange-50 to-blue-50 p-4 rounded-2xl border border-amber-200/80 mb-6 flex items-center gap-4 relative">
+                
+                <!-- Grammy SVG Mascot -->
+                <div class="w-16 h-16 sm:w-20 sm:h-20 shrink-0 relative flex items-center justify-center">
+                    <svg id="mascotSvg" class="w-full h-full drop-shadow-md transition-transform duration-300" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <!-- Owl Body -->
+                        <circle cx="50" cy="55" r="35" fill="#3B82F6"/>
+                        <circle cx="50" cy="58" r="26" fill="#EFF6FF"/>
+                        <!-- Ears / Feather Tufts -->
+                        <path d="M25 30L35 45L20 48Z" fill="#1D4ED8"/>
+                        <path d="M75 30L65 45L80 48Z" fill="#1D4ED8"/>
+                        <!-- Eyes Base -->
+                        <circle cx="38" cy="48" r="12" fill="white" stroke="#1D4ED8" stroke-width="2"/>
+                        <circle cx="62" cy="48" r="12" fill="white" stroke="#1D4ED8" stroke-width="2"/>
+                        <!-- Pupils (Dynamic) -->
+                        <circle id="mascotPupilL" cx="38" cy="48" r="5" fill="#1E293B"/>
+                        <circle id="mascotPupilR" cx="62" cy="48" r="5" fill="#1E293B"/>
+                        <!-- Beak -->
+                        <polygon points="50,54 44,62 56,62" fill="#F59E0B"/>
+                        <!-- Graduation Cap -->
+                        <polygon points="50,12 15,25 50,35 85,25" fill="#1E293B"/>
+                        <rect x="42" y="28" width="16" height="6" fill="#334155"/>
+                        <circle cx="50" cy="23" r="3" fill="#F59E0B"/>
+                        <path d="M50 23Q68 25 70 40" stroke="#F59E0B" stroke-width="2" fill="none"/>
+                    </svg>
+                </div>
+
+                <!-- Speech Bubble -->
+                <div class="flex-grow">
+                    <div class="flex items-center gap-1.5 text-[11px] font-bold text-amber-700 uppercase tracking-wider">
+                        <i data-lucide="bot" class="w-3.5 h-3.5"></i> Grammy the Owl
+                        <span id="speakingIndicator" class="hidden text-xs text-blue-600 font-bold items-center gap-1 ml-auto animate-pulse">
+                            <i data-lucide="volume-2" class="w-3.5 h-3.5"></i> Speaking...
+                        </span>
+                    </div>
+                    <p id="mascotSpeech" class="font-display text-sm sm:text-base font-semibold text-slate-800 leading-snug mt-0.5">
+                        Hoot! Pick the right article to help me complete the sentence! 🦉
+                    </p>
+                </div>
+            </div>
+
+            <!-- Sentence Display Area -->
+            <div class="my-6 py-2 px-2 text-center relative" id="sentenceContainer">
+                <p id="sentenceDisplay" class="font-display text-xl sm:text-2xl md:text-3xl font-bold text-slate-800 leading-relaxed">
+                    <!-- Dynamic Sentence HTML -->
+                </p>
+            </div>
+
+            <!-- Gamified Option Buttons Grid -->
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3.5 mt-8">
+                <button onclick="handleAnswer('a')" id="opt-a" class="option-btn bg-white hover:bg-blue-50 border-2 border-slate-200 hover:border-blue-500 text-slate-800 py-4 px-4 rounded-2xl font-display font-bold text-2xl flex flex-col items-center justify-center gap-0.5 shadow-sm">
+                    <span class="text-blue-600">a</span>
+                    <span class="text-[11px] font-body text-slate-500 font-normal">Consonant Sound</span>
+                </button>
+
+                <button onclick="handleAnswer('an')" id="opt-an" class="option-btn bg-white hover:bg-blue-50 border-2 border-slate-200 hover:border-blue-500 text-slate-800 py-4 px-4 rounded-2xl font-display font-bold text-2xl flex flex-col items-center justify-center gap-0.5 shadow-sm">
+                    <span class="text-indigo-600">an</span>
+                    <span class="text-[11px] font-body text-slate-500 font-normal">Vowel Sound</span>
+                </button>
+
+                <button onclick="handleAnswer('the')" id="opt-the" class="option-btn bg-white hover:bg-blue-50 border-2 border-slate-200 hover:border-blue-500 text-slate-800 py-4 px-4 rounded-2xl font-display font-bold text-2xl flex flex-col items-center justify-center gap-0.5 shadow-sm">
+                    <span class="text-emerald-600">the</span>
+                    <span class="text-[11px] font-body text-slate-500 font-normal">Specific / Unique</span>
+                </button>
+
+                <button onclick="handleAnswer('X')" id="opt-X" class="option-btn bg-white hover:bg-blue-50 border-2 border-slate-200 hover:border-blue-500 text-slate-800 py-4 px-4 rounded-2xl font-display font-bold text-2xl flex flex-col items-center justify-center gap-0.5 shadow-sm">
+                    <span class="text-rose-500">X</span>
+                    <span class="text-[11px] font-body text-slate-500 font-normal">No Article</span>
+                </button>
+            </div>
+
+            <!-- Gamified Feedback Drawer (Shows Answers & Explanation Simultaneously) -->
+            <div id="explanationBox" class="hidden mt-6 p-5 rounded-2xl border-2 transition-all animate-fadeIn">
+                <div class="flex items-start gap-3.5">
+                    <div id="feedbackIcon" class="p-2.5 rounded-xl text-white mt-0.5 shrink-0 shadow-sm">
+                        <i data-lucide="info" class="w-6 h-6"></i>
+                    </div>
+                    <div class="flex-grow">
+                        <div class="flex items-center justify-between flex-wrap gap-2">
+                            <h4 id="feedbackTitle" class="font-display font-bold text-lg"></h4>
+                            <span id="cantoneseTip" class="text-xs px-2.5 py-1 rounded-lg font-bold bg-white/80 text-slate-700 border border-slate-200 shadow-xs"></span>
+                        </div>
+                        <div class="mt-2 text-sm leading-relaxed text-slate-700 font-medium">
+                            <p id="answerTextReveal" class="font-bold text-slate-900 mb-1"></p>
+                            <p id="feedbackText"></p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-5 flex items-center justify-between pt-2 border-t border-slate-200/60">
+                    <button onclick="replayVoiceFeedback()" class="text-xs font-bold text-slate-600 hover:text-blue-600 flex items-center gap-1.5 py-1.5 px-3 rounded-lg hover:bg-white/80 border border-slate-200 transition shadow-2xs">
+                        <i data-lucide="volume-2" class="w-4 h-4 text-blue-500"></i>
+                        <span>Replay Voice Explanation</span>
+                    </button>
+
+                    <button onclick="nextQuestion()" id="nextBtn" class="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-display font-bold px-7 py-3 rounded-xl text-base transition shadow-md flex items-center gap-2 transform hover:scale-105 active:scale-95">
+                        <span>Next Question</span>
+                        <i data-lucide="arrow-right" class="w-5 h-5"></i>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Tier Completion Celebration Card -->
+        <section id="completionCard" class="hidden bg-white p-8 rounded-3xl shadow-lg border-2 border-slate-200 text-center relative overflow-hidden">
+            <div class="w-24 h-24 bg-gradient-to-tr from-amber-300 via-amber-400 to-orange-400 text-white rounded-3xl flex items-center justify-center mx-auto mb-4 border-4 border-amber-100 shadow-lg animate-bounce">
+                <i data-lucide="trophy" class="w-12 h-12"></i>
+            </div>
+            
+            <h2 class="font-display font-bold text-3xl sm:text-4xl text-slate-800">Tier Victory! 🎉</h2>
+            <p id="completionSubtitle" class="text-slate-600 text-base mt-1 font-medium">Incredible grammar skills! Here is your quest summary.</p>
+
+            <!-- Star Rating Display -->
+            <div class="flex justify-center gap-2 my-4" id="starRatingContainer">
+                <i data-lucide="star" class="w-8 h-8 fill-amber-400 text-amber-400"></i>
+                <i data-lucide="star" class="w-8 h-8 fill-amber-400 text-amber-400"></i>
+                <i data-lucide="star" class="w-8 h-8 fill-amber-400 text-amber-400"></i>
+            </div>
+
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 my-6 max-w-xl mx-auto">
+                <div class="bg-amber-50 p-3.5 rounded-2xl border border-amber-200 shadow-xs">
+                    <span class="block text-xs text-amber-700 font-bold uppercase tracking-wider">Final Score</span>
+                    <strong id="finalScore" class="text-2xl font-display text-amber-600">18/20</strong>
+                </div>
+                <div class="bg-emerald-50 p-3.5 rounded-2xl border border-emerald-200 shadow-xs">
+                    <span class="block text-xs text-emerald-700 font-bold uppercase tracking-wider">Accuracy</span>
+                    <strong id="finalAccuracy" class="text-2xl font-display text-emerald-600">90%</strong>
+                </div>
+                <div class="bg-purple-50 p-3.5 rounded-2xl border border-purple-200 shadow-xs">
+                    <span class="block text-xs text-purple-700 font-bold uppercase tracking-wider">Best Streak</span>
+                    <strong id="finalStreak" class="text-2xl font-display text-purple-600">8 🔥</strong>
+                </div>
+                <div class="bg-blue-50 p-3.5 rounded-2xl border border-blue-200 shadow-xs">
+                    <span class="block text-xs text-blue-700 font-bold uppercase tracking-wider">XP Earned</span>
+                    <strong id="finalXp" class="text-2xl font-display text-blue-600">+450 XP</strong>
+                </div>
+            </div>
+
+            <!-- Mistakes Breakdown List -->
+            <div id="mistakesContainer" class="hidden text-left mb-6 bg-slate-50 p-4 rounded-2xl border border-slate-200 max-h-60 overflow-y-auto">
+                <h4 class="font-display font-bold text-slate-800 text-sm mb-3 flex items-center gap-1.5">
+                    <i data-lucide="alert-circle" class="w-4 h-4 text-amber-500"></i> Quest Review (需要複習的題目):
+                </h4>
+                <div id="mistakesList" class="space-y-2 text-xs"></div>
+            </div>
+
+            <div class="flex flex-wrap justify-center gap-3">
+                <button onclick="retryCurrentTier()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-display font-bold px-6 py-3.5 rounded-xl text-sm transition flex items-center gap-2 border border-slate-300">
+                    <i data-lucide="rotate-ccw" class="w-4 h-4"></i> Replay Tier
+                </button>
+                <button onclick="advanceToNextTier()" id="nextTierBtn" class="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-display font-bold px-8 py-3.5 rounded-xl text-base transition shadow-md flex items-center gap-2 transform hover:scale-105 active:scale-95">
+                    <span>Next Level Challenge</span>
+                    <i data-lucide="chevron-right" class="w-5 h-5"></i>
+                </button>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Badges / Achievements Modal -->
+    <div id="badgesModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden animate-fadeIn">
+        <div class="bg-white w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[85vh] border-2 border-purple-200">
+            <!-- Modal Header -->
+            <div class="bg-gradient-to-r from-purple-600 to-indigo-600 text-white p-5 flex items-center justify-between">
+                <div class="flex items-center gap-2.5">
+                    <i data-lucide="trophy" class="w-6 h-6 text-amber-300"></i>
+                    <div>
+                        <h3 class="font-display font-bold text-lg">Your Grammar Badges</h3>
+                        <p class="text-xs text-purple-100">Unlock trophies as you conquer articles!</p>
+                    </div>
+                </div>
+                <button onclick="closeBadgesModal()" class="text-white/80 hover:text-white p-1.5 rounded-lg hover:bg-white/10 transition">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <!-- Modal Content Body -->
+            <div class="p-6 overflow-y-auto space-y-3" id="badgesListContainer">
+                <!-- Dynamic Badges rendered here -->
+            </div>
+
+            <div class="p-4 border-t border-slate-100 bg-slate-50 text-right">
+                <button onclick="closeBadgesModal()" class="bg-slate-800 hover:bg-slate-900 text-white font-display px-5 py-2 rounded-xl text-xs font-semibold">
+                    Awesome!
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Rule Book Modal -->
+    <div id="ruleBookModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden animate-fadeIn">
+        <div class="bg-white w-full max-w-2xl rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+            <!-- Modal Header -->
+            <div class="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white p-5 flex items-center justify-between">
+                <div class="flex items-center gap-2.5">
+                    <i data-lucide="book-open" class="w-6 h-6"></i>
+                    <div>
+                        <h3 class="font-display font-bold text-lg">Grammar Cheat Sheet (冠詞秘笈)</h3>
+                        <p class="text-xs text-blue-100">Reference notes based on F.1 English curriculum</p>
+                    </div>
+                </div>
+                <button onclick="closeRuleBook()" class="text-white/80 hover:text-white p-1.5 rounded-lg hover:bg-white/10 transition">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <!-- Modal Content Body -->
+            <div class="p-6 overflow-y-auto space-y-5 text-slate-700 text-xs sm:text-sm">
+                
+                <!-- Section 1: A vs AN -->
+                <div class="bg-blue-50/70 p-4 rounded-2xl border border-blue-200 shadow-xs">
+                    <h4 class="font-display font-bold text-blue-900 text-base mb-2 flex items-center gap-2">
+                        <span class="w-6 h-6 rounded-full bg-blue-600 text-white flex items-center justify-center text-xs">1</span>
+                        Indefinite Articles: "a" vs "an"
+                    </h4>
+                    <p class="mb-2">Used before singular, countable nouns when introducing them for the <strong>first time</strong>.</p>
+                    <ul class="space-y-2">
+                        <li class="bg-white p-2.5 rounded-xl border border-blue-100">
+                            <strong class="text-blue-800">Use "a"</strong> before <strong>consonant sounds</strong> (輔音發音):
+                            <span class="block text-slate-500 text-xs mt-0.5">e.g., a car, a teacher, a student, a BBC film (/b/ sound)</span>
+                        </li>
+                        <li class="bg-white p-2.5 rounded-xl border border-blue-100">
+                            <strong class="text-blue-800">Use "an"</strong> before <strong>vowel sounds</strong> (a, e, i, o, u 元音發音):
+                            <span class="block text-slate-500 text-xs mt-0.5">e.g., an actor, an orange, an essay, an MTR station (/em/ sound)</span>
+                        </li>
+                        <li class="bg-amber-50 p-2.5 rounded-xl border border-amber-200 text-amber-900">
+                            <strong class="text-amber-800">⚠️ Pronunciation Traps (特例考點!):</strong>
+                            <div class="mt-1 space-y-1">
+                                <div>• <strong>a university</strong> → Starts with a "Y" consonant sound (/juː/).</div>
+                                <div>• <strong>an hour</strong> → Silent 'h'! Starts with a vowel sound (/aʊər/).</div>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Section 2: THE -->
+                <div class="bg-emerald-50/70 p-4 rounded-2xl border border-emerald-200 shadow-xs">
+                    <h4 class="font-display font-bold text-emerald-900 text-base mb-2 flex items-center gap-2">
+                        <span class="w-6 h-6 rounded-full bg-emerald-600 text-white flex items-center justify-center text-xs">2</span>
+                        Definite Article: "the"
+                    </h4>
+                    <ul class="space-y-2">
+                        <li class="bg-white p-2.5 rounded-xl border border-emerald-100">
+                            <strong class="text-emerald-800">1. Unique objects (獨一無二事物):</strong>
+                            <span class="block text-slate-500 text-xs">the sun, the moon, the world, the Earth, the Hong Kong Museum of Art</span>
+                        </li>
+                        <li class="bg-white p-2.5 rounded-xl border border-emerald-100">
+                            <strong class="text-emerald-800">2. Second Mention (再次提及):</strong>
+                            <span class="block text-slate-500 text-xs">Gary works in <strong>a</strong> studio. <strong>The</strong> studio is in Kwun Tong.</span>
+                        </li>
+                        <li class="bg-white p-2.5 rounded-xl border border-emerald-100">
+                            <strong class="text-emerald-800">3. Known / Specified item (特定事物):</strong>
+                            <span class="block text-slate-500 text-xs">The books on the shelf; The girl in front of Joe</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Section 3: X (No Article) -->
+                <div class="bg-purple-50/70 p-4 rounded-2xl border border-purple-200 shadow-xs">
+                    <h4 class="font-display font-bold text-purple-900 text-base mb-2 flex items-center gap-2">
+                        <span class="w-6 h-6 rounded-full bg-purple-600 text-white flex items-center justify-center text-xs">3</span>
+                        Zero Article: "X" (不加冠詞)
+                    </h4>
+                    <ul class="space-y-1.5 bg-white p-3 rounded-xl border border-purple-100 list-disc list-inside">
+                        <li><strong>Proper Nouns / Cities:</strong> Hong Kong, Thailand, Paris.</li>
+                        <li><strong>Sports & Games:</strong> play basketball, play football.</li>
+                        <li><strong>General Uncountable Nouns:</strong> drink milk, eat rice.</li>
+                        <li><strong>General Plural Nouns:</strong> Dogs make great pets.</li>
+                    </ul>
+                </div>
+
+            </div>
+
+            <!-- Modal Footer -->
+            <div class="p-4 border-t border-slate-100 bg-slate-50 text-right">
+                <button onclick="closeRuleBook()" class="bg-slate-800 hover:bg-slate-900 text-white font-display px-5 py-2 rounded-xl text-xs font-semibold">
+                    Got it! Close
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-white/80 border-t border-slate-200 py-3 text-center text-xs text-slate-500 font-medium mt-auto">
+        <p>Article Master • F.1 Secondary English Interactive Learning Platform</p>
+    </footer>
+
+    <script>
+        // --- AUDIO SYNTH ENGINE (Web Audio API for Game SFX) ---
+        let soundEnabled = true;
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+        function unlockAudio() {
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume().catch(() => {});
+            }
+        }
+        window.addEventListener('click', unlockAudio, { once: true });
+        window.addEventListener('touchstart', unlockAudio, { once: true });
+
+        function playSound(type) {
+            if (!soundEnabled) return;
+            unlockAudio();
+            
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+
+            if (type === 'correct') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(523.25, audioCtx.currentTime); // C5
+                osc.frequency.exponentialRampToValueAtTime(659.25, audioCtx.currentTime + 0.08); // E5
+                osc.frequency.exponentialRampToValueAtTime(783.99, audioCtx.currentTime + 0.16); // G5
+                osc.frequency.exponentialRampToValueAtTime(1046.50, audioCtx.currentTime + 0.25); // C6
+                gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.35);
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.35);
+            } else if (type === 'wrong') {
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(261.63, audioCtx.currentTime); // C4
+                osc.frequency.exponentialRampToValueAtTime(196.00, audioCtx.currentTime + 0.15); // G3
+                gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.3);
+            } else if (type === 'levelUp') {
+                confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
+            }
+        }
+
+        function toggleSound() {
+            soundEnabled = !soundEnabled;
+            const icon = document.getElementById('soundIcon');
+            const text = document.getElementById('soundText');
+            if (soundEnabled) {
+                icon.setAttribute('data-lucide', 'volume-2');
+                text.textContent = 'Sound On';
+            } else {
+                icon.setAttribute('data-lucide', 'volume-x');
+                text.textContent = 'Muted';
+                if ('speechSynthesis' in window) {
+                    window.speechSynthesis.cancel();
+                }
+            }
+            lucide.createIcons();
+        }
+
+        // --- REAL-TIME VOICE FEEDBACK & EXPLANATION ENGINE ---
+        let lastSpokenText = "";
+
+        function speakSimultaneousFeedback(praise, answerExplanation, isCorrect, targetAnswer) {
+            const answerFormatted = targetAnswer === 'X' ? 'no article' : `'${targetAnswer}'`;
+            const spokenText = `${praise} ${isCorrect ? 'The correct answer is indeed' : 'The correct answer is'} ${answerFormatted}. ${answerExplanation}`;
+            lastSpokenText = spokenText;
+
+            // Mascot & Visual Speaking Indicators
+            const indicator = document.getElementById('speakingIndicator');
+            const mascot = document.getElementById('mascotSvg');
+
+            if (!soundEnabled) return;
+
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel(); // Stop prior audio instantly
+                
+                const utterance = new SpeechSynthesisUtterance(spokenText);
+                utterance.lang = 'en-US';
+                utterance.rate = isCorrect ? 1.02 : 0.95;
+                utterance.pitch = isCorrect ? 1.15 : 1.0;
+
+                // Select preferred natural English voice if available
+                const voices = window.speechSynthesis.getVoices();
+                const preferredVoice = voices.find(v => 
+                    v.lang.startsWith('en') && (v.name.includes('Google') || v.name.includes('Natural') || v.name.includes('Samantha') || v.name.includes('Zira'))
+                );
+                if (preferredVoice) {
+                    utterance.voice = preferredVoice;
+                }
+
+                utterance.onstart = () => {
+                    indicator.classList.remove('hidden');
+                    indicator.classList.add('flex');
+                    mascot.classList.add('mascot-speaking');
+                };
+
+                utterance.onend = () => {
+                    indicator.classList.add('hidden');
+                    indicator.classList.remove('flex');
+                    mascot.classList.remove('mascot-speaking');
+                };
+
+                utterance.onerror = () => {
+                    indicator.classList.add('hidden');
+                    indicator.classList.remove('flex');
+                    mascot.classList.remove('mascot-speaking');
+                };
+
+                window.speechSynthesis.speak(utterance);
+            }
+        }
+
+        function replayVoiceFeedback() {
+            if (lastSpokenText && soundEnabled && 'speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+                const utterance = new SpeechSynthesisUtterance(lastSpokenText);
+                utterance.lang = 'en-US';
+                utterance.rate = 0.98;
+                window.speechSynthesis.speak(utterance);
+            }
+        }
+
+        // --- EXCITING PRAISE & ENCOURAGEMENT DICTIONARY ---
+        const correctPraises = [
+            "Awesome job! You nailed it!",
+            "Woohoo! Spot on! Perfect answer!",
+            "Unstoppable! You're a grammar superstar!",
+            "Boom! That was brilliant!",
+            "Fantastic work! You really know your articles!",
+            "Superb! Keep up the amazing streak!",
+            "Great job! You made Grammy super proud!",
+            "Bullseye! Excellent grammar skills!"
+        ];
+
+        const wrongEncouragements = [
+            "Nice try! Don't worry, keep going!",
+            "So close! Check the rule and give it another shot!",
+            "Oops! Be careful next time, you've got this!",
+            "Don't give up! Every mistake makes you smarter!",
+            "Almost! Read the sentence carefully and try again champ!"
+        ];
+
+        function getRandomItem(array) {
+            return array[Math.floor(Math.random() * array.length)];
+        }
+
+        // --- QUESTION DATABASE (20 per tier = 60 total) ---
+        const questionsDatabase = {
+            tier1: [
+                { id: 1, sentence: "Mr. Lau needs {blank} envelope.", answer: "an", rule: "Vowel Sound /e/", cantonese: "元音發音", explanation: "Envelope begins with a vowel sound (/e/), so we use 'an'." },
+                { id: 2, sentence: "My father is {blank} postman.", answer: "a", rule: "Consonant Sound /p/", cantonese: "輔音發音", explanation: "Postman begins with a consonant sound (/p/), so we use 'a'." },
+                { id: 3, sentence: "Lucy bakes {blank} cake every Sunday morning.", answer: "a", rule: "Consonant Sound /k/", cantonese: "輔音發音", explanation: "Cake begins with a consonant sound (/k/), so we use 'a'." },
+                { id: 4, sentence: "He drives {blank} ambulance to work.", answer: "an", rule: "Vowel Sound /æ/", cantonese: "元音發音", explanation: "Ambulance starts with a vowel sound (/æ/), so we use 'an'." },
+                { id: 5, sentence: "She is {blank} famous artist.", answer: "a", rule: "Consonant Sound /f/", cantonese: "輔音發音", explanation: "Famous begins with a consonant sound (/f/), so we use 'a'." },
+                { id: 6, sentence: "I want to buy {blank} apple after dinner.", answer: "an", rule: "Vowel Sound /æ/", cantonese: "元音發音", explanation: "Apple starts with a vowel sound (/æ/), so we use 'an'." },
+                { id: 7, sentence: "Look at {blank} moon in the sky!", answer: "the", rule: "Unique Object", cantonese: "獨一無二", explanation: "There is only one moon! We use 'the' for unique objects in nature." },
+                { id: 8, sentence: "May wants to travel around {blank} world.", answer: "the", rule: "Unique Object", cantonese: "獨一無二", explanation: "There is only one world! We use 'the' for unique things." },
+                { id: 9, sentence: "Do you have {blank} oven at home?", answer: "an", rule: "Vowel Sound /ʌ/", cantonese: "元音發音", explanation: "Oven starts with a vowel sound (/ʌ/), so we use 'an'." },
+                { id: 10, sentence: "We live in {blank} Hong Kong.", answer: "X", rule: "Place Name", cantonese: "專有名詞/地名", explanation: "We do NOT use articles before city or country names like Hong Kong." },
+                { id: 11, sentence: "She wants to buy {blank} orange jacket.", answer: "an", rule: "Vowel Sound /ɒ/", cantonese: "元音發音", explanation: "Orange starts with a vowel sound (/ɒ/), so we use 'an'." },
+                { id: 12, sentence: "My dad is {blank} Chinese teacher.", answer: "a", rule: "Consonant Sound /tʃ/", cantonese: "輔音發音", explanation: "Chinese begins with a consonant sound (/tʃ/), so we use 'a'." },
+                { id: 13, sentence: "{blank} sun is shining brightly today.", answer: "the", rule: "Unique Object", cantonese: "獨一無二", explanation: "There is only one sun! We use 'the' before unique objects." },
+                { id: 14, sentence: "I eat {blank} rice for dinner every night.", answer: "X", rule: "Uncountable Noun", cantonese: "不可數名詞", explanation: "Rice is an uncountable noun spoken about in general. No article 'X' needed." },
+                { id: 15, sentence: "Gary buys {blank} car.", answer: "a", rule: "Consonant Sound /k/", cantonese: "輔音發音", explanation: "Car begins with a consonant sound (/k/), so we use 'a'." },
+                { id: 16, sentence: "Please switch off {blank} lights before leaving.", answer: "the", rule: "Specific Item", cantonese: "特定事物", explanation: "Both speaker and listener know which specific lights are being referred to." },
+                { id: 17, sentence: "Our family has {blank} pet dog.", answer: "a", rule: "Consonant Sound /p/", cantonese: "輔音發音", explanation: "Pet begins with a consonant sound (/p/), so we use 'a'." },
+                { id: 18, sentence: "I love playing {blank} basketball with my friends.", answer: "X", rule: "Sports & Games", cantonese: "運動球類", explanation: "We do NOT use articles before sports or games (e.g., play basketball)." },
+                { id: 19, sentence: "There is {blank} cat sitting on the sofa.", answer: "a", rule: "Consonant Sound /k/", cantonese: "輔音發音", explanation: "Cat starts with a consonant sound (/k/), so we use 'a'." },
+                { id: 20, sentence: "Who is {blank} author of this book?", answer: "the", rule: "Specific Person", cantonese: "特定人物", explanation: "Refers to the specific author of this specific book, so we use 'the'." }
+            ],
+            tier2: [
+                { id: 21, sentence: "I met a boy yesterday. {blank} boy was very polite.", answer: "the", rule: "Second Mention", cantonese: "再次提及", explanation: "Second mention rule: We use 'the' because the boy has already been introduced." },
+                { id: 22, sentence: "{blank} capital of France is Paris.", answer: "the", rule: "Specific Entity", cantonese: "特定唯一", explanation: "There is only one capital of France, so we use 'the'." },
+                { id: 23, sentence: "Gary works in {blank} studio in Kwun Tong.", answer: "a", rule: "First Mention", cantonese: "首次提及", explanation: "First time introducing a singular countable studio with a consonant sound (/st/)." },
+                { id: 24, sentence: "{blank} girl in front of Joe is my sister.", answer: "the", rule: "Specified Person", cantonese: "特定人物", explanation: "We use 'the' because the phrase 'in front of Joe' specifies exactly which girl." },
+                { id: 25, sentence: "Hurry up! We only have {blank} hour left!", answer: "an", rule: "Silent 'H' Exception", cantonese: "發音特例 (不發音H)", explanation: "Tricky! 'Hour' starts with a silent 'h', so it begins with a vowel sound (/aʊər/). Use 'an'!" },
+                { id: 26, sentence: "I want to visit {blank} Hong Kong Museum of Art.", answer: "the", rule: "Museum/Building Name", cantonese: "專有建築名稱", explanation: "We use 'the' before specific official names of museums and monuments." },
+                { id: 27, sentence: "My brother wants to be {blank} engineer when he grows up.", answer: "an", rule: "Vowel Sound /en/", cantonese: "元音發音", explanation: "Engineer begins with a vowel sound (/en/), so we use 'an'." },
+                { id: 28, sentence: "You may borrow {blank} magazines on the shelves.", answer: "the", rule: "Specific Items", cantonese: "特定對象", explanation: "The phrase 'on the shelves' specifies exactly which magazines are meant." },
+                { id: 29, sentence: "I don't know {blank} woman at the door.", answer: "the", rule: "Specified Person", cantonese: "特定人物", explanation: "The phrase 'at the door' identifies the specific woman." },
+                { id: 30, sentence: "Jason has a book about history. Where is {blank} book now?", answer: "the", rule: "Second Mention", cantonese: "再次提及", explanation: "Second mention rule: We use 'the' because the book was already mentioned." },
+                { id: 31, sentence: "Each of us has to bring {blank} present to the party.", answer: "a", rule: "First Mention", cantonese: "首次提及", explanation: "First mention of a singular countable object starting with a consonant sound." },
+                { id: 32, sentence: "We bought a present. {blank} present must not cost over $50.", answer: "the", rule: "Second Mention", cantonese: "再次提及", explanation: "Second mention rule: The present was introduced in the previous sentence." },
+                { id: 33, sentence: "We take our pet dog to {blank} park near our home.", answer: "the", rule: "Known Place", cantonese: "已知地點", explanation: "Refers to a specific park ('near our home') known to speaker and listener." },
+                { id: 34, sentence: "Mum is {blank} accountant in a big firm.", answer: "an", rule: "Vowel Sound /ə/", cantonese: "元音發音", explanation: "Accountant starts with a vowel sound (/ə/), so we use 'an'." },
+                { id: 35, sentence: "Look at {blank} man standing over there!", answer: "the", rule: "Pointing Out Specific Person", cantonese: "特定人物", explanation: "We use 'the' because the speaker is pointing out a specific man." },
+                { id: 36, sentence: "{blank} Earth moves slowly around the sun.", answer: "the", rule: "Celestial Body", cantonese: "獨一無二天體", explanation: "We use 'the' before unique celestial bodies like 'the Earth'." },
+                { id: 37, sentence: "She likes drinking {blank} milk every morning.", answer: "X", rule: "General Uncountable", cantonese: "泛指不可數", explanation: "Milk is an uncountable liquid in general. No article 'X' needed!" },
+                { id: 38, sentence: "Is there {blank} post office nearby?", answer: "a", rule: "General First Mention", cantonese: "首次詢問", explanation: "Asking about any general post office for the first time." },
+                { id: 39, sentence: "Yes, {blank} post office is just around the corner.", answer: "the", rule: "Second Mention / Specific", cantonese: "特定地點", explanation: "Referring back to the specific post office being discussed." },
+                { id: 40, sentence: "Ariana Grande is {blank} American singer.", answer: "an", rule: "Vowel Sound /ə/", cantonese: "元音發音", explanation: "'American' starts with a vowel sound (/ə/), so we use 'an'." }
+            ],
+            tier3: [
+                { id: 41, sentence: "Peter is {blank} university student living in Sha Tin.", answer: "a", rule: "Pronunciation Rule (/j/ Sound)", cantonese: "Y輔音發音特例", explanation: "Pronunciation Rule! 'University' starts with a 'Y' consonant sound (/juː/), so we use 'a', NOT 'an'!" },
+                { id: 42, sentence: "We walked to {blank} MTR station to take the train.", answer: "an", rule: "Abbreviation Sound (/em/)", cantonese: "縮寫字母元音", explanation: "Abbreviation Rule! The letter 'M' is pronounced 'em' (/em/), starting with a vowel sound. Use 'an'!" },
+                { id: 43, sentence: "My family watched {blank} BBC film about wild animals.", answer: "a", rule: "Abbreviation Sound (/biː/)", cantonese: "縮寫字母輔音", explanation: "Abbreviation Rule! The letter 'B' is pronounced 'bee' (/biː/), starting with a consonant sound. Use 'a'!" },
+                { id: 44, sentence: "During {blank} summer holiday, many people visit Phuket Island.", answer: "the", rule: "Specific Time Period", cantonese: "特定假期", explanation: "We use 'the' for specific holiday periods like 'the summer holiday'." },
+                { id: 45, sentence: "Look! There is {blank} eagle flying high in the sky.", answer: "an", rule: "Vowel Sound /iː/", cantonese: "元音發音", explanation: "Eagle starts with a vowel sound (/iː/), so we use 'an'." },
+                { id: 46, sentence: "On the shore stands {blank} palm tree that looks like an umbrella.", answer: "a", rule: "First Mention Singular", cantonese: "首次提及", explanation: "First time introducing a singular countable noun starting with consonant sound /p/." },
+                { id: 47, sentence: "I love this photo because it looks just like {blank} painting!", answer: "a", rule: "Singular Comparison", cantonese: "單數名詞", explanation: "Singular countable noun used in a comparison starting with consonant sound /p/." },
+                { id: 48, sentence: "Mum works as an accountant in {blank} IT company.", answer: "an", rule: "Abbreviation Sound (/aɪ/)", cantonese: "縮寫元音", explanation: "Abbreviation 'IT' is pronounced 'eye-tee' (/aɪ-tiː/), starting with a vowel sound. Use 'an'!" },
+                { id: 49, sentence: "{blank} sky is so clear tonight that we can see the moon.", answer: "the", rule: "Unique Natural Object", cantonese: "獨一無二自然物", explanation: "We use 'the' for unique natural elements like 'the sky'." },
+                { id: 50, sentence: "There is {blank} information centre inside the station.", answer: "an", rule: "Vowel Sound /ɪ/", cantonese: "元音發音", explanation: "Information starts with a vowel sound (/ɪ/), so we use 'an'." },
+                { id: 51, sentence: "{blank} computer on my desk is out of order today.", answer: "the", rule: "Specified Item", cantonese: "特定事物", explanation: "The phrase 'on my desk' specifies exactly which computer is broken." },
+                { id: 52, sentence: "Time magazine named her one of {blank} 100 most influential people.", answer: "the", rule: "Superlative Pattern", cantonese: "最高級/特定短語", explanation: "Superlatives and set ranking phrases use 'the' (e.g. 'one of the 100')." },
+                { id: 53, sentence: "{blank} dogs make loyal pets, but my brother prefers cats.", answer: "X", rule: "General Plural Noun", cantonese: "泛指複數名詞", explanation: "Plural nouns in general (talking about dogs as a whole) take NO article 'X'." },
+                { id: 54, sentence: "We waited for an hour, but {blank} bus was late.", answer: "the", rule: "Expected/Specific Item", cantonese: "特定對象", explanation: "Refers to the specific bus we were waiting for." },
+                { id: 55, sentence: "My sister loves playing {blank} piano in her free time.", answer: "the", rule: "Musical Instruments", cantonese: "樂器名稱", explanation: "We use 'the' with musical instruments when talking about playing them (e.g. play the piano)." },
+                { id: 56, sentence: "Dad drives us to school in {blank} taxi every morning.", answer: "a", rule: "First Mention Singular", cantonese: "單數交通工具", explanation: "First mention of a singular countable vehicle with a consonant sound." },
+                { id: 57, sentence: "Many Hong Kong people love travelling to {blank} Thailand.", answer: "X", rule: "Country Name", cantonese: "國家名稱", explanation: "We do NOT use articles before most country names like Thailand or Japan." },
+                { id: 58, sentence: "There is a boat on the sea, and {blank} clouds look like marshmallows.", answer: "the", rule: "Specified Plural Nouns", cantonese: "照片中特定事物", explanation: "Refers to the specific clouds visible in the scene being described." },
+                { id: 59, sentence: "She is studying for a degree at {blank} university in London.", answer: "a", rule: "Pronunciation Rule (/j/)", cantonese: "Y發音特例", explanation: "'University' begins with the consonant sound /j/ ('yoo'). Always use 'a university'!" },
+                { id: 60, sentence: "Jack wants to be an actor, but he is not interested in {blank} music.", answer: "X", rule: "Abstract General Concept", cantonese: "抽象/泛指概念", explanation: "Music is an uncountable abstract noun spoken about in general. Use 'X'." }
+            ]
+        };
+
+        // --- BADGES / ACHIEVEMENTS DATABASE ---
+        const badgesData = [
+            { id: 'first_win', name: 'First Step Scholar', desc: 'Answer your first question correctly', icon: 'zap', unlocked: false },
+            { id: 'streak_3', name: 'On Fire!', desc: 'Achieve a 3-question streak', icon: 'flame', unlocked: false },
+            { id: 'streak_5', name: 'Combo Master', desc: 'Achieve a 5-question streak', icon: 'sparkles', unlocked: false },
+            { id: 'level_2', name: 'Level 2 Grammar Wiz', desc: 'Reach Player Level 2', icon: 'star', unlocked: false },
+            { id: 'tier1_master', name: 'Novice Champion', desc: 'Complete Tier 1 with 80%+ score', icon: 'award', unlocked: false },
+            { id: 'perfect_tier', name: 'Flawless Victory', desc: 'Complete any tier with 100% accuracy', icon: 'crown', unlocked: false }
+        ];
+
+        // --- GAMIFIED APP STATE ---
+        let currentTier = 1;
+        let currentQIndex = 0;
+        let score = 0;
+        let streak = 0;
+        let maxStreak = 0;
+        let answeredCount = 0;
+        let mistakes = [];
+
+        // Gamification metrics
+        let xpTotal = 0;
+        let playerLevel = 1;
+        let coins = 0;
+
+        // --- INITIALIZATION ---
+        window.onload = function() {
+            lucide.createIcons();
+            selectTier(1);
+            renderBadges();
+            
+            // Pre-load Web Speech Voices
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.getVoices();
+            }
+        };
+
+        // --- TIER SELECTION ---
+        function selectTier(tierNum) {
+            currentTier = tierNum;
+            currentQIndex = 0;
+            score = 0;
+            streak = 0;
+            maxStreak = 0;
+            answeredCount = 0;
+            mistakes = [];
+
+            // Update UI Tab Buttons
+            [1, 2, 3].forEach(t => {
+                const btn = document.getElementById(`tierBtn${t}`);
+                if (t === tierNum) {
+                    btn.className = "flex-1 min-w-[120px] py-2.5 px-3 rounded-xl font-display font-bold text-sm transition flex flex-col items-center justify-center gap-0.5 border-2 border-blue-500 bg-blue-600 text-white shadow-md";
+                } else {
+                    btn.className = "flex-1 min-w-[120px] py-2.5 px-3 rounded-xl font-display font-bold text-sm transition flex flex-col items-center justify-center gap-0.5 border border-slate-200 bg-white text-slate-700 hover:bg-slate-50";
+                }
+            });
+
+            // Update Tier Badge Text
+            const tierNames = { 1: "Tier 1: Novice", 2: "Tier 2: Champion", 3: "Tier 3: Legend" };
+            document.getElementById('tierBadge').textContent = tierNames[tierNum];
+
+            // Reset UI Views
+            document.getElementById('quizCard').classList.remove('hidden');
+            document.getElementById('completionCard').classList.add('hidden');
+
+            renderQuestion();
+        }
+
+        // --- RENDER QUESTION & MASCOT RESET ---
+        function getCurrentQuestionList() {
+            return questionsDatabase[`tier${currentTier}`];
+        }
+
+        function renderQuestion() {
+            const list = getCurrentQuestionList();
+            const q = list[currentQIndex];
+
+            // Stop prior speech
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+            }
+
+            // Update HUD stats
+            document.getElementById('currentQNum').textContent = currentQIndex + 1;
+            document.getElementById('totalQNum').textContent = list.length;
+            document.getElementById('scoreCount').textContent = score;
+            document.getElementById('streakCount').textContent = streak;
+
+            // Combo Multiplier UI
+            const comboContainer = document.getElementById('comboContainer');
+            if (streak >= 3) {
+                comboContainer.classList.remove('hidden');
+                document.getElementById('comboMultiplier').textContent = `${Math.min(4, Math.floor(streak/2) + 1)}x COMBO!`;
+            } else {
+                comboContainer.classList.add('hidden');
+            }
+
+            const progressPct = ((currentQIndex) / list.length) * 100;
+            document.getElementById('progressBar').style.width = `${progressPct}%`;
+
+            // Category tag
+            document.getElementById('ruleCategoryTag').innerHTML = `<i data-lucide="tag" class="w-3.5 h-3.5 text-blue-500"></i> ${q.rule} (${q.cantonese})`;
+
+            // Format sentence with gap
+            const formattedSentence = q.sentence.replace("{blank}", `<span id="blankGap" class="blank-space">?</span>`);
+            document.getElementById('sentenceDisplay').innerHTML = formattedSentence;
+
+            // Reset Mascot State (Thinking pose)
+            setMascotExpression('normal', "Hoot! Choose the correct article to fill the blank! 🦉");
+
+            // Reset Option Buttons State
+            ['a', 'an', 'the', 'X'].forEach(opt => {
+                const btn = document.getElementById(`opt-${opt}`);
+                btn.disabled = false;
+                btn.className = "option-btn bg-white hover:bg-blue-50 border-2 border-slate-200 hover:border-blue-500 text-slate-800 py-4 px-4 rounded-2xl font-display font-bold text-2xl flex flex-col items-center justify-center gap-0.5 shadow-sm";
+            });
+
+            // Hide Explanation Drawer
+            document.getElementById('explanationBox').classList.add('hidden');
+
+            lucide.createIcons();
+        }
+
+        // --- MASCOT EXPRESSIONS ---
+        function setMascotExpression(type, text) {
+            const speech = document.getElementById('mascotSpeech');
+            const pupilL = document.getElementById('mascotPupilL');
+            const pupilR = document.getElementById('mascotPupilR');
+            const mascot = document.getElementById('mascotSvg');
+
+            speech.textContent = text;
+
+            if (type === 'happy') {
+                pupilL.setAttribute('cy', '44');
+                pupilR.setAttribute('cy', '44');
+                mascot.style.transform = 'scale(1.1) rotate(5deg)';
+                setTimeout(() => mascot.style.transform = 'scale(1) rotate(0deg)', 400);
+            } else if (type === 'sad') {
+                pupilL.setAttribute('cy', '52');
+                pupilR.setAttribute('cy', '52');
+                mascot.style.transform = 'translateY(4px)';
+                setTimeout(() => mascot.style.transform = 'translateY(0)', 400);
+            } else {
+                pupilL.setAttribute('cy', '48');
+                pupilR.setAttribute('cy', '48');
+            }
+        }
+
+        // --- ANSWER HANDLING WITH SIMULTANEOUS REVEAL & SPOKEN ENCOURAGEMENT ---
+        function handleAnswer(selectedOpt) {
+            const list = getCurrentQuestionList();
+            const q = list[currentQIndex];
+            const isCorrect = selectedOpt === q.answer;
+
+            answeredCount++;
+
+            // Disable option buttons
+            ['a', 'an', 'the', 'X'].forEach(opt => {
+                document.getElementById(`opt-${opt}`).disabled = true;
+            });
+
+            const gap = document.getElementById('blankGap');
+            gap.textContent = selectedOpt === 'X' ? 'X' : selectedOpt;
+            gap.classList.add('filled');
+
+            const expBox = document.getElementById('explanationBox');
+            const iconBox = document.getElementById('feedbackIcon');
+            const feedbackTitle = document.getElementById('feedbackTitle');
+            const answerTextReveal = document.getElementById('answerTextReveal');
+            const feedbackText = document.getElementById('feedbackText');
+            const cantoneseTip = document.getElementById('cantoneseTip');
+
+            const targetAnswerDisplay = q.answer === 'X' ? 'No Article (X)' : `"${q.answer}"`;
+
+            if (isCorrect) {
+                score++;
+                streak++;
+                if (streak > maxStreak) maxStreak = streak;
+
+                // Gamification rewards
+                const xpGained = 50 + (streak > 2 ? 20 : 0);
+                addXP(xpGained);
+                coins += 5;
+                document.getElementById('coinCount').textContent = coins;
+
+                showXpPopup(`+${xpGained} XP!`);
+                playSound('correct');
+
+                // Unlock achievements
+                unlockBadge('first_win');
+                if (streak >= 3) unlockBadge('streak_3');
+                if (streak >= 5) unlockBadge('streak_5');
+
+                gap.className = "blank-space correct";
+                document.getElementById(`opt-${selectedOpt}`).className = "option-btn bg-emerald-50 border-2 border-emerald-500 text-emerald-800 py-4 px-4 rounded-2xl font-display font-bold text-2xl flex flex-col items-center justify-center gap-0.5 shadow-md ring-2 ring-emerald-300";
+
+                expBox.className = "mt-6 p-5 rounded-2xl border-2 border-emerald-300 bg-emerald-50/80 text-emerald-900 animate-fadeIn shadow-xs";
+                iconBox.className = "p-2.5 rounded-xl bg-emerald-500 text-white shrink-0 mt-0.5 shadow-sm";
+                iconBox.innerHTML = `<i data-lucide="check-circle" class="w-6 h-6"></i>`;
+                
+                const praiseText = getRandomItem(correctPraises);
+                feedbackTitle.textContent = praiseText;
+                feedbackTitle.className = "font-display font-bold text-xl text-emerald-800";
+
+                answerTextReveal.textContent = `Correct Article: ${targetAnswerDisplay}`;
+                answerTextReveal.className = "font-bold text-emerald-900 mb-1 text-base";
+
+                // Mascot reaction
+                setMascotExpression('happy', `🎉 ${praiseText} Correct choice!`);
+
+                // SIMULTANEOUS VOICE EXPLANATION + PRAISE
+                speakSimultaneousFeedback(praiseText, q.explanation, true, q.answer);
+
+            } else {
+                streak = 0;
+                playSound('wrong');
+
+                mistakes.push({
+                    question: q,
+                    userAns: selectedOpt
+                });
+
+                gap.className = "blank-space wrong";
+                document.getElementById(`opt-${selectedOpt}`).className = "option-btn bg-rose-50 border-2 border-rose-400 text-rose-800 py-4 px-4 rounded-2xl font-display font-bold text-2xl flex flex-col items-center justify-center gap-0.5 shadow-sm";
+                
+                // Highlight correct button
+                document.getElementById(`opt-${q.answer}`).className = "option-btn bg-emerald-50 border-2 border-emerald-500 text-emerald-800 py-4 px-4 rounded-2xl font-display font-bold text-2xl flex flex-col items-center justify-center gap-0.5 shadow-md ring-2 ring-emerald-300";
+
+                expBox.className = "mt-6 p-5 rounded-2xl border-2 border-rose-300 bg-rose-50/80 text-rose-900 animate-fadeIn shadow-xs";
+                iconBox.className = "p-2.5 rounded-xl bg-rose-500 text-white shrink-0 mt-0.5 shadow-sm";
+                iconBox.innerHTML = `<i data-lucide="sparkles" class="w-6 h-6"></i>`;
+
+                const encourageText = getRandomItem(wrongEncouragements);
+                feedbackTitle.textContent = encourageText;
+                feedbackTitle.className = "font-display font-bold text-lg text-rose-800";
+
+                answerTextReveal.textContent = `Correct Answer: ${targetAnswerDisplay}`;
+                answerTextReveal.className = "font-bold text-rose-900 mb-1 text-base";
+
+                // Mascot reaction
+                setMascotExpression('sad', `💪 ${encourageText} The answer is ${targetAnswerDisplay}.`);
+
+                // SIMULTANEOUS VOICE EXPLANATION + ENCOURAGEMENT
+                speakSimultaneousFeedback(encourageText, q.explanation, false, q.answer);
+            }
+
+            cantoneseTip.textContent = `${q.rule} • ${q.cantonese}`;
+            feedbackText.textContent = q.explanation;
+
+            // Show explanation drawer simultaneously
+            expBox.classList.remove('hidden');
+
+            // Update HUD stats
+            document.getElementById('scoreCount').textContent = score;
+            document.getElementById('streakCount').textContent = streak;
+
+            lucide.createIcons();
+        }
+
+        // --- XP & LEVEL SYSTEM ---
+        function addXP(amount) {
+            xpTotal += amount;
+            const xpForNextLevel = playerLevel * 100;
+            
+            if (xpTotal >= xpForNextLevel) {
+                playerLevel++;
+                xpTotal -= xpForNextLevel;
+                playSound('levelUp');
+                unlockBadge('level_2');
+                document.getElementById('playerLevelBadge').textContent = `Lvl ${playerLevel}`;
+            }
+
+            document.getElementById('xpText').textContent = `${xpTotal}/${playerLevel * 100}`;
+            document.getElementById('xpBar').style.width = `${(xpTotal / (playerLevel * 100)) * 100}%`;
+        }
+
+        function showXpPopup(text) {
+            const container = document.getElementById('sentenceContainer');
+            const popup = document.createElement('div');
+            popup.className = 'xp-popup text-xl sm:text-2xl';
+            popup.textContent = text;
+            popup.style.left = '50%';
+            popup.style.top = '10px';
+            popup.style.transform = 'translateX(-50%)';
+            container.appendChild(popup);
+            setTimeout(() => popup.remove(), 1000);
+        }
+
+        // --- NEXT QUESTION OR TIER END ---
+        function nextQuestion() {
+            const list = getCurrentQuestionList();
+            currentQIndex++;
+
+            if (currentQIndex < list.length) {
+                renderQuestion();
+            } else {
+                finishTier();
+            }
+        }
+
+        // --- READ SENTENCE SPEECH ---
+        function speakSentence() {
+            const list = getCurrentQuestionList();
+            const q = list[currentQIndex];
+            const fullText = q.sentence.replace("{blank}", q.answer === 'X' ? '' : q.answer);
+
+            if ('speechSynthesis' in window && soundEnabled) {
+                window.speechSynthesis.cancel();
+                const utterance = new SpeechSynthesisUtterance(fullText);
+                utterance.lang = 'en-US';
+                utterance.rate = 0.85;
+                window.speechSynthesis.speak(utterance);
+            }
+        }
+
+        // --- FINISH TIER & SUMMARY ---
+        function finishTier() {
+            const list = getCurrentQuestionList();
+            document.getElementById('quizCard').classList.add('hidden');
+            document.getElementById('completionCard').classList.remove('hidden');
+
+            const pct = Math.round((score / list.length) * 100);
+            const xpBonus = score * 20;
+            addXP(xpBonus);
+
+            document.getElementById('finalScore').textContent = `${score}/${list.length}`;
+            document.getElementById('finalAccuracy').textContent = `${pct}%`;
+            document.getElementById('finalStreak').textContent = `${maxStreak} 🔥`;
+            document.getElementById('finalXp').textContent = `+${xpBonus} XP`;
+
+            // Star rating display
+            const starContainer = document.getElementById('starRatingContainer');
+            const starsCount = pct >= 90 ? 3 : pct >= 60 ? 2 : 1;
+            let starsHtml = '';
+            for (let i = 0; i < 3; i++) {
+                if (i < starsCount) {
+                    starsHtml += `<i data-lucide="star" class="w-10 h-10 fill-amber-400 text-amber-400 animate-bounce"></i>`;
+                } else {
+                    starsHtml += `<i data-lucide="star" class="w-10 h-10 text-slate-300"></i>`;
+                }
+            }
+            starContainer.innerHTML = starsHtml;
+
+            if (pct >= 80) unlockBadge('tier1_master');
+            if (pct === 100) unlockBadge('perfect_tier');
+
+            playSound('levelUp');
+
+            // Populate Mistakes List
+            const mistakesCont = document.getElementById('mistakesContainer');
+            const mistakesList = document.getElementById('mistakesList');
+            mistakesList.innerHTML = '';
+
+            if (mistakes.length > 0) {
+                mistakesCont.classList.remove('hidden');
+                mistakes.forEach(m => {
+                    const item = document.createElement('div');
+                    item.className = "bg-white p-3 rounded-xl border border-slate-200 flex flex-col gap-1 shadow-2xs";
+                    item.innerHTML = `
+                        <div class="font-bold text-slate-800">
+                            ${m.question.sentence.replace("{blank}", `<strong class="text-emerald-600 underline">${m.question.answer}</strong>`)}
+                        </div>
+                        <div class="text-[11px] text-slate-500 flex justify-between">
+                            <span>Your answer: <span class="text-rose-600 font-bold">${m.userAns}</span></span>
+                            <span class="text-slate-400 font-mono">${m.question.rule}</span>
+                        </div>
+                    `;
+                    mistakesList.appendChild(item);
+                });
+            } else {
+                mistakesCont.classList.add('hidden');
+            }
+
+            const nextBtn = document.getElementById('nextTierBtn');
+            if (currentTier < 3) {
+                nextBtn.classList.remove('hidden');
+            } else {
+                nextBtn.classList.add('hidden');
+            }
+
+            lucide.createIcons();
+        }
+
+        function retryCurrentTier() {
+            selectTier(currentTier);
+        }
+
+        function advanceToNextTier() {
+            if (currentTier < 3) {
+                selectTier(currentTier + 1);
+            }
+        }
+
+        // --- BADGES MODAL LOGIC ---
+        function unlockBadge(badgeId) {
+            const badge = badgesData.find(b => b.id === badgeId);
+            if (badge && !badge.unlocked) {
+                badge.unlocked = true;
+                renderBadges();
+            }
+        }
+
+        function renderBadges() {
+            const container = document.getElementById('badgesListContainer');
+            if (!container) return;
+            container.innerHTML = '';
+
+            badgesData.forEach(b => {
+                const item = document.createElement('div');
+                item.className = `p-3.5 rounded-2xl border-2 flex items-center gap-3.5 ${
+                    b.unlocked ? 'bg-purple-50 border-purple-200' : 'bg-slate-50 border-slate-200 opacity-60'
+                }`;
+                item.innerHTML = `
+                    <div class="w-11 h-11 rounded-xl ${b.unlocked ? 'bg-purple-600 text-white' : 'bg-slate-300 text-slate-500'} flex items-center justify-center shrink-0 shadow-sm">
+                        <i data-lucide="${b.icon}" class="w-6 h-6"></i>
+                    </div>
+                    <div>
+                        <h4 class="font-display font-bold text-slate-800 text-sm flex items-center gap-2">
+                            ${b.name}
+                            ${b.unlocked ? '<span class="text-[10px] bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full font-bold">UNLOCKED</span>' : ''}
+                        </h4>
+                        <p class="text-xs text-slate-500 mt-0.5">${b.desc}</p>
+                    </div>
+                `;
+                container.appendChild(item);
+            });
+            lucide.createIcons();
+        }
+
+        function openBadgesModal() {
+            document.getElementById('badgesModal').classList.remove('hidden');
+        }
+
+        function closeBadgesModal() {
+            document.getElementById('badgesModal').classList.add('hidden');
+        }
+
+        // --- RULE BOOK MODAL CONTROLS ---
+        function openRuleBook() {
+            document.getElementById('ruleBookModal').classList.remove('hidden');
+        }
+
+        function closeRuleBook() {
+            document.getElementById('ruleBookModal').classList.add('hidden');
+        }
+    </script>
+</body>
+</html>
