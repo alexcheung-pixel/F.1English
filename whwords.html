@@ -1,0 +1,2130 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full bg-slate-50">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HK S1 Wh-Questions Grammar Quest</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Inter Font -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+    .badge-glow { box-shadow: 0 0 15px rgba(99, 102, 241, 0.4); }
+    .card-hover { transition: all 0.2s ease-in-out; }
+    .card-hover:hover { transform: translateY(-3px); }
+    /* Canvas Confetti Overlay */
+    #confettiCanvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      pointer-events: none;
+      z-index: 9999;
+    }
+    .chip-btn {
+      transition: all 0.15s ease-in-out;
+    }
+    .chip-btn:active {
+      transform: scale(0.95);
+    }
+  </style>
+</head>
+<body class="h-full text-slate-800 flex flex-col justify-between selection:bg-indigo-500 selection:text-white">
+
+  <!-- Confetti Canvas -->
+  <canvas id="confettiCanvas"></canvas>
+
+  <!-- Top Header Navigation -->
+  <header class="bg-indigo-700 text-white shadow-md sticky top-0 z-40">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-16">
+        <!-- Logo & Title -->
+        <div class="flex items-center space-x-3 cursor-pointer" onclick="switchTab('notes')">
+          <div class="bg-amber-400 text-indigo-900 font-extrabold text-xl p-2 rounded-xl flex items-center justify-center shadow-inner">
+            🇭🇰 Wh
+          </div>
+          <div>
+            <h1 class="text-lg font-bold tracking-tight leading-tight">HK S1 Wh-Quest</h1>
+            <p class="text-xs text-indigo-200">Hong Kong Grammar Master</p>
+          </div>
+        </div>
+
+        <!-- User Stats Bar (XP, Level, Audio, Streak) -->
+        <div class="flex items-center space-x-3 sm:space-x-5 text-sm">
+          <!-- Streak -->
+          <div class="flex items-center bg-indigo-800/80 px-3 py-1.5 rounded-lg border border-indigo-500/30" title="Current Correct Streak">
+            <i class="fa-solid fa-fire text-amber-400 text-base mr-1.5 animate-pulse"></i>
+            <span id="headerStreak" class="font-bold">0</span>
+          </div>
+
+          <!-- XP & Level Badge -->
+          <div class="flex items-center bg-indigo-800/80 px-3 py-1.5 rounded-lg border border-indigo-500/30">
+            <i class="fa-solid fa-star text-yellow-300 text-base mr-1.5"></i>
+            <div class="flex flex-col">
+              <span class="text-xs text-indigo-200 uppercase font-semibold">Lvl <span id="headerLevelNum">1</span></span>
+              <span id="headerXP" class="font-bold text-xs text-amber-300">0 XP</span>
+            </div>
+          </div>
+
+          <!-- Audio Toggle -->
+          <button id="audioBtn" onclick="toggleAudio()" class="p-2 rounded-lg bg-indigo-800 hover:bg-indigo-600 transition text-amber-300" title="Toggle Sound FX">
+            <i class="fa-solid fa-volume-high" id="audioIcon"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <nav class="bg-indigo-800 border-t border-indigo-600/50 px-4 sm:px-8">
+      <div class="max-w-7xl mx-auto flex space-x-2 sm:space-x-6 overflow-x-auto py-2 text-sm font-medium">
+        <button id="tab-notes" onclick="switchTab('notes')" class="tab-btn px-4 py-2 rounded-lg flex items-center space-x-2 bg-indigo-900 text-white shadow-sm font-semibold">
+          <i class="fa-solid fa-book-open"></i>
+          <span>Grammar Notes</span>
+        </button>
+        <button id="tab-quiz" onclick="switchTab('quiz')" class="tab-btn px-4 py-2 rounded-lg flex items-center space-x-2 text-indigo-200 hover:bg-indigo-700 hover:text-white">
+          <i class="fa-solid fa-gamepad"></i>
+          <span>Quiz Arena</span>
+        </button>
+        <button id="tab-vault" onclick="switchTab('vault')" class="tab-btn px-4 py-2 rounded-lg flex items-center space-x-2 text-indigo-200 hover:bg-indigo-700 hover:text-white relative">
+          <i class="fa-solid fa-box-archive"></i>
+          <span>Mistake Vault</span>
+          <span id="vaultBadge" class="hidden absolute -top-1 -right-1 bg-rose-500 text-white text-[10px] font-bold rounded-full w-5 h-5 flex items-center justify-center border-2 border-indigo-800">0</span>
+        </button>
+        <button id="tab-stats" onclick="switchTab('stats')" class="tab-btn px-4 py-2 rounded-lg flex items-center space-x-2 text-indigo-200 hover:bg-indigo-700 hover:text-white">
+          <i class="fa-solid fa-trophy"></i>
+          <span>Badges & Stats</span>
+        </button>
+      </div>
+    </nav>
+  </header>
+
+  <!-- MAIN CONTENT AREA -->
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex-1 w-full">
+
+    <!-- ================= SECTION 1: GRAMMAR TEACHING NOTES ================= -->
+    <section id="view-notes" class="space-y-6">
+      <!-- Welcome Banner -->
+      <div class="bg-gradient-to-r from-indigo-600 via-indigo-700 to-purple-700 text-white rounded-2xl p-6 sm:p-8 shadow-lg relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-6">
+        <div class="relative z-10 max-w-2xl">
+          <span class="bg-amber-400/20 text-amber-300 border border-amber-400/30 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider inline-flex items-center gap-1.5 mb-3">
+            <i class="fa-solid fa-sparkles"></i> HK Secondary 1 English Curriculum
+          </span>
+          <h2 class="text-2xl sm:text-4xl font-black tracking-tight leading-tight">Mastering Wh-Questions</h2>
+          <p class="text-indigo-100 text-sm sm:text-base mt-2 leading-relaxed">
+            Learn question words, targeted information, What vs. Which rules, Wh + noun phrases, sentence structures, and Subject vs. Object questions with colorful interactive visuals!
+          </p>
+        </div>
+        <!-- Decorative Vector SVG Illustration -->
+        <div class="w-full md:w-56 h-36 flex-shrink-0 flex items-center justify-center relative z-10 bg-white/10 rounded-2xl p-3 backdrop-blur-sm border border-white/15">
+          <svg viewBox="0 0 200 120" class="w-full h-full drop-shadow-md">
+            <rect x="10" y="10" width="180" height="100" rx="16" fill="#4F46E5" opacity="0.4"/>
+            <!-- Mascot / Book Graphic -->
+            <path d="M 40 85 C 40 85 65 75 100 85 C 135 75 160 85 160 85 L 160 35 C 160 35 135 25 100 35 C 65 25 40 35 40 35 Z" fill="#FFFFFF" opacity="0.95"/>
+            <path d="M 100 35 L 100 85" stroke="#6366F1" stroke-width="3" stroke-linecap="round"/>
+            <circle cx="68" cy="55" r="10" fill="#F59E0B"/>
+            <text x="68" y="59" font-size="12" font-weight="bold" fill="#FFF" text-anchor="middle">?</text>
+            <circle cx="132" cy="55" r="10" fill="#10B981"/>
+            <text x="132" y="59" font-size="10" font-weight="bold" fill="#FFF" text-anchor="middle">Wh</text>
+            <!-- Floating Sparkles -->
+            <polygon points="100,12 103,20 112,20 105,25 107,33 100,28 93,33 95,25 88,20 97,20" fill="#FBBF24"/>
+          </svg>
+        </div>
+        <i class="fa-solid fa-graduation-cap absolute -right-6 -bottom-6 text-indigo-500/10 text-9xl pointer-events-none"></i>
+      </div>
+
+      <!-- Notes Sub-Tabs Nav -->
+      <div class="flex space-x-2 border-b border-slate-200 overflow-x-auto pb-2">
+        <button onclick="switchNotesSubTab('words')" id="nsub-words" class="nsub-btn px-4 py-2 rounded-t-lg font-semibold text-sm bg-indigo-600 text-white">1. Question Words & Targets</button>
+        <button onclick="switchNotesSubTab('choice')" id="nsub-choice" class="nsub-btn px-4 py-2 rounded-t-lg font-semibold text-sm text-slate-600 hover:bg-slate-200">2. What vs Which & Wh + Noun</button>
+        <button onclick="switchNotesSubTab('struct')" id="nsub-struct" class="nsub-btn px-4 py-2 rounded-t-lg font-semibold text-sm text-slate-600 hover:bg-slate-200">3. Question Structures</button>
+        <button onclick="switchNotesSubTab('subobj')" id="nsub-subobj" class="nsub-btn px-4 py-2 rounded-t-lg font-semibold text-sm text-slate-600 hover:bg-slate-200">4. Subject vs Object</button>
+      </div>
+
+      <!-- Sub-Tab 1: Question Words & Targets -->
+      <div id="notes-content-words" class="space-y-4">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <!-- What -->
+          <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm card-hover border-t-4 border-t-blue-500 flex flex-col justify-between">
+            <div>
+              <div class="flex items-center justify-between">
+                <span class="text-2xl font-black text-blue-600">What</span>
+                <span class="text-xs font-bold px-2.5 py-1 bg-blue-50 text-blue-700 rounded-lg">Things / Actions</span>
+              </div>
+              <!-- SVG Illustration -->
+              <div class="my-3 h-20 bg-blue-50/60 rounded-xl flex items-center justify-center p-2">
+                <svg viewBox="0 0 100 60" class="w-16 h-16">
+                  <rect x="20" y="10" width="60" height="40" rx="8" fill="#3B82F6" opacity="0.8"/>
+                  <path d="M 35 25 L 65 25 M 35 35 L 55 35" stroke="#FFF" stroke-width="4" stroke-linecap="round"/>
+                  <circle cx="70" cy="35" r="5" fill="#F59E0B"/>
+                </svg>
+              </div>
+              <p class="text-xs text-slate-500">Asks about objects, actions, ideas, or information.</p>
+            </div>
+            <div class="mt-3 p-2.5 bg-slate-50 rounded-xl text-xs font-medium text-slate-700 border border-slate-100">
+              <span class="font-bold text-blue-600">e.g.</span> "What did you do in Japan during Christmas?"
+            </div>
+          </div>
+
+          <!-- When -->
+          <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm card-hover border-t-4 border-t-emerald-500 flex flex-col justify-between">
+            <div>
+              <div class="flex items-center justify-between">
+                <span class="text-2xl font-black text-emerald-600">When</span>
+                <span class="text-xs font-bold px-2.5 py-1 bg-emerald-50 text-emerald-700 rounded-lg">Time</span>
+              </div>
+              <!-- SVG Illustration -->
+              <div class="my-3 h-20 bg-emerald-50/60 rounded-xl flex items-center justify-center p-2">
+                <svg viewBox="0 0 100 60" class="w-16 h-16">
+                  <circle cx="50" cy="30" r="22" fill="#10B981" opacity="0.8"/>
+                  <circle cx="50" cy="30" r="18" fill="#FFF"/>
+                  <path d="M 50 30 L 50 18 M 50 30 L 60 30" stroke="#10B981" stroke-width="3" stroke-linecap="round"/>
+                </svg>
+              </div>
+              <p class="text-xs text-slate-500">Asks about time, dates, days, or schedules.</p>
+            </div>
+            <div class="mt-3 p-2.5 bg-slate-50 rounded-xl text-xs font-medium text-slate-700 border border-slate-100">
+              <span class="font-bold text-emerald-600">e.g.</span> "When will the school choir perform?"
+            </div>
+          </div>
+
+          <!-- Where -->
+          <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm card-hover border-t-4 border-t-purple-500 flex flex-col justify-between">
+            <div>
+              <div class="flex items-center justify-between">
+                <span class="text-2xl font-black text-purple-600">Where</span>
+                <span class="text-xs font-bold px-2.5 py-1 bg-purple-50 text-purple-700 rounded-lg">Places</span>
+              </div>
+              <!-- SVG Illustration -->
+              <div class="my-3 h-20 bg-purple-50/60 rounded-xl flex items-center justify-center p-2">
+                <svg viewBox="0 0 100 60" class="w-16 h-16">
+                  <path d="M 50 10 C 38 10 30 18 30 30 C 30 42 50 54 50 54 C 50 54 70 42 70 30 C 70 18 62 10 50 10 Z" fill="#8B5CF6"/>
+                  <circle cx="50" cy="26" r="8" fill="#FFF"/>
+                </svg>
+              </div>
+              <p class="text-xs text-slate-500">Asks about location, position, or direction.</p>
+            </div>
+            <div class="mt-3 p-2.5 bg-slate-50 rounded-xl text-xs font-medium text-slate-700 border border-slate-100">
+              <span class="font-bold text-purple-600">e.g.</span> "Where are you having lunch in Mong Kok?"
+            </div>
+          </div>
+
+          <!-- Why -->
+          <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm card-hover border-t-4 border-t-rose-500 flex flex-col justify-between">
+            <div>
+              <div class="flex items-center justify-between">
+                <span class="text-2xl font-black text-rose-600">Why</span>
+                <span class="text-xs font-bold px-2.5 py-1 bg-rose-50 text-rose-700 rounded-lg">Reasons</span>
+              </div>
+              <!-- SVG Illustration -->
+              <div class="my-3 h-20 bg-rose-50/60 rounded-xl flex items-center justify-center p-2">
+                <svg viewBox="0 0 100 60" class="w-16 h-16">
+                  <path d="M 25 15 C 25 15 20 40 50 40 C 80 40 75 15 50 15 Z" fill="#F43F5E" opacity="0.85"/>
+                  <text x="50" y="32" font-size="18" font-weight="black" fill="#FFF" text-anchor="middle">?</text>
+                </svg>
+              </div>
+              <p class="text-xs text-slate-500">Asks for reasons or causes (often answered with 'Because').</p>
+            </div>
+            <div class="mt-3 p-2.5 bg-slate-50 rounded-xl text-xs font-medium text-slate-700 border border-slate-100">
+              <span class="font-bold text-rose-600">e.g.</span> "Why didn't you take a boat trip in Sai Kung?"
+            </div>
+          </div>
+
+          <!-- Who -->
+          <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm card-hover border-t-4 border-t-amber-500 flex flex-col justify-between">
+            <div>
+              <div class="flex items-center justify-between">
+                <span class="text-2xl font-black text-amber-600">Who</span>
+                <span class="text-xs font-bold px-2.5 py-1 bg-amber-50 text-amber-700 rounded-lg">People</span>
+              </div>
+              <!-- SVG Illustration -->
+              <div class="my-3 h-20 bg-amber-50/60 rounded-xl flex items-center justify-center p-2">
+                <svg viewBox="0 0 100 60" class="w-16 h-16">
+                  <circle cx="50" cy="22" r="12" fill="#F59E0B"/>
+                  <path d="M 30 48 C 30 38 40 36 50 36 C 60 36 70 38 70 48 Z" fill="#F59E0B"/>
+                </svg>
+              </div>
+              <p class="text-xs text-slate-500">Asks about human subjects or objects.</p>
+            </div>
+            <div class="mt-3 p-2.5 bg-slate-50 rounded-xl text-xs font-medium text-slate-700 border border-slate-100">
+              <span class="font-bold text-amber-600">e.g.</span> "Who did you go to Ocean Park with?"
+            </div>
+          </div>
+
+          <!-- Whose -->
+          <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm card-hover border-t-4 border-t-teal-500 flex flex-col justify-between">
+            <div>
+              <div class="flex items-center justify-between">
+                <span class="text-2xl font-black text-teal-600">Whose</span>
+                <span class="text-xs font-bold px-2.5 py-1 bg-teal-50 text-teal-700 rounded-lg">Possession</span>
+              </div>
+              <!-- SVG Illustration -->
+              <div class="my-3 h-20 bg-teal-50/60 rounded-xl flex items-center justify-center p-2">
+                <svg viewBox="0 0 100 60" class="w-16 h-16">
+                  <rect x="30" y="20" width="40" height="28" rx="6" fill="#14B8A6"/>
+                  <path d="M 42 20 L 42 14 C 42 10 58 10 58 14 L 58 20" stroke="#14B8A6" stroke-width="4" fill="none"/>
+                  <circle cx="50" cy="34" r="4" fill="#FFF"/>
+                </svg>
+              </div>
+              <p class="text-xs text-slate-500">Asks about who owns an item or object.</p>
+            </div>
+            <div class="mt-3 p-2.5 bg-slate-50 rounded-xl text-xs font-medium text-slate-700 border border-slate-100">
+              <span class="font-bold text-teal-600">e.g.</span> "Whose camera is this on the teacher's desk?"
+            </div>
+          </div>
+
+          <!-- Which -->
+          <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm card-hover border-t-4 border-t-indigo-500 flex flex-col justify-between">
+            <div>
+              <div class="flex items-center justify-between">
+                <span class="text-2xl font-black text-indigo-600">Which</span>
+                <span class="text-xs font-bold px-2.5 py-1 bg-indigo-50 text-indigo-700 rounded-lg">Choices (List)</span>
+              </div>
+              <!-- SVG Illustration -->
+              <div class="my-3 h-20 bg-indigo-50/60 rounded-xl flex items-center justify-center p-2">
+                <svg viewBox="0 0 100 60" class="w-16 h-16">
+                  <path d="M 30 45 L 50 15 L 70 45" stroke="#6366F1" stroke-width="4" stroke-linecap="round" fill="none"/>
+                  <circle cx="30" cy="45" r="6" fill="#EC4899"/>
+                  <circle cx="70" cy="45" r="6" fill="#10B981"/>
+                </svg>
+              </div>
+              <p class="text-xs text-slate-500">Asks to choose from a known limited list of options.</p>
+            </div>
+            <div class="mt-3 p-2.5 bg-slate-50 rounded-xl text-xs font-medium text-slate-700 border border-slate-100">
+              <span class="font-bold text-indigo-600">e.g.</span> "Which tourist attraction do you like better?"
+            </div>
+          </div>
+
+          <!-- How -->
+          <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm card-hover border-t-4 border-t-orange-500 flex flex-col justify-between">
+            <div>
+              <div class="flex items-center justify-between">
+                <span class="text-2xl font-black text-orange-600">How</span>
+                <span class="text-xs font-bold px-2.5 py-1 bg-orange-50 text-orange-700 rounded-lg">Manner / Means</span>
+              </div>
+              <!-- SVG Illustration -->
+              <div class="my-3 h-20 bg-orange-50/60 rounded-xl flex items-center justify-center p-2">
+                <svg viewBox="0 0 100 60" class="w-16 h-16">
+                  <circle cx="50" cy="30" r="16" fill="#F97316"/>
+                  <path d="M 42 30 L 48 36 L 58 24" stroke="#FFF" stroke-width="3" stroke-linecap="round" fill="none"/>
+                </svg>
+              </div>
+              <p class="text-xs text-slate-500">Asks about method, way, condition, or process.</p>
+            </div>
+            <div class="mt-3 p-2.5 bg-slate-50 rounded-xl text-xs font-medium text-slate-700 border border-slate-100">
+              <span class="font-bold text-orange-600">e.g.</span> "How did you book the MTR tickets?"
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sub-Tab 2: What vs Which & Wh + Noun -->
+      <div id="notes-content-choice" class="hidden space-y-4">
+        <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+          <h3 class="text-lg font-bold text-slate-800 flex items-center space-x-2">
+            <i class="fa-solid fa-code-compare text-indigo-600"></i>
+            <span>The HK Curriculum Rule: What vs Which</span>
+          </h3>
+          <p class="text-sm text-slate-600 mt-1">Both words ask about choices, but have specific guidelines in S1 HK Exams:</p>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+            <!-- Which -->
+            <div class="bg-indigo-50 border border-indigo-200 rounded-xl p-5">
+              <div class="flex items-center space-x-2">
+                <span class="bg-indigo-600 text-white font-bold px-3 py-1 rounded-md text-sm">WHICH</span>
+                <span class="text-xs font-semibold text-indigo-700">Known / Limited Options</span>
+              </div>
+              <ul class="mt-3 space-y-2 text-xs text-indigo-900">
+                <li class="flex items-start space-x-2">
+                  <i class="fa-solid fa-check text-indigo-600 mt-0.5"></i>
+                  <span>Used when we <strong>know the exact number of choices</strong>.</span>
+                </li>
+                <li class="flex items-start space-x-2">
+                  <i class="fa-solid fa-check text-indigo-600 mt-0.5"></i>
+                  <span>Used when choosing directly from a listed option.</span>
+                </li>
+              </ul>
+              <div class="mt-4 p-3 bg-white rounded-lg border border-indigo-200 text-xs font-medium">
+                👉 <em>"<strong>Which</strong> T-shirt do you like – the red one or the green one?"</em>
+              </div>
+            </div>
+
+            <!-- What -->
+            <div class="bg-blue-50 border border-blue-200 rounded-xl p-5">
+              <div class="flex items-center space-x-2">
+                <span class="bg-blue-600 text-white font-bold px-3 py-1 rounded-md text-sm">WHAT</span>
+                <span class="text-xs font-semibold text-blue-700">Open / Unlimited Set</span>
+              </div>
+              <ul class="mt-3 space-y-2 text-xs text-blue-900">
+                <li class="flex items-start space-x-2">
+                  <i class="fa-solid fa-check text-blue-600 mt-0.5"></i>
+                  <span>Used when options are open-ended or unlimited.</span>
+                </li>
+                <li class="flex items-start space-x-2">
+                  <i class="fa-solid fa-check text-blue-600 mt-0.5"></i>
+                  <span>Note: In casual conversation, either can sometimes be used (e.g., <em>What/Which festivals do you like?</em>).</span>
+                </li>
+              </ul>
+              <div class="mt-4 p-3 bg-white rounded-lg border border-blue-200 text-xs font-medium">
+                👉 <em>"<strong>What</strong> is your favourite school subject?"</em>
+              </div>
+            </div>
+          </div>
+
+          <!-- Wh + Noun Phrases -->
+          <div class="mt-6 pt-6 border-t border-slate-200">
+            <h4 class="text-base font-bold text-slate-800 flex items-center space-x-2">
+              <i class="fa-solid fa-layer-group text-purple-600"></i>
+              <span>What / Which / Whose + Noun or Noun Phrase</span>
+            </h4>
+            <p class="text-xs text-slate-600 mt-1">We often attach a noun directly after the Wh-word to specify the exact thing being asked about:</p>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-3 text-xs">
+              <div class="p-3 bg-slate-50 border border-slate-200 rounded-lg">
+                <span class="font-bold text-purple-700">What time</span> did you go to bed?
+              </div>
+              <div class="p-3 bg-slate-50 border border-slate-200 rounded-lg">
+                <span class="font-bold text-indigo-700">Which TV channels</span> do you watch?
+              </div>
+              <div class="p-3 bg-slate-50 border border-slate-200 rounded-lg">
+                <span class="font-bold text-teal-700">Whose backpack</span> is this?
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sub-Tab 3: Question Structures -->
+      <div id="notes-content-struct" class="hidden space-y-4">
+        <!-- Structure A -->
+        <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+          <div class="flex items-center space-x-2">
+            <span class="bg-purple-600 text-white text-xs font-black px-2.5 py-1 rounded">A</span>
+            <h3 class="text-base font-bold text-slate-800">Wh-word + Verb 'To Be'</h3>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
+            <div class="p-3.5 bg-slate-50 rounded-lg border border-slate-200 text-xs">
+              <span class="font-bold text-purple-700 block mb-1">1. Wh-word + be + subject</span>
+              <code>Where <strong>is</strong> Legoland Park?</code>
+            </div>
+            <div class="p-3.5 bg-slate-50 rounded-lg border border-slate-200 text-xs">
+              <span class="font-bold text-purple-700 block mb-1">2. Wh-word + be + possessive pronoun</span>
+              <code>Which bag <strong>is yours</strong>?</code>
+            </div>
+            <div class="p-3.5 bg-slate-50 rounded-lg border border-slate-200 text-xs">
+              <span class="font-bold text-purple-700 block mb-1">3. Wh-word + be + adjective</span>
+              <code>Who <strong>was late</strong> for assembly?</code>
+            </div>
+            <div class="p-3.5 bg-slate-50 rounded-lg border border-slate-200 text-xs">
+              <span class="font-bold text-purple-700 block mb-1">4. Wh-word + be + subject + -ing</span>
+              <code>Why <strong>are we dining</strong> here?</code>
+            </div>
+          </div>
+        </div>
+
+        <!-- Structure B -->
+        <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+          <div class="flex items-center space-x-2">
+            <span class="bg-indigo-600 text-white text-xs font-black px-2.5 py-1 rounded">B</span>
+            <h3 class="text-base font-bold text-slate-800">Wh-words + Auxiliary Verbs (Do / Does / Did)</h3>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
+            <div class="p-4 bg-indigo-50 border border-indigo-200 rounded-xl text-xs">
+              <span class="font-bold text-indigo-800 block mb-1">1. Present Tense Formula:</span>
+              <div class="bg-white p-2 rounded my-1 font-mono text-indigo-600 border border-indigo-100 font-bold">
+                Wh-word + do/does + subject + base verb
+              </div>
+              <ul class="list-disc list-inside text-slate-600 mt-2 space-y-1">
+                <li>What <strong>do</strong> you want for dinner?</li>
+                <li>When <strong>does</strong> she come to school?</li>
+              </ul>
+            </div>
+
+            <div class="p-4 bg-emerald-50 border border-emerald-200 rounded-xl text-xs">
+              <span class="font-bold text-emerald-800 block mb-1">2. Past Tense Formula:</span>
+              <div class="bg-white p-2 rounded my-1 font-mono text-emerald-600 border border-emerald-100 font-bold">
+                Wh-word + did + subject + base verb
+              </div>
+              <ul class="list-disc list-inside text-slate-600 mt-2 space-y-1">
+                <li>What <strong>did</strong> you do last night?</li>
+                <li>Where <strong>did</strong> they go last year?</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sub-Tab 4: Subject vs Object -->
+      <div id="notes-content-subobj" class="hidden space-y-4">
+        <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+          <h3 class="text-lg font-bold text-slate-800 flex items-center space-x-2">
+            <i class="fa-solid fa-people-arrows text-amber-500"></i>
+            <span>Subject vs Object Wh-Questions</span>
+          </h3>
+          <p class="text-sm text-slate-600 mt-1">Some Wh-words (like <em>who, what, which, whose</em>) can be either the <strong>Subject</strong> or <strong>Object</strong> of the question!</p>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+            <!-- Subject Question -->
+            <div class="bg-amber-50 border border-amber-200 rounded-xl p-5">
+              <div class="flex items-center justify-between">
+                <span class="font-bold text-amber-800 text-sm">Subject Question</span>
+                <span class="text-[10px] bg-amber-200 text-amber-900 font-bold px-2 py-0.5 rounded">NO Auxiliary do/does/did</span>
+              </div>
+              <p class="text-xs text-amber-900 mt-2">The Wh-word acts as the subject (the doer of the action).</p>
+              <div class="bg-white p-3 rounded-lg border border-amber-200 mt-3 font-mono text-xs text-amber-800 font-bold">
+                Wh-word + main verb + object
+              </div>
+              <div class="mt-3 text-xs text-slate-700">
+                👉 <em>"Who <strong>destroyed</strong> the window?"</em><br>
+                <span class="text-slate-500 text-[11px]">(Answer: Tom destroyed it. 'Tom' is subject!)</span>
+              </div>
+            </div>
+
+            <!-- Object Question -->
+            <div class="bg-teal-50 border border-teal-200 rounded-xl p-5">
+              <div class="flex items-center justify-between">
+                <span class="font-bold text-teal-800 text-sm">Object Question</span>
+                <span class="text-[10px] bg-teal-200 text-teal-900 font-bold px-2 py-0.5 rounded">REQUIRES do/does/did</span>
+              </div>
+              <p class="text-xs text-teal-900 mt-2">The Wh-word acts as the object receiving the action.</p>
+              <div class="bg-white p-3 rounded-lg border border-teal-200 mt-3 font-mono text-xs text-teal-800 font-bold">
+                Wh-word + do/does/did + subject + main verb
+              </div>
+              <div class="mt-3 text-xs text-slate-700">
+                👉 <em>"What <strong>does</strong> Tony <strong>like</strong>?"</em><br>
+                <span class="text-slate-500 text-[11px]">(Answer: Tony likes pizza. 'Pizza' is object!)</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= SECTION 2: QUIZ ARENA ================= -->
+    <section id="view-quiz" class="hidden space-y-6">
+      <!-- Level Selector Grid -->
+      <div id="quiz-level-select" class="space-y-6">
+        <div class="flex items-center justify-between bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+          <div>
+            <h2 class="text-xl font-bold text-slate-800">Select Challenge Level</h2>
+            <p class="text-xs text-slate-500">45 unique curriculum-aligned questions for Hong Kong Secondary 1 students.</p>
+          </div>
+          <!-- Timer Toggle -->
+          <div class="flex items-center space-x-2 bg-slate-100 p-2 rounded-xl">
+            <i class="fa-solid fa-stopwatch text-amber-500 text-sm"></i>
+            <span class="text-xs font-bold text-slate-700">Timer Mode (25s)</span>
+            <input type="checkbox" id="timerToggle" class="w-4 h-4 text-indigo-600 rounded focus:ring-indigo-500 cursor-pointer">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+          <!-- Level 1 -->
+          <div class="bg-white p-6 rounded-2xl border-2 border-slate-200 hover:border-blue-500 shadow-sm card-hover group flex flex-col justify-between overflow-hidden relative">
+            <div class="h-24 bg-gradient-to-r from-blue-500 to-indigo-600 -mx-6 -mt-6 p-4 flex items-center justify-between text-white mb-4">
+              <div class="flex items-center space-x-3">
+                <span class="w-10 h-10 rounded-xl bg-white/20 text-white font-black text-lg flex items-center justify-center backdrop-blur-sm">1</span>
+                <div>
+                  <span class="text-xs text-blue-100 font-bold uppercase tracking-wider block">Level 1</span>
+                  <h4 class="font-extrabold text-base leading-tight">Word Finder</h4>
+                </div>
+              </div>
+              <svg viewBox="0 0 60 60" class="w-12 h-12 opacity-80">
+                <circle cx="26" cy="26" r="16" fill="none" stroke="#FFF" stroke-width="4"/>
+                <path d="M 38 38 L 52 52" stroke="#FFF" stroke-width="5" stroke-linecap="round"/>
+              </svg>
+            </div>
+            <div onclick="startQuiz(1)" class="cursor-pointer">
+              <h3 class="text-lg font-bold text-slate-800 group-hover:text-blue-600 transition">Question Word Identification</h3>
+              <p class="text-xs text-slate-500 mt-1">Identify correct Wh-words (What, Where, When, Who, Why, Whose, Which, How).</p>
+            </div>
+            <div class="mt-6 pt-4 border-t border-slate-100 space-y-2">
+              <button onclick="startQuiz(1)" class="w-full py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs font-bold rounded-xl flex items-center justify-between px-3 transition">
+                <span>Start Level 1</span>
+                <i class="fa-solid fa-play"></i>
+              </button>
+              <button onclick="generateNewQuestions(1)" class="w-full py-1.5 bg-slate-100 hover:bg-amber-100 hover:text-amber-800 text-slate-600 text-[11px] font-bold rounded-lg flex items-center justify-center space-x-1.5 transition">
+                <i class="fa-solid fa-wand-magic-sparkles text-amber-500"></i>
+                <span>Generate 15 New Questions</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Level 2 -->
+          <div class="bg-white p-6 rounded-2xl border-2 border-slate-200 hover:border-indigo-500 shadow-sm card-hover group flex flex-col justify-between overflow-hidden relative">
+            <div class="h-24 bg-gradient-to-r from-indigo-600 to-purple-600 -mx-6 -mt-6 p-4 flex items-center justify-between text-white mb-4">
+              <div class="flex items-center space-x-3">
+                <span class="w-10 h-10 rounded-xl bg-white/20 text-white font-black text-lg flex items-center justify-center backdrop-blur-sm">2</span>
+                <div>
+                  <span class="text-xs text-indigo-100 font-bold uppercase tracking-wider block">Level 2</span>
+                  <h4 class="font-extrabold text-base leading-tight">Match Master</h4>
+                </div>
+              </div>
+              <svg viewBox="0 0 60 60" class="w-12 h-12 opacity-80">
+                <rect x="10" y="15" width="18" height="30" rx="4" fill="#FFF" opacity="0.8"/>
+                <rect x="32" y="15" width="18" height="30" rx="4" fill="#FFF"/>
+                <path d="M 28 30 L 32 30" stroke="#FFF" stroke-width="3"/>
+              </svg>
+            </div>
+            <div onclick="startQuiz(2)" class="cursor-pointer">
+              <h3 class="text-lg font-bold text-slate-800 group-hover:text-indigo-600 transition">Answer to Question Match</h3>
+              <p class="text-xs text-slate-500 mt-1">Given an Answer statement, choose the correct Wh-question out of 4 options.</p>
+            </div>
+            <div class="mt-6 pt-4 border-t border-slate-100 space-y-2">
+              <button onclick="startQuiz(2)" class="w-full py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-bold rounded-xl flex items-center justify-between px-3 transition">
+                <span>Start Level 2</span>
+                <i class="fa-solid fa-play"></i>
+              </button>
+              <button onclick="generateNewQuestions(2)" class="w-full py-1.5 bg-slate-100 hover:bg-amber-100 hover:text-amber-800 text-slate-600 text-[11px] font-bold rounded-lg flex items-center justify-center space-x-1.5 transition">
+                <i class="fa-solid fa-wand-magic-sparkles text-amber-500"></i>
+                <span>Generate 15 New Questions</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Level 3 -->
+          <div class="bg-white p-6 rounded-2xl border-2 border-slate-200 hover:border-purple-500 shadow-sm card-hover group flex flex-col justify-between overflow-hidden relative">
+            <div class="h-24 bg-gradient-to-r from-purple-600 to-pink-600 -mx-6 -mt-6 p-4 flex items-center justify-between text-white mb-4">
+              <div class="flex items-center space-x-3">
+                <span class="w-10 h-10 rounded-xl bg-white/20 text-white font-black text-lg flex items-center justify-center backdrop-blur-sm">3</span>
+                <div>
+                  <span class="text-xs text-purple-100 font-bold uppercase tracking-wider block">Level 3</span>
+                  <h4 class="font-extrabold text-base leading-tight">Sentence Builder</h4>
+                </div>
+              </div>
+              <svg viewBox="0 0 60 60" class="w-12 h-12 opacity-80">
+                <rect x="8" y="22" width="18" height="16" rx="4" fill="#FFF"/>
+                <rect x="28" y="22" width="24" height="16" rx="4" fill="#FFF" opacity="0.8"/>
+              </svg>
+            </div>
+            <div onclick="startQuiz(3)" class="cursor-pointer">
+              <h3 class="text-lg font-bold text-slate-800 group-hover:text-purple-600 transition">Reorder Underlined Target</h3>
+              <p class="text-xs text-slate-500 mt-1">Read the answer with <u>underlined parts</u>, then reorder scrambled chips into a question.</p>
+            </div>
+            <div class="mt-6 pt-4 border-t border-slate-100 space-y-2">
+              <button onclick="startQuiz(3)" class="w-full py-2 bg-purple-50 hover:bg-purple-100 text-purple-700 text-xs font-bold rounded-xl flex items-center justify-between px-3 transition">
+                <span>Start Level 3</span>
+                <i class="fa-solid fa-play"></i>
+              </button>
+              <button onclick="generateNewQuestions(3)" class="w-full py-1.5 bg-slate-100 hover:bg-amber-100 hover:text-amber-800 text-slate-600 text-[11px] font-bold rounded-lg flex items-center justify-center space-x-1.5 transition">
+                <i class="fa-solid fa-wand-magic-sparkles text-amber-500"></i>
+                <span>Generate 15 New Questions</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ACTIVE QUIZ CONTAINER -->
+      <div id="quiz-active-box" class="hidden space-y-4">
+        <!-- Quiz Header Bar -->
+        <div class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div class="flex items-center space-x-3">
+            <button onclick="exitQuiz()" class="text-slate-400 hover:text-slate-600 p-2 rounded-lg bg-slate-100">
+              <i class="fa-solid fa-arrow-left"></i>
+            </button>
+            <div>
+              <span id="quizLevelBadge" class="text-[11px] font-bold text-indigo-600 bg-indigo-50 px-2.5 py-0.5 rounded-md uppercase">Level 1</span>
+              <h3 id="quizTitle" class="text-base font-bold text-slate-800">Question 1 of 15</h3>
+            </div>
+          </div>
+
+          <!-- Score / Multiplier / Timer / Generate New Button Display -->
+          <div class="flex items-center justify-between sm:justify-end space-x-2 sm:space-x-3 text-xs font-bold">
+            <button onclick="generateNewQuestions(quizState.level)" class="px-2.5 py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-800 rounded-lg border border-amber-200 flex items-center space-x-1 transition" title="Generate another set of 15 questions for this level">
+              <i class="fa-solid fa-wand-magic-sparkles text-amber-500"></i>
+              <span class="hidden sm:inline">New Set</span>
+            </button>
+
+            <div class="flex items-center space-x-1.5 bg-amber-50 text-amber-700 px-3 py-1.5 rounded-lg border border-amber-200">
+              <i class="fa-solid fa-bolt text-amber-500"></i>
+              <span>Mult: <span id="quizMultiplier">x1.0</span></span>
+            </div>
+
+            <div id="quizTimerBox" class="hidden flex items-center space-x-1.5 bg-rose-50 text-rose-700 px-3 py-1.5 rounded-lg border border-rose-200">
+              <i class="fa-solid fa-clock text-rose-500"></i>
+              <span id="quizTimerVal">25s</span>
+            </div>
+
+            <div class="flex items-center space-x-1.5 bg-emerald-50 text-emerald-700 px-3 py-1.5 rounded-lg border border-emerald-200">
+              <i class="fa-solid fa-star text-emerald-500"></i>
+              <span>Score: <span id="quizScoreVal">0</span></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Progress Bar -->
+        <div class="w-full bg-slate-200 rounded-full h-2.5 overflow-hidden">
+          <div id="quizProgressBar" class="bg-indigo-600 h-2.5 rounded-full transition-all duration-300" style="width: 0%"></div>
+        </div>
+
+        <!-- Question Card Box -->
+        <div class="bg-white p-6 sm:p-8 rounded-2xl border border-slate-200 shadow-sm space-y-6">
+          <div id="questionPromptBox" class="space-y-2">
+            <div id="questionContextTag" class="hidden inline-block text-[11px] font-bold px-2.5 py-1 bg-amber-100 text-amber-800 rounded-md"></div>
+            <div id="questionText" class="text-lg sm:text-xl font-bold text-slate-800 leading-relaxed">
+              Loading Question...
+            </div>
+          </div>
+
+          <!-- MULTIPLE CHOICE CONTAINER (Levels 1, 3, 4) -->
+          <div id="mcqContainer" class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+            <!-- Dynamic option buttons rendered via JS -->
+          </div>
+
+          <!-- REORDER WORD CHIPS CONTAINER (Level 2) -->
+          <div id="reorderContainer" class="hidden space-y-5">
+            <!-- User Sentence Workspace -->
+            <div class="space-y-2">
+              <label class="text-xs font-bold text-slate-500 uppercase tracking-wider block">Your Reordered Question:</label>
+              <div id="reorderWorkspace" class="min-h-[60px] p-3 bg-slate-50 border-2 border-dashed border-indigo-300 rounded-xl flex flex-wrap gap-2 items-center">
+                <span id="reorderPlaceholder" class="text-xs text-slate-400 italic">Tap words from below to construct your question...</span>
+              </div>
+            </div>
+
+            <!-- Word Bank -->
+            <div class="space-y-2">
+              <div class="flex justify-between items-center">
+                <label class="text-xs font-bold text-slate-500 uppercase tracking-wider">Word Bank (Tap to select):</label>
+                <button onclick="resetReorder()" class="text-xs text-indigo-600 hover:text-indigo-800 font-bold flex items-center space-x-1">
+                  <i class="fa-solid fa-rotate-left"></i>
+                  <span>Reset Words</span>
+                </button>
+              </div>
+              <div id="reorderBank" class="flex flex-wrap gap-2 p-3 bg-slate-100/70 rounded-xl border border-slate-200">
+                <!-- Chips rendered here -->
+              </div>
+            </div>
+
+            <!-- Submit Reorder Button -->
+            <div class="pt-2 flex justify-end">
+              <button id="submitReorderBtn" onclick="submitReorderAnswer()" class="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white text-xs sm:text-sm font-bold rounded-xl shadow transition flex items-center space-x-2">
+                <span>Check Reordered Question</span>
+                <i class="fa-solid fa-check"></i>
+              </button>
+            </div>
+          </div>
+
+          <!-- Immediate Feedback Card -->
+          <div id="feedbackCard" class="hidden rounded-xl p-5 border space-y-3">
+            <div class="flex items-center justify-between">
+              <span id="feedbackTitle" class="font-extrabold text-sm flex items-center space-x-2"></span>
+              <span id="feedbackFormula" class="text-[11px] font-mono font-semibold bg-white/80 px-2.5 py-1 rounded border"></span>
+            </div>
+            <p id="feedbackText" class="text-xs sm:text-sm text-slate-700 leading-relaxed"></p>
+            <div class="pt-2 flex justify-end">
+              <button id="nextBtn" onclick="nextQuestion()" class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs sm:text-sm font-bold rounded-xl shadow transition flex items-center space-x-2">
+                <span>Next Question</span>
+                <i class="fa-solid fa-arrow-right"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- LEVEL COMPLETE SUMMARY MODAL -->
+      <div id="quiz-summary-box" class="hidden bg-white p-8 rounded-2xl border border-slate-200 shadow-xl max-w-lg mx-auto text-center space-y-6">
+        <div class="w-20 h-20 bg-amber-100 text-amber-500 rounded-full flex items-center justify-center mx-auto text-4xl shadow-inner">
+          🏆
+        </div>
+        <div>
+          <h3 class="text-2xl font-black text-slate-800">Module Completed!</h3>
+          <p class="text-xs text-slate-500 mt-1" id="summarySub">Great job practicing your Wh-Questions grammar!</p>
+        </div>
+
+        <div class="grid grid-cols-3 gap-3 bg-slate-50 p-4 rounded-xl text-center border border-slate-200">
+          <div>
+            <span class="text-xs text-slate-500 font-semibold block">Correct</span>
+            <span id="summaryCorrect" class="text-lg font-black text-emerald-600">0/15</span>
+          </div>
+          <div>
+            <span class="text-xs text-slate-500 font-semibold block">XP Earned</span>
+            <span id="summaryXP" class="text-lg font-black text-amber-500">+0 XP</span>
+          </div>
+          <div>
+            <span class="text-xs text-slate-500 font-semibold block">Accuracy</span>
+            <span id="summaryAccuracy" class="text-lg font-black text-indigo-600">0%</span>
+          </div>
+        </div>
+
+        <div class="flex space-x-3">
+          <button onclick="exitQuiz()" class="flex-1 py-3 bg-slate-200 hover:bg-slate-300 text-slate-800 text-xs font-bold rounded-xl transition">
+            Back to Arena
+          </button>
+          <button onclick="restartLevel()" class="flex-1 py-3 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl transition shadow">
+            Try Again
+          </button>
+          <button onclick="generateNewQuestions(quizState.level)" class="flex-1 py-3 bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold rounded-xl transition shadow flex items-center justify-center space-x-1">
+            <i class="fa-solid fa-wand-magic-sparkles"></i>
+            <span>New Set (15)</span>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= SECTION 3: MISTAKE VAULT ================= -->
+    <section id="view-vault" class="hidden space-y-6">
+      <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h2 class="text-xl font-bold text-slate-800 flex items-center space-x-2">
+            <i class="fa-solid fa-vault text-rose-500"></i>
+            <span>Smart Mistake Vault</span>
+          </h2>
+          <p class="text-xs text-slate-500 mt-1">Review questions you previously answered incorrectly to solidify your knowledge.</p>
+        </div>
+        <div class="flex space-x-2">
+          <button onclick="retryMistakes()" id="retryMistakesBtn" class="px-4 py-2.5 bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold rounded-xl shadow transition flex items-center space-x-2 disabled:opacity-50">
+            <i class="fa-solid fa-rotate-right"></i>
+            <span>Practice Vault Questions</span>
+          </button>
+          <button onclick="clearVault()" class="px-3 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-bold rounded-xl transition">
+            Clear
+          </button>
+        </div>
+      </div>
+
+      <!-- Mistake Items Container -->
+      <div id="vaultList" class="space-y-4">
+        <!-- Rendered via JavaScript -->
+      </div>
+    </section>
+
+    <!-- ================= SECTION 4: BADGES & STATS ================= -->
+    <section id="view-stats" class="hidden space-y-6">
+      <!-- Player Profile Summary Card -->
+      <div class="bg-gradient-to-r from-slate-900 to-indigo-950 text-white rounded-2xl p-6 shadow-md flex flex-col sm:flex-row items-center justify-between gap-6">
+        <div class="flex items-center space-x-4">
+          <div class="w-16 h-16 rounded-2xl bg-amber-400 text-slate-900 font-black text-2xl flex items-center justify-center shadow-lg border-2 border-amber-300">
+            👑
+          </div>
+          <div>
+            <div class="flex items-center space-x-2">
+              <h2 class="text-xl font-black" id="statsTitle">HK S1 Scholar</h2>
+              <span class="text-xs bg-indigo-800 px-2 py-0.5 rounded text-indigo-200 font-semibold">Level <span id="statsLevelNum">1</span></span>
+            </div>
+            <p class="text-xs text-slate-400 mt-1">Keep practicing Wh-Questions to unlock all achievements!</p>
+          </div>
+        </div>
+
+        <!-- Level XP Bar -->
+        <div class="w-full sm:w-64 bg-slate-800/80 p-3 rounded-xl border border-slate-700/50 space-y-1">
+          <div class="flex justify-between text-xs font-semibold">
+            <span class="text-slate-400">XP Progress</span>
+            <span id="statsXPText" class="text-amber-400">0 / 100 XP</span>
+          </div>
+          <div class="w-full bg-slate-700 rounded-full h-2">
+            <div id="statsXPBar" class="bg-amber-400 h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Metrics Overview Cards -->
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm text-center">
+          <span class="text-xs text-slate-500 font-semibold block">Total Solved</span>
+          <span id="metricTotalSolved" class="text-xl font-black text-slate-800">0</span>
+        </div>
+        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm text-center">
+          <span class="text-xs text-slate-500 font-semibold block">Accuracy Rate</span>
+          <span id="metricAccuracy" class="text-xl font-black text-emerald-600">0%</span>
+        </div>
+        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm text-center">
+          <span class="text-xs text-slate-500 font-semibold block">Best Streak</span>
+          <span id="metricBestStreak" class="text-xl font-black text-amber-500">0 🔥</span>
+        </div>
+        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm text-center">
+          <span class="text-xs text-slate-500 font-semibold block">Vault Mistakes</span>
+          <span id="metricVaultCount" class="text-xl font-black text-rose-500">0</span>
+        </div>
+      </div>
+
+      <!-- Badges Showcase Grid -->
+      <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+        <h3 class="text-lg font-bold text-slate-800">Achievement Badges</h3>
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-4" id="badgesGrid">
+          <!-- Rendered dynamically -->
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="bg-white border-t border-slate-200 py-4 text-center text-xs text-slate-500">
+    <div class="max-w-7xl mx-auto px-4">
+      Hong Kong Secondary 1 English Curriculum Alignment • Wh-Questions Learning Application
+    </div>
+  </footer>
+
+  <!-- JAVASCRIPT LOGIC & DATA ENGINE -->
+  <script>
+    /* ================= 60 QUESTIONS DATABASE ================= */
+    let QUESTIONS = [
+      // ---------- LEVEL 1: QUESTION WORD IDENTIFICATION (1-15) ----------
+      {
+        id: 1, level: 1, type: 'mcq',
+        question: "______ is the school library? - It is on the 3rd floor next to the computer room.",
+        options: ["When", "Where", "Why", "Whose"],
+        answer: 1,
+        formula: "Where + be + Subject (Place)",
+        explanation: "We use 'Where' to ask about location or place (on the 3rd floor)."
+      },
+      {
+        id: 2, level: 1, type: 'mcq',
+        question: "______ does the tuck shop open in the morning? - At 7:30 a.m.",
+        options: ["Where", "When", "Who", "How"],
+        answer: 1,
+        formula: "When + do/does + S + Base Verb (Time)",
+        explanation: "'At 7:30 a.m.' refers to time, so we use 'When'."
+      },
+      {
+        id: 3, level: 1, type: 'mcq',
+        question: "______ do you usually eat for lunch in the canteen? - Fried rice and lemon tea.",
+        options: ["What", "Which", "Where", "Whose"],
+        answer: 0,
+        formula: "What + do/does + S + Base Verb (Things/Food)",
+        explanation: "'What' is used to ask about things or food when options are open."
+      },
+      {
+        id: 4, level: 1, type: 'mcq',
+        question: "______ is that teacher standing near the general office? - That is Mr. Wong, our Science teacher.",
+        options: ["Whose", "Who", "Which", "Where"],
+        answer: 1,
+        formula: "Who + be + Subject (People)",
+        explanation: "'Mr. Wong' is a person, so we use 'Who' to ask about people."
+      },
+      {
+        id: 5, level: 1, type: 'mcq',
+        question: "______ backpack is left on the basketball court? - It is Amy's.",
+        options: ["Who", "Whose", "Which", "What"],
+        answer: 1,
+        formula: "Whose + Noun + be + ... (Possession)",
+        explanation: "'It is Amy's' shows possession, so we ask with 'Whose'."
+      },
+      {
+        id: 6, level: 1, type: 'mcq',
+        question: "______ transport do you prefer to take to school - the MTR or the bus?",
+        options: ["Which", "How", "Where", "When"],
+        answer: 0,
+        formula: "Which + Noun (Limited Choice)",
+        explanation: "Since there is a specific choice between two options (MTR or bus), use 'Which'."
+      },
+      {
+        id: 7, level: 1, type: 'mcq',
+        question: "______ did you book the tickets for the Hong Kong Science Museum?",
+        options: ["How", "Why", "When", "Which"],
+        answer: 0,
+        formula: "How + did + S + Base Verb (Manner/Means)",
+        explanation: "'How' asks about the method, way, or process used to complete an action."
+      },
+      {
+        id: 8, level: 1, type: 'mcq',
+        question: "______ are all the Secondary 1 students feeling excited today? - Because today is Sports Day!",
+        options: ["Where", "Why", "Who", "How"],
+        answer: 1,
+        formula: "Why + be + S + Adj (Reasons)",
+        explanation: "The answer starts with 'Because', which gives a reason. We ask reasons using 'Why'."
+      },
+      {
+        id: 9, level: 1, type: 'mcq',
+        question: "Identify what the bold Wh-word asks about: '<b>When</b> will the English Club meeting start?'",
+        options: ["Time", "Place", "Reason", "Person"],
+        answer: 0,
+        formula: "When = Time",
+        explanation: "'When' is specifically used to target time, dates, or schedules."
+      },
+      {
+        id: 10, level: 1, type: 'mcq',
+        question: "Identify what the bold Wh-word asks about: '<b>Why</b> didn't Kelvin join the school choir practice?'",
+        options: ["Possession", "Manner", "Reason", "Choice"],
+        answer: 2,
+        formula: "Why = Reason",
+        explanation: "'Why' asks for the cause or reason behind an event."
+      },
+      {
+        id: 11, level: 1, type: 'mcq',
+        question: "______ sweater is this on the desk? Is it yours or Mary's?",
+        options: ["Whose", "Who", "Which", "Where"],
+        answer: 0,
+        formula: "Whose + Noun (Ownership)",
+        explanation: "'Whose' asks about ownership of an item."
+      },
+      {
+        id: 12, level: 1, type: 'mcq',
+        question: "______ path should we take up Victoria Peak - the morning trail or the staircase?",
+        options: ["What", "Which", "Where", "How"],
+        answer: 1,
+        formula: "Which + Noun (Specific Options)",
+        explanation: "When choosing between specific options (morning trail or staircase), use 'Which'."
+      },
+      {
+        id: 13, level: 1, type: 'mcq',
+        question: "______ did you do during the Easter holiday in Hong Kong?",
+        options: ["What", "Where", "When", "Who"],
+        answer: 0,
+        formula: "What + did + S + Base Verb (Actions)",
+        explanation: "We use 'What...do' to ask about actions or activities."
+      },
+      {
+        id: 14, level: 1, type: 'mcq',
+        question: "______ is your favourite classmate to study with for the English test?",
+        options: ["Who", "Whose", "Which", "Where"],
+        answer: 0,
+        formula: "Who + be + S (People)",
+        explanation: "A classmate is a person, requiring 'Who'."
+      },
+      {
+        id: 15, level: 1, type: 'mcq',
+        question: "______ do passengers travel across Victoria Harbour to Central? - By Star Ferry.",
+        options: ["How", "Why", "Where", "What"],
+        answer: 0,
+        formula: "How + do + S + Base Verb (Transport Means)",
+        explanation: "'By Star Ferry' specifies the transport method, which answers 'How'."
+      },
+
+      // ---------- LEVEL 2: ANSWER GIVEN -> PICK CORRECT QUESTION (16-30) ----------
+      {
+        id: 16, level: 2, type: 'mcq',
+        question: "<span class='text-xs font-bold text-slate-500 uppercase block mb-1'>Answer Statement:</span> \"Legoland Park is located in London.\"",
+        options: [
+          "Where is Legoland Park located?",
+          "When is Legoland Park located?",
+          "Why is Legoland Park located?",
+          "Who is Legoland Park located?"
+        ],
+        answer: 0,
+        formula: "Where + be + Subject + Participle",
+        explanation: "The answer mentions a place ('in London'), so the correct question must use 'Where'."
+      },
+      {
+        id: 17, level: 2, type: 'mcq',
+        question: "<span class='text-xs font-bold text-slate-500 uppercase block mb-1'>Answer Statement:</span> \"I want pizza and garlic bread for dinner.\"",
+        options: [
+          "What do you want for dinner?",
+          "Where do you want for dinner?",
+          "When do you want for dinner?",
+          "Whose do you want for dinner?"
+        ],
+        answer: 0,
+        formula: "What + do + subject + base verb",
+        explanation: "'Pizza and garlic bread' are things/food items, so 'What' is the correct question word."
+      },
+      {
+        id: 18, level: 2, type: 'mcq',
+        question: "<span class='text-xs font-bold text-slate-500 uppercase block mb-1'>Answer Statement:</span> \"She comes to school at 7:45 a.m. every morning.\"",
+        options: [
+          "When does she come to school?",
+          "Where does she come to school?",
+          "Who does she come to school?",
+          "Why does she come to school?"
+        ],
+        answer: 0,
+        formula: "When + does + S + base verb",
+        explanation: "'At 7:45 a.m.' is a time, which matches the question word 'When'."
+      },
+      {
+        id: 19, level: 2, type: 'mcq',
+        question: "<span class='text-xs font-bold text-slate-500 uppercase block mb-1'>Answer Statement:</span> \"I didn't take a boat trip because I was feeling seasick.\"",
+        options: [
+          "Why didn't you take a boat trip?",
+          "How didn't you take a boat trip?",
+          "Which didn't you take a boat trip?",
+          "Where didn't you take a boat trip?"
+        ],
+        answer: 0,
+        formula: "Why + negative aux (didn't) + S + base verb",
+        explanation: "The clause 'because I was feeling seasick' states a reason, matching 'Why'."
+      },
+      {
+        id: 20, level: 2, type: 'mcq',
+        question: "<span class='text-xs font-bold text-slate-500 uppercase block mb-1'>Answer Statement:</span> \"I like the Hong Kong Space Museum best out of all museums.\"",
+        options: [
+          "Which tourist attraction do you like best?",
+          "Where tourist attraction do you like best?",
+          "When tourist attraction do you like best?",
+          "Whose tourist attraction do you like best?"
+        ],
+        answer: 0,
+        formula: "Which + Noun phrase + do + S + main verb",
+        explanation: "Choosing from a list of tourist attractions requires 'Which tourist attraction...'."
+      },
+      {
+        id: 21, level: 2, type: 'mcq',
+        question: "<span class='text-xs font-bold text-slate-500 uppercase block mb-1'>Answer Statement:</span> \"I went to Japan with my elder sister.\"",
+        options: [
+          "Who did you go to Japan with?",
+          "Where did you go to Japan with?",
+          "What did you go to Japan with?",
+          "When did you go to Japan with?"
+        ],
+        answer: 0,
+        formula: "Who + did + S + base verb + preposition",
+        explanation: "'My elder sister' is a person, so 'Who...with?' is the correct question format."
+      },
+      {
+        id: 22, level: 2, type: 'mcq',
+        question: "<span class='text-xs font-bold text-slate-500 uppercase block mb-1'>Answer Statement:</span> \"The black camera on the desk is Kelvin's.\"",
+        options: [
+          "Whose camera is on the desk?",
+          "Who camera is on the desk?",
+          "Which camera is on the desk?",
+          "Where camera is on the desk?"
+        ],
+        answer: 0,
+        formula: "Whose + Noun + be + prepositional phrase",
+        explanation: "'Kelvin's' indicates ownership, requiring 'Whose camera...'."
+      },
+      {
+        id: 23, level: 2, type: 'mcq',
+        question: "<span class='text-xs font-bold text-slate-500 uppercase block mb-1'>Answer Statement:</span> \"We booked the tickets online using a mobile app.\"",
+        options: [
+          "How did you book the tickets?",
+          "Why did you book the tickets?",
+          "Where did you book the tickets?",
+          "When did you book the tickets?"
+        ],
+        answer: 0,
+        formula: "How + did + S + base verb",
+        explanation: "'Online using a mobile app' specifies the method, which corresponds to 'How'."
+      },
+      {
+        id: 24, level: 2, type: 'mcq',
+        question: "<span class='text-xs font-bold text-slate-500 uppercase block mb-1'>Answer Statement:</span> \"I went to bed at 10:30 p.m. last night.\"",
+        options: [
+          "What time did you go to bed?",
+          "Where time did you go to bed?",
+          "Why time did you go to bed?",
+          "Who time did you go to bed?"
+        ],
+        answer: 0,
+        formula: "What time + did + S + base verb",
+        explanation: "'At 10:30 p.m.' specifies exact clock time, matching 'What time...'."
+      },
+      {
+        id: 25, level: 2, type: 'mcq',
+        question: "<span class='text-xs font-bold text-slate-500 uppercase block mb-1'>Answer Statement:</span> \"I usually watch National Geographic and ViuTV.\"",
+        options: [
+          "Which TV channels do you usually watch?",
+          "Where TV channels do you usually watch?",
+          "When TV channels do you usually watch?",
+          "How TV channels do you usually watch?"
+        ],
+        answer: 0,
+        formula: "Which + plural noun + do + S + verb",
+        explanation: "Selecting TV channels from options requires 'Which TV channels...'."
+      },
+      {
+        id: 26, level: 2, type: 'mcq',
+        question: "<span class='text-xs font-bold text-slate-500 uppercase block mb-1'>Answer Statement:</span> \"The blue dress is more beautiful than the red one.\"",
+        options: [
+          "Which dress is more beautiful?",
+          "Where dress is more beautiful?",
+          "When dress is more beautiful?",
+          "Why dress is more beautiful?"
+        ],
+        answer: 0,
+        formula: "Which + Noun + be + comparative adj",
+        explanation: "Comparing two specific dresses requires 'Which dress...'."
+      },
+      {
+        id: 27, level: 2, type: 'mcq',
+        question: "<span class='text-xs font-bold text-slate-500 uppercase block mb-1'>Answer Statement:</span> \"We are dining in the school hall because the canteen is full.\"",
+        options: [
+          "Why are we dining in the hall?",
+          "Where are we dining in the hall?",
+          "When are we dining in the hall?",
+          "Who are we dining in the hall?"
+        ],
+        answer: 0,
+        formula: "Why + be (are) + S + verb-ing",
+        explanation: "'Because the canteen is full' provides a reason, requiring 'Why'."
+      },
+      {
+        id: 28, level: 2, type: 'mcq',
+        question: "<span class='text-xs font-bold text-slate-500 uppercase block mb-1'>Answer Statement:</span> \"They went to Kyoto, Japan last summer.\"",
+        options: [
+          "Where did they go last year?",
+          "When did they go last year?",
+          "Why did they go last year?",
+          "Who did they go last year?"
+        ],
+        answer: 0,
+        formula: "Where + did + S + base verb",
+        explanation: "'Kyoto, Japan' is a destination/place, matching 'Where'."
+      },
+      {
+        id: 29, level: 2, type: 'mcq',
+        question: "<span class='text-xs font-bold text-slate-500 uppercase block mb-1'>Answer Statement:</span> \"Tony likes eating dim sum and egg tarts.\"",
+        options: [
+          "What does Tony like to eat?",
+          "Where does Tony like to eat?",
+          "When does Tony like to eat?",
+          "Whose does Tony like to eat?"
+        ],
+        answer: 0,
+        formula: "What + does + S + base verb",
+        explanation: "'Dim sum and egg tarts' are food items (things), requiring 'What'."
+      },
+      {
+        id: 30, level: 2, type: 'mcq',
+        question: "<span class='text-xs font-bold text-slate-500 uppercase block mb-1'>Answer Statement:</span> \"Tom accidentally destroyed the classroom window yesterday.\"",
+        options: [
+          "Who destroyed the window yesterday?",
+          "What destroyed the window yesterday?",
+          "Where destroyed the window yesterday?",
+          "Why destroyed the window yesterday?"
+        ],
+        answer: 0,
+        formula: "Who (Subject) + main verb + object",
+        explanation: "'Tom' is the person who did the action (Subject), requiring 'Who' without do/does/did."
+      },
+
+      // ---------- LEVEL 3: UNDERLINED ANSWER -> REORDER WORD CHIPS (31-45) ----------
+      {
+        id: 31, level: 3, type: 'reorder',
+        question: "<span class='text-xs font-bold text-slate-500 uppercase block mb-1'>Answer Statement:</span> We meet <u>once a week</u>.",
+        words: ["How", "often", "do", "you", "meet?"],
+        correctSentence: "How often do you meet?",
+        formula: "How often + do + S + base verb",
+        explanation: "'Once a week' specifies frequency, so arrange words into 'How often do you meet?'."
+      },
+      {
+        id: 32, level: 3, type: 'reorder',
+        question: "<span class='text-xs font-bold text-slate-500 uppercase block mb-1'>Answer Statement:</span> Our club meetings are always <u>on Thursdays</u>.",
+        words: ["When", "are", "your", "club", "meetings?"],
+        correctSentence: "When are your club meetings?",
+        formula: "When + be + S",
+        explanation: "'On Thursdays' specifies the day/time, so assemble 'When are your club meetings?'."
+      },
+      {
+        id: 33, level: 3, type: 'reorder',
+        question: "<span class='text-xs font-bold text-slate-500 uppercase block mb-1'>Answer Statement:</span> We meet <u>in the school library</u>.",
+        words: ["Where", "do", "you", "meet?"],
+        correctSentence: "Where do you meet?",
+        formula: "Where + do + S + base verb",
+        explanation: "'In the school library' specifies location, so assemble 'Where do you meet?'."
+      },
+      {
+        id: 34, level: 3, type: 'reorder',
+        question: "<span class='text-xs font-bold text-slate-500 uppercase block mb-1'>Answer Statement:</span> My favourite author is <u>John Cheung</u>.",
+        words: ["Who", "is", "your", "favourite", "author?"],
+        correctSentence: "Who is your favourite author?",
+        formula: "Who + be + S",
+        explanation: "'John Cheung' is a person, so assemble 'Who is your favourite author?'."
+      },
+      {
+        id: 35, level: 3, type: 'reorder',
+        question: "<span class='text-xs font-bold text-slate-500 uppercase block mb-1'>Answer Statement:</span> I like his books <u>because they are entertaining</u>.",
+        words: ["Why", "do", "you", "like", "his", "books?"],
+        correctSentence: "Why do you like his books?",
+        formula: "Why + do + S + base verb",
+        explanation: "'Because they are entertaining' is a reason, so assemble 'Why do you like his books?'."
+      },
+      {
+        id: 36, level: 3, type: 'reorder',
+        question: "<span class='text-xs font-bold text-slate-500 uppercase block mb-1'>Answer Statement:</span> I prefer <u>funny comic books</u>.",
+        words: ["What", "type", "of", "books", "do", "you", "prefer?"],
+        correctSentence: "What type of books do you prefer?",
+        formula: "What type of + noun + do + S + verb",
+        explanation: "'Funny comic books' describes the genre/type, so assemble 'What type of books do you prefer?'."
+      },
+      {
+        id: 37, level: 3, type: 'reorder',
+        question: "<span class='text-xs font-bold text-slate-500 uppercase block mb-1'>Answer Statement:</span> My favourite subject is <u>Mathematics</u>.",
+        words: ["What", "is", "your", "favourite", "subject?"],
+        correctSentence: "What is your favourite subject?",
+        formula: "What + be + S",
+        explanation: "'Mathematics' is a thing/subject, so assemble 'What is your favourite subject?'."
+      },
+      {
+        id: 38, level: 3, type: 'reorder',
+        question: "<span class='text-xs font-bold text-slate-500 uppercase block mb-1'>Answer Statement:</span> I usually have lunch <u>in the school canteen</u>.",
+        words: ["Where", "do", "you", "usually", "have", "lunch?"],
+        correctSentence: "Where do you usually have lunch?",
+        formula: "Where + do + S + adverbs + base verb",
+        explanation: "'In the school canteen' specifies place, so assemble 'Where do you usually have lunch?'."
+      },
+      {
+        id: 39, level: 3, type: 'reorder',
+        question: "<span class='text-xs font-bold text-slate-500 uppercase block mb-1'>Answer Statement:</span> I like ICT <u>because it is easy for me</u>.",
+        words: ["Why", "do", "you", "like", "ICT?"],
+        correctSentence: "Why do you like ICT?",
+        formula: "Why + do + S + base verb",
+        explanation: "'Because it is easy' is a reason, so assemble 'Why do you like ICT?'."
+      },
+      {
+        id: 40, level: 3, type: 'reorder',
+        question: "<span class='text-xs font-bold text-slate-500 uppercase block mb-1'>Answer Statement:</span> I prefer <u>tea</u> between tea and coffee.",
+        words: ["Which", "drink", "do", "you", "prefer?"],
+        correctSentence: "Which drink do you prefer?",
+        formula: "Which + Noun + do + S + verb",
+        explanation: "Choosing between options requires assembling 'Which drink do you prefer?'."
+      },
+      {
+        id: 41, level: 3, type: 'reorder',
+        question: "<span class='text-xs font-bold text-slate-500 uppercase block mb-1'>Answer Statement:</span> You can ask <u>Ms. Lam</u> for help.",
+        words: ["Who", "can", "I", "ask", "for", "help?"],
+        correctSentence: "Who can I ask for help?",
+        formula: "Who + modal + S + base verb",
+        explanation: "'Ms. Lam' is a person, so assemble 'Who can I ask for help?'."
+      },
+      {
+        id: 42, level: 3, type: 'reorder',
+        question: "<span class='text-xs font-bold text-slate-500 uppercase block mb-1'>Answer Statement:</span> The volleyball team practices <u>at 5 p.m.</u>",
+        words: ["What", "time", "does", "the", "team", "practice?"],
+        correctSentence: "What time does the team practice?",
+        formula: "What time + does + S + base verb",
+        explanation: "'At 5 p.m.' is time, so assemble 'What time does the team practice?'."
+      },
+      {
+        id: 43, level: 3, type: 'reorder',
+        question: "<span class='text-xs font-bold text-slate-500 uppercase block mb-1'>Answer Statement:</span> <u>Sam Wong</u> is the president of the Environment Club.",
+        words: ["Who", "is", "the", "club", "president?"],
+        correctSentence: "Who is the club president?",
+        formula: "Who (Subject) + be + object",
+        explanation: "'Sam Wong' is the person, so assemble 'Who is the club president?'."
+      },
+      {
+        id: 44, level: 3, type: 'reorder',
+        question: "<span class='text-xs font-bold text-slate-500 uppercase block mb-1'>Answer Statement:</span> I go to school <u>by bus</u>.",
+        words: ["How", "do", "you", "go", "to", "school?"],
+        correctSentence: "How do you go to school?",
+        formula: "How + do + S + base verb",
+        explanation: "'By bus' specifies transport, so assemble 'How do you go to school?'."
+      },
+      {
+        id: 45, level: 3, type: 'reorder',
+        question: "<span class='text-xs font-bold text-slate-500 uppercase block mb-1'>Answer Statement:</span> The computer room is locked <u>because the teacher is away</u>.",
+        words: ["Why", "is", "the", "room", "locked?"],
+        correctSentence: "Why is the room locked?",
+        formula: "Why + be + S + adjective",
+        explanation: "'Because the teacher is away' gives a reason, so assemble 'Why is the room locked?'."
+      }
+    ];
+
+    /* ================= NEW QUESTION GENERATOR ENGINE (LLM + Dynamic Fallback) ================= */
+    async function generateNewQuestions(levelNum) {
+      // Show loading notification toast or spinner
+      const loadingToast = document.createElement('div');
+      loadingToast.className = "fixed top-20 right-4 bg-indigo-900 text-white p-4 rounded-xl shadow-2xl z-50 flex items-center space-x-3 text-xs sm:text-sm font-bold border border-indigo-500 animate-bounce";
+      loadingToast.innerHTML = `<i class="fa-solid fa-wand-magic-sparkles text-amber-400 text-lg animate-spin"></i><span>Generating 15 New Level ${levelNum} Questions...</span>`;
+      document.body.appendChild(loadingToast);
+
+      const apiKey = ""; // Canvas runtime API key binding
+      const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
+
+      let levelInstructions = "";
+      let responseSchema = {};
+
+      if (levelNum === 1) {
+        levelInstructions = "Generate 15 fill-in-the-blank questions for Wh-words (What, Where, When, Who, Why, Whose, Which, How) suited for Hong Kong Secondary 1 students. For each question, provide 4 option strings, correct option index (0-3), grammar formula, and short teacher explanation.";
+        responseSchema = {
+          type: "ARRAY",
+          items: {
+            type: "OBJECT",
+            properties: {
+              question: { type: "STRING" },
+              options: { type: "ARRAY", items: { type: "STRING" } },
+              answer: { type: "INTEGER" },
+              formula: { type: "STRING" },
+              explanation: { type: "STRING" }
+            },
+            required: ["question", "options", "answer", "formula", "explanation"]
+          }
+        };
+      } else if (levelNum === 2) {
+        levelInstructions = "Generate 15 questions where an Answer Statement is given (e.g., 'Answer Statement: ...'), and the student must choose the single correct Wh-question out of 4 multiple-choice options. Suitable for Hong Kong Secondary 1 level.";
+        responseSchema = {
+          type: "ARRAY",
+          items: {
+            type: "OBJECT",
+            properties: {
+              question: { type: "STRING" },
+              options: { type: "ARRAY", items: { type: "STRING" } },
+              answer: { type: "INTEGER" },
+              formula: { type: "STRING" },
+              explanation: { type: "STRING" }
+            },
+            required: ["question", "options", "answer", "formula", "explanation"]
+          }
+        };
+      } else {
+        levelInstructions = "Generate 15 questions where an Answer Statement has an <u>underlined target part</u>. The student needs to arrange word chips into the correct Wh-question. Provide question string with <u>underlined part</u>, array of word chips ('words'), exact target sentence string ('correctSentence'), formula, and explanation.";
+        responseSchema = {
+          type: "ARRAY",
+          items: {
+            type: "OBJECT",
+            properties: {
+              question: { type: "STRING" },
+              words: { type: "ARRAY", items: { type: "STRING" } },
+              correctSentence: { type: "STRING" },
+              formula: { type: "STRING" },
+              explanation: { type: "STRING" }
+            },
+            required: ["question", "words", "correctSentence", "formula", "explanation"]
+          }
+        };
+      }
+
+      let generatedData = null;
+
+      try {
+        const payload = {
+          contents: [{ parts: [{ text: levelInstructions }] }],
+          generationConfig: {
+            responseMimeType: "application/json",
+            responseSchema: responseSchema
+          }
+        };
+
+        const res = await fetch(apiUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        if (res.ok) {
+          const json = await res.json();
+          const rawText = json.candidates?.[0]?.content?.parts?.[0]?.text;
+          if (rawText) {
+            generatedData = JSON.parse(rawText);
+          }
+        }
+      } catch (err) {
+        console.warn("AI generation API fetch issue, falling back to dynamic synthesizer:", err);
+      }
+
+      // Fallback synthesizer if API call is unfulfilled or delayed
+      if (!generatedData || !Array.isArray(generatedData) || generatedData.length === 0) {
+        generatedData = generateDynamicFallbackSet(levelNum);
+      }
+
+      // Process & replace level questions
+      const startId = (levelNum - 1) * 15 + 1;
+      const formattedQuestions = generatedData.slice(0, 15).map((q, i) => {
+        return {
+          id: startId + i,
+          level: levelNum,
+          type: levelNum === 3 ? 'reorder' : 'mcq',
+          contextTag: null,
+          question: q.question,
+          options: q.options || [],
+          answer: typeof q.answer === 'number' ? q.answer : 0,
+          words: q.words || [],
+          correctSentence: q.correctSentence || "",
+          formula: q.formula || "Wh-question rule",
+          explanation: q.explanation || "Grammar target verified."
+        };
+      });
+
+      // Update local database
+      QUESTIONS = QUESTIONS.filter(q => q.level !== levelNum).concat(formattedQuestions);
+      loadingToast.remove();
+
+      // Launch the freshly generated quiz
+      switchTab('quiz');
+      startQuiz(levelNum);
+    }
+
+    /* Fallback Dynamic Question Synthesizer */
+    function generateDynamicFallbackSet(levelNum) {
+      const places = ["Mong Kok", "Sha Tin", "Causeway Bay", "Tsim Sha Tsui", "Central", "Ocean Park"];
+      const times = ["at 8:00 a.m.", "on Saturdays", "after school", "during recess", "this Friday"];
+      const names = ["Chris", "Jessica", "David", "Grace", "Ethan", "Chloe"];
+      const subjects = ["English", "Mathematics", "Science", "History", "Geography"];
+
+      const items = [];
+
+      for (let i = 0; i < 15; i++) {
+        const place = places[i % places.length];
+        const time = times[i % times.length];
+        const name = names[i % names.length];
+        const subj = subjects[i % subjects.length];
+
+        if (levelNum === 1) {
+          items.push({
+            question: `______ does ${name} study for the ${subj} test? - In the ${place} public library.`,
+            options: ["Where", "When", "Why", "Who"],
+            answer: 0,
+            formula: "Where + do/does + S + base verb",
+            explanation: `Asking about location (${place}) requires 'Where'.`
+          });
+        } else if (levelNum === 2) {
+          items.push({
+            question: `<span class='text-xs font-bold text-slate-500 uppercase block mb-1'>Answer Statement:</span> "${name} attends ${subj} lessons ${time} in ${place}."`,
+            options: [
+              `When and where does ${name} attend ${subj} lessons?`,
+              `Who and whose does ${name} attend ${subj} lessons?`,
+              `Why and how does ${name} attend ${subj} lessons?`,
+              `Which and what does ${name} attend ${subj} lessons?`
+            ],
+            answer: 0,
+            formula: "When/Where + does + S + base verb",
+            explanation: `The answer provides time (${time}) and location (${place}).`
+          });
+        } else {
+          items.push({
+            question: `<span class='text-xs font-bold text-slate-500 uppercase block mb-1'>Answer Statement:</span> ${name} goes to ${place} <u>${time}</u>.`,
+            words: ["When", "does", name, "go", "to", `${place}?`],
+            correctSentence: `When does ${name} go to ${place}?`,
+            formula: "When + does + S + base verb",
+            explanation: `The underlined part '${time}' specifies time, so assemble 'When does...'`
+          });
+        }
+      }
+      return items;
+    }
+
+    /* ================= APP STATE MANAGEMENT ================= */
+    let state = {
+      xp: 0,
+      level: 1,
+      streak: 0,
+      bestStreak: 0,
+      soundEnabled: true,
+      vault: [],
+      badges: {
+        firstStep: false,
+        detective: false,
+        structureKing: false,
+        subObjMaster: false,
+        hkChampion: false,
+        streakFlame: false,
+        speedDemon: false,
+        vaultCleaner: false
+      },
+      totalSolved: 0,
+      totalCorrect: 0
+    };
+
+    // Active Quiz State
+    let quizState = {
+      active: false,
+      level: 1,
+      questions: [],
+      currentIndex: 0,
+      score: 0,
+      correctCount: 0,
+      timerEnabled: false,
+      timerSeconds: 25,
+      timerInterval: null,
+      multiplier: 1.0,
+      isVaultRetry: false,
+      // For Level 2 Reordering
+      userReorderWords: []
+    };
+
+    /* ================= INITIALIZATION & LOCAL STORAGE ================= */
+    window.onload = function() {
+      loadState();
+      updateHeaderUI();
+      renderBadges();
+      renderVaultUI();
+    };
+
+    function saveState() {
+      try {
+        localStorage.setItem('hk_wh_quest_state', JSON.stringify(state));
+      } catch (e) { console.error('Save failed', e); }
+    }
+
+    function loadState() {
+      try {
+        const data = localStorage.getItem('hk_wh_quest_state');
+        if (data) {
+          state = { ...state, ...JSON.parse(data) };
+        }
+      } catch (e) { console.error('Load failed', e); }
+    }
+
+    /* ================= AUDIO SYNTHESIZER (Web Audio API) ================= */
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    let audioCtx = null;
+
+    function toggleAudio() {
+      state.soundEnabled = !state.soundEnabled;
+      document.getElementById('audioIcon').className = state.soundEnabled ? "fa-solid fa-volume-high" : "fa-solid fa-volume-xmark";
+      document.getElementById('audioBtn').className = state.soundEnabled ? "p-2 rounded-lg bg-indigo-800 text-amber-300" : "p-2 rounded-lg bg-indigo-950 text-slate-500";
+      saveState();
+    }
+
+    function playSound(type) {
+      if (!state.soundEnabled) return;
+      try {
+        if (!audioCtx) audioCtx = new AudioContext();
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        const now = audioCtx.currentTime;
+
+        if (type === 'correct') {
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(523.25, now);
+          osc.frequency.exponentialRampToValueAtTime(659.25, now + 0.1);
+          osc.frequency.exponentialRampToValueAtTime(783.99, now + 0.2);
+          gain.gain.setValueAtTime(0.2, now);
+          gain.gain.exponentialRampToValueAtTime(0.01, now + 0.35);
+          osc.start(now);
+          osc.stop(now + 0.35);
+        } else if (type === 'wrong') {
+          osc.type = 'sawtooth';
+          osc.frequency.setValueAtTime(180, now);
+          osc.frequency.exponentialRampToValueAtTime(110, now + 0.25);
+          gain.gain.setValueAtTime(0.2, now);
+          gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+          osc.start(now);
+          osc.stop(now + 0.3);
+        } else if (type === 'victory') {
+          const notes = [523.25, 659.25, 783.99, 1046.50];
+          notes.forEach((freq, idx) => {
+            const o = audioCtx.createOscillator();
+            const g = audioCtx.createGain();
+            o.connect(g);
+            g.connect(audioCtx.destination);
+            o.type = 'triangle';
+            o.frequency.setValueAtTime(freq, now + idx * 0.12);
+            g.gain.setValueAtTime(0.2, now + idx * 0.12);
+            g.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.12 + 0.25);
+            o.start(now + idx * 0.12);
+            o.stop(now + idx * 0.12 + 0.25);
+          });
+        }
+      } catch (e) { console.error('Audio play error', e); }
+    }
+
+    /* ================= CANVAS CONFETTI EFFECT ================= */
+    function launchConfetti() {
+      const canvas = document.getElementById('confettiCanvas');
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+      const pieces = [];
+      const colors = ['#f59e0b', '#10b981', '#3b82f6', '#8b5cf6', '#ec4899', '#ef4444'];
+      for (let i = 0; i < 100; i++) {
+        pieces.push({
+          x: Math.random() * canvas.width,
+          y: Math.random() * canvas.height - canvas.height,
+          size: Math.random() * 8 + 4,
+          color: colors[Math.floor(Math.random() * colors.length)],
+          speedY: Math.random() * 3 + 2,
+          speedX: (Math.random() - 0.5) * 2,
+          rotation: Math.random() * 360,
+          rotSpeed: (Math.random() - 0.5) * 8
+        });
+      }
+      let frame = 0;
+      function animate() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        pieces.forEach(p => {
+          p.y += p.speedY;
+          p.x += p.speedX;
+          p.rotation += p.rotSpeed;
+          ctx.save();
+          ctx.translate(p.x, p.y);
+          ctx.rotate((p.rotation * Math.PI) / 180);
+          ctx.fillStyle = p.color;
+          ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size);
+          ctx.restore();
+        });
+        frame++;
+        if (frame < 150) requestAnimationFrame(animate);
+        else ctx.clearRect(0, 0, canvas.width, canvas.height);
+      }
+      animate();
+    }
+
+    /* ================= TAB NAVIGATION LOGIC ================= */
+    function switchTab(tabId) {
+      document.querySelectorAll('main > section').forEach(sec => sec.classList.add('hidden'));
+      document.getElementById('view-' + tabId).classList.remove('hidden');
+
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.className = "tab-btn px-4 py-2 rounded-lg flex items-center space-x-2 text-indigo-200 hover:bg-indigo-700 hover:text-white";
+      });
+      const activeBtn = document.getElementById('tab-' + tabId);
+      if (activeBtn) {
+        activeBtn.className = "tab-btn px-4 py-2 rounded-lg flex items-center space-x-2 bg-indigo-900 text-white shadow-sm font-semibold";
+      }
+
+      if (tabId === 'stats') renderStatsPage();
+      if (tabId === 'vault') renderVaultUI();
+    }
+
+    function switchNotesSubTab(subId) {
+      document.querySelectorAll('#view-notes > div[id^="notes-content-"]').forEach(div => div.classList.add('hidden'));
+      document.getElementById('notes-content-' + subId).classList.remove('hidden');
+
+      document.querySelectorAll('.nsub-btn').forEach(btn => {
+        btn.className = "nsub-btn px-4 py-2 rounded-t-lg font-semibold text-sm text-slate-600 hover:bg-slate-200";
+      });
+      document.getElementById('nsub-' + subId).className = "nsub-btn px-4 py-2 rounded-t-lg font-semibold text-sm bg-indigo-600 text-white";
+    }
+
+    /* ================= QUIZ ARENA ENGINE ================= */
+    function startQuiz(levelNum, customQuestions = null) {
+      quizState.active = true;
+      quizState.level = levelNum;
+      quizState.currentIndex = 0;
+      quizState.score = 0;
+      quizState.correctCount = 0;
+      quizState.multiplier = 1.0;
+      quizState.timerEnabled = document.getElementById('timerToggle').checked;
+      quizState.isVaultRetry = !!customQuestions;
+
+      if (customQuestions) {
+        quizState.questions = customQuestions;
+      } else {
+        quizState.questions = QUESTIONS.filter(q => q.level === levelNum);
+      }
+      quizState.questions.forEach(q => { delete q.shuffledWords; });
+
+      document.getElementById('quiz-level-select').classList.add('hidden');
+      document.getElementById('quiz-summary-box').classList.add('hidden');
+      document.getElementById('quiz-active-box').classList.remove('hidden');
+
+      const levelNames = {
+        1: "Level 1: Identification",
+        2: "Level 2: Answer to Question Match",
+        3: "Level 3: Target Word Reordering"
+      };
+
+      document.getElementById('quizLevelBadge').innerText = customQuestions ? "Vault Practice" : (levelNames[levelNum] || "Level " + levelNum);
+      
+      renderQuestion();
+    }
+
+    function renderQuestion() {
+      clearInterval(quizState.timerInterval);
+      const q = quizState.questions[quizState.currentIndex];
+      const total = quizState.questions.length;
+
+      document.getElementById('quizTitle').innerText = `Question ${quizState.currentIndex + 1} of ${total}`;
+      document.getElementById('quizProgressBar').style.width = `${((quizState.currentIndex) / total) * 100}%`;
+      document.getElementById('quizScoreVal').innerText = quizState.score;
+      document.getElementById('quizMultiplier').innerText = `x${quizState.multiplier.toFixed(1)}`;
+
+      // Context Tag display
+      const tagBox = document.getElementById('questionContextTag');
+      if (q.contextTag) {
+        tagBox.classList.remove('hidden');
+        tagBox.innerText = `Context: ${q.contextTag}`;
+      } else {
+        tagBox.classList.add('hidden');
+      }
+
+      document.getElementById('questionText').innerHTML = q.question;
+      document.getElementById('feedbackCard').classList.add('hidden');
+
+      const mcqBox = document.getElementById('mcqContainer');
+      const reorderBox = document.getElementById('reorderContainer');
+
+      if (q.type === 'reorder') {
+        // Level 2 Word Chips interface
+        mcqBox.classList.add('hidden');
+        reorderBox.classList.remove('hidden');
+
+        // Setup scrambled chips
+        quizState.userReorderWords = [];
+        renderReorderChips(q);
+      } else {
+        // Standard Multiple Choice interface (Levels 1, 3, 4)
+        reorderBox.classList.add('hidden');
+        mcqBox.classList.remove('hidden');
+
+        mcqBox.innerHTML = '';
+        q.options.forEach((opt, idx) => {
+          const btn = document.createElement('button');
+          btn.className = "option-btn w-full p-4 rounded-xl border-2 border-slate-200 bg-white text-left font-semibold text-sm sm:text-base text-slate-700 hover:border-indigo-500 hover:bg-indigo-50/50 transition flex items-center justify-between";
+          btn.onclick = () => handleAnswer(idx);
+          btn.innerHTML = `<span>${opt}</span> <i class="fa-regular fa-circle text-slate-300"></i>`;
+          mcqBox.appendChild(btn);
+        });
+      }
+
+      // Timer setup
+      const timerBox = document.getElementById('quizTimerBox');
+      if (quizState.timerEnabled) {
+        timerBox.classList.remove('hidden');
+        quizState.timerSeconds = 25;
+        document.getElementById('quizTimerVal').innerText = "25s";
+        quizState.timerInterval = setInterval(() => {
+          quizState.timerSeconds--;
+          document.getElementById('quizTimerVal').innerText = `${quizState.timerSeconds}s`;
+          if (quizState.timerSeconds <= 0) {
+            clearInterval(quizState.timerInterval);
+            handleAnswer(-1); // Time out
+          }
+        }, 1000);
+      } else {
+        timerBox.classList.add('hidden');
+      }
+    }
+
+    /* ================= LEVEL 2 WORD CHIPS HANDLERS ================= */
+    function renderReorderChips(q) {
+      const bank = document.getElementById('reorderBank');
+      const workspace = document.getElementById('reorderWorkspace');
+      
+      bank.innerHTML = '';
+      
+      // Shuffle original words array if not already done
+      if (!q.shuffledWords) {
+        q.shuffledWords = [...q.words].sort(() => Math.random() - 0.5);
+      }
+
+      // Render Bank Chips
+      q.shuffledWords.forEach((word, idx) => {
+        const isUsed = quizState.userReorderWords.some(item => item.bankIdx === idx);
+        if (!isUsed) {
+          const chip = document.createElement('button');
+          chip.className = "chip-btn bg-white hover:bg-indigo-50 text-indigo-900 border border-indigo-200 font-bold px-3 py-2 rounded-lg text-sm shadow-sm cursor-pointer";
+          chip.innerText = word;
+          chip.onclick = () => selectWordChip(word, idx);
+          bank.appendChild(chip);
+        }
+      });
+
+      // Render Workspace Chips
+      workspace.innerHTML = '';
+      if (quizState.userReorderWords.length === 0) {
+        const placeholder = document.createElement('span');
+        placeholder.id = 'reorderPlaceholder';
+        placeholder.className = 'text-xs text-slate-400 italic';
+        placeholder.innerText = 'Tap words from below to construct your question...';
+        workspace.appendChild(placeholder);
+      } else {
+        quizState.userReorderWords.forEach((item, wIdx) => {
+          const chip = document.createElement('button');
+          chip.className = "chip-btn bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-3 py-2 rounded-lg text-sm shadow flex items-center space-x-1.5";
+          chip.innerHTML = `<span>${item.word}</span> <i class="fa-solid fa-xmark text-xs opacity-75"></i>`;
+          chip.onclick = () => removeWordChip(wIdx);
+          workspace.appendChild(chip);
+        });
+      }
+
+      document.getElementById('submitReorderBtn').disabled = (quizState.userReorderWords.length === 0);
+    }
+
+    function selectWordChip(word, bankIdx) {
+      quizState.userReorderWords.push({ word, bankIdx });
+      renderReorderChips(quizState.questions[quizState.currentIndex]);
+    }
+
+    function removeWordChip(wIdx) {
+      quizState.userReorderWords.splice(wIdx, 1);
+      renderReorderChips(quizState.questions[quizState.currentIndex]);
+    }
+
+    function resetReorder() {
+      quizState.userReorderWords = [];
+      renderReorderChips(quizState.questions[quizState.currentIndex]);
+    }
+
+    function submitReorderAnswer() {
+      const q = quizState.questions[quizState.currentIndex];
+      const constructedSentence = quizState.userReorderWords.map(w => w.word).join(' ');
+      const isCorrect = (constructedSentence === q.correctSentence);
+
+      handleAnswer(isCorrect ? 1 : 0, constructedSentence);
+    }
+
+    /* ================= GENERAL ANSWER EVALUATION ================= */
+    function handleAnswer(selectedIdx, userStringText = null) {
+      clearInterval(quizState.timerInterval);
+      const q = quizState.questions[quizState.currentIndex];
+      let isCorrect = false;
+
+      if (q.type === 'reorder') {
+        isCorrect = (selectedIdx === 1);
+      } else {
+        isCorrect = (selectedIdx === q.answer);
+      }
+
+      // Disable buttons
+      document.querySelectorAll('.option-btn').forEach(btn => btn.disabled = true);
+      document.querySelectorAll('.chip-btn').forEach(btn => btn.disabled = true);
+      const subBtn = document.getElementById('submitReorderBtn');
+      if (subBtn) subBtn.disabled = true;
+
+      state.totalSolved++;
+
+      if (isCorrect) {
+        playSound('correct');
+        quizState.correctCount++;
+        state.totalCorrect++;
+        state.streak++;
+        if (state.streak > state.bestStreak) state.bestStreak = state.streak;
+
+        // Multiplier scaling
+        if (state.streak >= 5) quizState.multiplier = 2.0;
+        else if (state.streak >= 3) quizState.multiplier = 1.5;
+        else quizState.multiplier = 1.0;
+
+        const baseXP = 10;
+        const earnedXP = Math.round(baseXP * quizState.multiplier);
+        quizState.score += earnedXP;
+        state.xp += earnedXP;
+
+        // Highlight correct options if MCQ
+        if (q.type !== 'reorder' && selectedIdx >= 0) {
+          const buttons = document.querySelectorAll('.option-btn');
+          if (buttons[selectedIdx]) {
+            buttons[selectedIdx].className = "option-btn w-full p-4 rounded-xl border-2 border-emerald-500 bg-emerald-50 text-emerald-900 font-bold text-sm sm:text-base flex items-center justify-between";
+            buttons[selectedIdx].innerHTML = `<span>${q.options[selectedIdx]}</span> <i class="fa-solid fa-circle-check text-emerald-600"></i>`;
+          }
+        }
+
+        if (quizState.isVaultRetry) {
+          state.vault = state.vault.filter(v => v.id !== q.id);
+        }
+
+        if (state.streak >= 5) state.badges.streakFlame = true;
+
+        showFeedback(true, q);
+      } else {
+        playSound('wrong');
+        state.streak = 0;
+        quizState.multiplier = 1.0;
+
+        if (q.type !== 'reorder') {
+          const buttons = document.querySelectorAll('.option-btn');
+          if (selectedIdx >= 0 && buttons[selectedIdx]) {
+            buttons[selectedIdx].className = "option-btn w-full p-4 rounded-xl border-2 border-rose-500 bg-rose-50 text-rose-900 font-bold text-sm sm:text-base flex items-center justify-between";
+            buttons[selectedIdx].innerHTML = `<span>${q.options[selectedIdx]}</span> <i class="fa-solid fa-circle-xmark text-rose-600"></i>`;
+          }
+          if (buttons[q.answer]) {
+            buttons[q.answer].className = "option-btn w-full p-4 rounded-xl border-2 border-emerald-500 bg-emerald-50 text-emerald-900 font-bold text-sm sm:text-base flex items-center justify-between";
+          }
+        }
+
+        // Store into Mistake Vault
+        let wrongTxt = "";
+        if (q.type === 'reorder') wrongTxt = userStringText || "Incomplete Sentence";
+        else wrongTxt = selectedIdx >= 0 ? q.options[selectedIdx] : "Time Out";
+
+        if (!state.vault.some(v => v.id === q.id)) {
+          state.vault.push({
+            ...q,
+            userWrongAnswer: wrongTxt
+          });
+        }
+
+        showFeedback(false, q);
+      }
+
+      checkLevelUp();
+      saveState();
+      updateHeaderUI();
+      renderVaultUI();
+    }
+
+    function showFeedback(isCorrect, q) {
+      const card = document.getElementById('feedbackCard');
+      card.classList.remove('hidden');
+
+      if (isCorrect) {
+        card.className = "rounded-xl p-5 border border-emerald-200 bg-emerald-50/60 space-y-3";
+        document.getElementById('feedbackTitle').className = "font-extrabold text-sm text-emerald-800 flex items-center space-x-2";
+        document.getElementById('feedbackTitle').innerHTML = `<i class="fa-solid fa-circle-check"></i><span>Excellent! Correct Answer</span>`;
+      } else {
+        card.className = "rounded-xl p-5 border border-rose-200 bg-rose-50/60 space-y-3";
+        document.getElementById('feedbackTitle').className = "font-extrabold text-sm text-rose-800 flex items-center space-x-2";
+        document.getElementById('feedbackTitle').innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i><span>Incorrect</span>`;
+      }
+
+      document.getElementById('feedbackFormula').innerText = q.formula;
+      
+      let explainHTML = `<strong>Teacher Tip:</strong> ${q.explanation}`;
+      if (q.type === 'reorder') {
+        explainHTML += `<br><span class='mt-1 block font-bold text-indigo-900'>Correct Order: "${q.correctSentence}"</span>`;
+      }
+      document.getElementById('feedbackText').innerHTML = explainHTML;
+    }
+
+    function nextQuestion() {
+      quizState.currentIndex++;
+      if (quizState.currentIndex < quizState.questions.length) {
+        renderQuestion();
+      } else {
+        finishQuiz();
+      }
+    }
+
+    function finishQuiz() {
+      quizState.active = false;
+      document.getElementById('quiz-active-box').classList.add('hidden');
+      document.getElementById('quiz-summary-box').classList.remove('hidden');
+
+      const total = quizState.questions.length;
+      const acc = Math.round((quizState.correctCount / total) * 100);
+
+      document.getElementById('summaryCorrect').innerText = `${quizState.correctCount}/${total}`;
+      document.getElementById('summaryXP').innerText = `+${quizState.score} XP`;
+      document.getElementById('summaryAccuracy').innerText = `${acc}%`;
+
+      // Badge Unlocks
+      if (state.totalSolved >= 1) state.badges.firstStep = true;
+      if (quizState.level === 1 && acc >= 70) state.badges.detective = true;
+      if (quizState.level === 2 && acc >= 70) state.badges.structureKing = true;
+      if (quizState.level === 3 && acc >= 70) state.badges.subObjMaster = true;
+
+      if (acc >= 70) {
+        playSound('victory');
+        launchConfetti();
+      }
+
+      saveState();
+      updateHeaderUI();
+    }
+
+    function exitQuiz() {
+      clearInterval(quizState.timerInterval);
+      document.getElementById('quiz-active-box').classList.add('hidden');
+      document.getElementById('quiz-summary-box').classList.add('hidden');
+      document.getElementById('quiz-level-select').classList.remove('hidden');
+    }
+
+    function restartLevel() {
+      startQuiz(quizState.level, quizState.isVaultRetry ? quizState.questions : null);
+    }
+
+    /* ================= LEVEL & XP LOGIC ================= */
+    function checkLevelUp() {
+      const requiredXP = state.level * 100;
+      if (state.xp >= requiredXP) {
+        state.level++;
+        playSound('victory');
+      }
+    }
+
+    function updateHeaderUI() {
+      document.getElementById('headerStreak').innerText = state.streak;
+      document.getElementById('headerLevelNum').innerText = state.level;
+      document.getElementById('headerXP').innerText = `${state.xp} XP`;
+
+      const vaultBadge = document.getElementById('vaultBadge');
+      if (state.vault.length > 0) {
+        vaultBadge.classList.remove('hidden');
+        vaultBadge.innerText = state.vault.length;
+      } else {
+        vaultBadge.classList.add('hidden');
+      }
+    }
+
+    /* ================= MISTAKE VAULT RENDERER ================= */
+    function renderVaultUI() {
+      const container = document.getElementById('vaultList');
+      const retryBtn = document.getElementById('retryMistakesBtn');
+      container.innerHTML = '';
+
+      if (state.vault.length === 0) {
+        retryBtn.disabled = true;
+        container.innerHTML = `
+          <div class="bg-white p-8 rounded-2xl border border-slate-200 text-center space-y-3">
+            <div class="text-4xl">🎉</div>
+            <h4 class="font-bold text-slate-800 text-base">Your Mistake Vault is Empty!</h4>
+            <p class="text-xs text-slate-500">You have no recorded mistakes. Complete exercises in the Quiz Arena to test your skills.</p>
+          </div>
+        `;
+        return;
+      }
+
+      retryBtn.disabled = false;
+      state.vault.forEach((item, idx) => {
+        const card = document.createElement('div');
+        card.className = "bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-3";
+        
+        let correctDisplay = "";
+        if (item.type === 'reorder') correctDisplay = item.correctSentence;
+        else correctDisplay = item.options[item.answer];
+
+        card.innerHTML = `
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold px-2.5 py-0.5 bg-rose-50 text-rose-700 rounded-md">Mistake #${idx + 1}</span>
+            <span class="text-xs font-mono font-semibold bg-slate-100 px-2.5 py-0.5 rounded text-slate-600">${item.formula}</span>
+          </div>
+          <p class="text-sm font-bold text-slate-800">${item.question}</p>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+            <div class="p-2.5 bg-rose-50 text-rose-800 rounded-lg border border-rose-100">
+              <span class="font-bold">Your Choice:</span> ${item.userWrongAnswer} ❌
+            </div>
+            <div class="p-2.5 bg-emerald-50 text-emerald-800 rounded-lg border border-emerald-100">
+              <span class="font-bold">Correct Choice:</span> ${correctDisplay} ✓
+            </div>
+          </div>
+          <p class="text-xs text-slate-600 bg-slate-50 p-3 rounded-lg border border-slate-100">
+            <strong>HK Teacher Tip:</strong> ${item.explanation}
+          </p>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    function retryMistakes() {
+      if (state.vault.length === 0) return;
+      switchTab('quiz');
+      startQuiz(0, [...state.vault]);
+    }
+
+    function clearVault() {
+      state.vault = [];
+      saveState();
+      renderVaultUI();
+      updateHeaderUI();
+    }
+
+    /* ================= BADGES & STATS PAGE ================= */
+    function renderStatsPage() {
+      document.getElementById('statsLevelNum').innerText = state.level;
+      const currentLevelXP = state.xp % 100;
+      document.getElementById('statsXPText').innerText = `${currentLevelXP} / 100 XP`;
+      document.getElementById('statsXPBar').style.width = `${(currentLevelXP / 100) * 100}%`;
+
+      document.getElementById('metricTotalSolved').innerText = state.totalSolved;
+      const acc = state.totalSolved > 0 ? Math.round((state.totalCorrect / state.totalSolved) * 100) : 0;
+      document.getElementById('metricAccuracy').innerText = `${acc}%`;
+      document.getElementById('metricBestStreak').innerText = `${state.bestStreak} 🔥`;
+      document.getElementById('metricVaultCount').innerText = state.vault.length;
+
+      renderBadges();
+    }
+
+    function renderBadges() {
+      const grid = document.getElementById('badgesGrid');
+      grid.innerHTML = '';
+
+      const badgeList = [
+        { key: 'firstStep', title: 'First Step', desc: 'Answer 1 question correctly', icon: '🎓' },
+        { key: 'detective', title: 'Wh-Detective', desc: 'Pass Level 1 Word Identification', icon: '🔍' },
+        { key: 'structureKing', title: 'Answer Matcher', desc: 'Pass Level 2 Answer to Question Match', icon: '🧩' },
+        { key: 'subObjMaster', title: 'Word Reorderer', desc: 'Pass Level 3 Reorder Underlined Target', icon: '🎯' },
+        { key: 'streakFlame', title: 'Streak Flame', desc: 'Reach a 5-question streak', icon: '🔥' }
+      ];
+
+      badgeList.forEach(b => {
+        const unlocked = state.badges[b.key];
+        const card = document.createElement('div');
+        card.className = unlocked 
+          ? "bg-indigo-50 border-2 border-indigo-300 p-4 rounded-xl text-center shadow-sm badge-glow space-y-2"
+          : "bg-slate-100 border-2 border-slate-200 p-4 rounded-xl text-center opacity-60 space-y-2";
+
+        card.innerHTML = `
+          <div class="text-3xl">${b.icon}</div>
+          <h4 class="font-bold text-xs sm:text-sm text-slate-800">${b.title}</h4>
+          <p class="text-[10px] text-slate-500 leading-tight">${b.desc}</p>
+          <span class="inline-block text-[9px] font-bold px-2 py-0.5 rounded ${unlocked ? 'bg-indigo-600 text-white' : 'bg-slate-300 text-slate-600'}">
+            ${unlocked ? 'UNLOCKED' : 'LOCKED'}
+          </span>
+        `;
+        grid.appendChild(card);
+      });
+    }
+  </script>
+</body>
+</html>
