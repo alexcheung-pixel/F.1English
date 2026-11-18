@@ -1,0 +1,1845 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Grammar Quest: Tenses &amp; Wh-Questions</title>
+  <!-- Tailwind CSS for responsive layout and utility styling -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Tone.js for synthesized sound effects without external audio URLs -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+  <!-- Google Fonts: Fredoka for friendly game headers, Inter for crisp dialogue readability -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            display: ['Fredoka', 'sans-serif'],
+            sans: ['Inter', 'sans-serif'],
+          },
+          animation: {
+            'bounce-short': 'bounceShort 0.5s ease-in-out',
+            'shake': 'shake 0.4s cubic-bezier(.36,.07,.19,.97) both',
+            'pop-in': 'popIn 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards',
+          },
+          keyframes: {
+            bounceShort: {
+              '0%, 100%': { transform: 'translateY(0)' },
+              '50%': { transform: 'translateY(-6px)' },
+            },
+            shake: {
+              '10%, 90%': { transform: 'translateX(-2px)' },
+              '20%, 80%': { transform: 'translateX(4px)' },
+              '30%, 50%, 70%': { transform: 'translateX(-6px)' },
+              '40%, 60%': { transform: 'translateX(6px)' },
+            },
+            popIn: {
+              '0%': { opacity: '0', transform: 'scale(0.85)' },
+              '100%': { opacity: '1', transform: 'scale(1)' },
+            }
+          }
+        }
+      }
+    };
+  </script>
+
+  <style>
+    /* Custom tactile button depth and smooth scrollbars */
+    body {
+      background-color: #f4f7fb;
+      color: #1e293b;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .btn-3d {
+      transition: transform 0.1s ease, box-shadow 0.1s ease, background-color 0.15s ease;
+    }
+    .btn-3d:active:not(:disabled) {
+      transform: translateY(3px);
+      border-bottom-width: 1px;
+    }
+    .chat-scroll::-webkit-scrollbar {
+      width: 6px;
+    }
+    .chat-scroll::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    .chat-scroll::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 9999px;
+    }
+    .confetti-piece {
+      position: fixed;
+      width: 10px;
+      height: 10px;
+      top: -12px;
+      z-index: 9999;
+      pointer-events: none;
+      animation: fall linear forwards;
+    }
+    @keyframes fall {
+      to {
+        transform: translateY(105vh) rotate(720deg);
+        opacity: 0;
+      }
+    }
+  </style>
+</head>
+<body class="font-sans antialiased min-h-screen flex flex-col overflow-x-hidden selection:bg-indigo-200 selection:text-indigo-900">
+
+  <!-- Top Gamification HUD Header -->
+  <header class="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200 shadow-sm">
+    <div class="max-w-5xl mx-auto px-3 sm:px-6 h-16 flex items-center justify-between gap-2">
+      <!-- Brand / Home Button -->
+      <button onclick="goHome()" class="flex items-center gap-2.5 text-left group focus:outline-none">
+        <div class="w-10 h-10 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 text-white flex items-center justify-center shadow-md group-hover:scale-105 transition-transform">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+          </svg>
+        </div>
+        <div>
+          <h1 class="font-display font-bold text-lg sm:text-xl leading-none text-slate-800">Grammar Quest</h1>
+          <span class="text-[11px] font-semibold uppercase tracking-wider text-indigo-600">Tenses &amp; Wh-Questions</span>
+        </div>
+      </button>
+
+      <!-- Player Stats Bar (Level, XP, Streak, Badges, Audio) -->
+      <div class="flex items-center gap-1.5 sm:gap-3">
+        <!-- Level & XP Pill -->
+        <div class="flex items-center gap-2 bg-slate-100 border border-slate-200 px-2.5 sm:px-3 py-1.5 rounded-2xl">
+          <span id="hud-level" class="px-2 py-0.5 text-xs font-display font-bold bg-indigo-600 text-white rounded-lg">Lv.1</span>
+          <div class="hidden sm:flex flex-col w-20">
+            <div class="flex justify-between text-[10px] font-bold text-slate-600">
+              <span>XP</span>
+              <span id="hud-xp-text">0 / 100</span>
+            </div>
+            <div class="w-full h-1.5 bg-slate-200 rounded-full overflow-hidden mt-0.5">
+              <div id="hud-xp-bar" class="h-full bg-indigo-500 rounded-full transition-all duration-300" style="width: 0%"></div>
+            </div>
+          </div>
+          <span id="hud-xp-mobile" class="sm:hidden text-xs font-bold text-slate-700">0 XP</span>
+        </div>
+
+        <!-- Streak Counter -->
+        <div id="hud-streak-box" class="flex items-center gap-1 bg-amber-50 border border-amber-200 text-amber-700 px-2.5 py-1.5 rounded-2xl font-display font-bold text-sm">
+          <span>🔥</span>
+          <span id="hud-streak">0</span>
+        </div>
+
+        <!-- Trophies / Badges Button -->
+        <button onclick="openTrophyModal()" class="p-2 sm:px-3 sm:py-1.5 rounded-2xl bg-purple-50 hover:bg-purple-100 border border-purple-200 text-purple-700 flex items-center gap-1.5 font-semibold text-xs sm:text-sm transition-colors" title="View Trophies">
+          <span>🏆</span>
+          <span class="hidden md:inline">Trophies</span>
+          <span id="hud-badge-count" class="bg-purple-600 text-white text-[11px] font-bold px-1.5 py-0.2 rounded-full">0/6</span>
+        </button>
+
+        <!-- Sound Toggle -->
+        <button id="sound-toggle-btn" onclick="toggleSound()" class="p-2 rounded-2xl bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-700 transition-colors" title="Toggle Sound">
+          <span id="sound-icon">🔊</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content Container -->
+  <main id="app-main" class="flex-1 max-w-5xl w-full mx-auto px-3 sm:px-6 py-6">
+    <!-- Views are dynamically rendered here -->
+  </main>
+
+  <!-- Trophies & Achievements Modal -->
+  <div id="trophy-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4">
+    <div class="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-slate-100 animate-pop-in">
+      <div class="flex items-center justify-between mb-4">
+        <div class="flex items-center gap-2.5">
+          <span class="text-3xl">🏆</span>
+          <div>
+            <h2 class="font-display font-bold text-xl text-slate-800">Quest Trophies</h2>
+            <p class="text-xs text-slate-500">Complete missions &amp; build streaks to unlock badges!</p>
+          </div>
+        </div>
+        <button onclick="closeTrophyModal()" class="w-9 h-9 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-600 font-bold">✕</button>
+      </div>
+      <div id="trophy-grid" class="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[60vh] overflow-y-auto pr-1">
+        <!-- Populated dynamically -->
+      </div>
+      <div class="mt-5 flex justify-end">
+        <button onclick="closeTrophyModal()" class="btn-3d px-5 py-2.5 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-display font-semibold border-b-4 border-indigo-800">
+          Back to Quest
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Mission Complete Modal -->
+  <div id="complete-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4">
+    <div class="bg-white rounded-3xl max-w-md w-full p-6 sm:p-8 text-center shadow-2xl border border-slate-100 animate-pop-in">
+      <div id="complete-stars" class="flex justify-center gap-2 text-4xl sm:text-5xl mb-3">
+        ⭐⭐⭐
+      </div>
+      <h2 id="complete-title" class="font-display font-bold text-2xl sm:text-3xl text-slate-800 mb-1">Mission Complete!</h2>
+      <p id="complete-subtitle" class="text-sm text-slate-500 mb-5">Awesome grammar skills!</p>
+
+      <div class="grid grid-cols-3 gap-2 bg-slate-50 p-3.5 rounded-2xl border border-slate-200 mb-5">
+        <div>
+          <div class="text-[11px] font-bold uppercase text-slate-400">Score</div>
+          <div id="complete-score" class="font-display font-bold text-lg text-slate-800">17/17</div>
+        </div>
+        <div class="border-x border-slate-200">
+          <div class="text-[11px] font-bold uppercase text-slate-400">Accuracy</div>
+          <div id="complete-accuracy" class="font-display font-bold text-lg text-emerald-600">100%</div>
+        </div>
+        <div>
+          <div class="text-[11px] font-bold uppercase text-slate-400">XP Earned</div>
+          <div id="complete-xp" class="font-display font-bold text-lg text-indigo-600">+180</div>
+        </div>
+      </div>
+
+      <div id="complete-badge-unlock" class="hidden mb-5 p-3 rounded-2xl bg-amber-50 border border-amber-200 text-amber-800 text-sm font-semibold">
+        <!-- Badge unlock message -->
+      </div>
+
+      <div class="flex flex-col sm:flex-row gap-2.5">
+        <button onclick="retryCurrentMission()" class="btn-3d flex-1 py-3 px-4 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-display font-semibold border-b-4 border-slate-300">
+          Play Again
+        </button>
+        <button onclick="closeCompleteModalAndGoHome()" class="btn-3d flex-1 py-3 px-4 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-display font-semibold border-b-4 border-indigo-800">
+          Next Mission →
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification -->
+  <div id="toast-banner" class="fixed top-20 left-1/2 -translate-x-1/2 z-50 pointer-events-none opacity-0 transition-all duration-300">
+    <div id="toast-content" class="px-4 py-2.5 rounded-2xl shadow-lg font-semibold text-sm flex items-center gap-2 bg-slate-800 text-white">
+      <span>✨</span>
+      <span id="toast-text">Notification</span>
+    </div>
+  </div>
+
+  <script>
+    /* =========================================================================
+       1. CURRICULUM & EXERCISE DATA
+       Includes:
+       - World 1 (Original PDF Worksheet): Green Valley Zoo & Lucy's Pet Lucky
+       - World 2 (Generated - Topic: School): Sunnyvale Open Day & School Clubs
+       - World 3 (Generated - Topic: Pet): Paws & Whiskers Clinic & Pet Hamster
+       ========================================================================= */
+    const MISSIONS = [
+      // ----------------- WORLD 1: ORIGINAL WORKSHEET -----------------
+      {
+        id: 'w1-tenses',
+        world: 'World 1 · Original Worksheet',
+        topic: 'Zoo & Animals',
+        type: 'tenses',
+        badgeId: 'zoo-ranger',
+        title: 'Green Valley Zoo Tour',
+        subtitle: 'Mixed Tenses & "There is / There are" (17 Questions)',
+        icon: '🐼',
+        themeColor: 'emerald',
+        instructions: 'Choose the correct verb tense (Simple Present, Present Continuous, Simple Past, Simple Future) or "there is / there are" form for each blank.',
+        characters: {
+          A: { name: 'Jerry (Zoo Guide)', avatar: '🧑‍🌾', align: 'left', bubbleBg: 'bg-emerald-50 border-emerald-200' },
+          B: { name: 'Tom (Visitor)', avatar: '🧑', align: 'right', bubbleBg: 'bg-white border-slate-200' }
+        },
+        dialogue: [
+          {
+            speaker: 'A',
+            segments: [
+              { text: 'Welcome to Green Valley Zoo! ' },
+              { blankId: 1 },
+              { text: ' our zoo for the first time? ' },
+              { blankId: 2 },
+              { text: ' any particular animals you would like to see today?' }
+            ]
+          },
+          {
+            speaker: 'B',
+            segments: [
+              { text: 'Yes! I’m interested in red pandas. What ' },
+              { example: 'are they eating' },
+              { text: ' (they / eat)? I can see that some keepers are preparing food over there.' }
+            ]
+          },
+          {
+            speaker: 'A',
+            segments: [
+              { text: 'Good observation! Our red pandas ' },
+              { blankId: 3 },
+              { text: ' eating bamboo now. Last year, we rescued several injured animals and ' },
+              { blankId: 4 },
+              { text: ' them here for treatment. Our keepers ' },
+              { blankId: 5 },
+              { text: ' good care of them every day. Although there are many animals here, ' },
+              { blankId: 6 },
+              { text: ' any lions or tigers in our zoo because we focus on smaller animals that need special care.' }
+            ]
+          },
+          {
+            speaker: 'B',
+            segments: [
+              { text: 'I see! I also heard that your zoo holds educational activities for children regularly. ' },
+              { blankId: 7 },
+              { text: ' any special events for children last month?' }
+            ]
+          },
+          {
+            speaker: 'A',
+            segments: [
+              { text: 'Yes! We ' },
+              { blankId: 8 },
+              { text: ' an animal-care workshop at a local primary school. The children enjoyed learning about wildlife. We ' },
+              { blankId: 9 },
+              { text: ' another workshop next month, as we have already planned everything. As you can see, our helpful staff members ' },
+              { blankId: 10 },
+              { text: ' materials for the workshop.' }
+            ]
+          },
+          {
+            speaker: 'B',
+            segments: [
+              { text: 'Good to know! I’d love to join the workshop. I think I ' },
+              { blankId: 11 },
+              { text: ' for it when I get home. By the way, ' },
+              { blankId: 12 },
+              { text: ' any special rule to follow when visiting the animals?' }
+            ]
+          },
+          {
+            speaker: 'A',
+            segments: [
+              { text: 'Yes, visitors ' },
+              { blankId: 13 },
+              { text: ' to follow some rules when interacting with the animals. We also ask everyone to keep their voices down. ' },
+              { blankId: 14 },
+              { text: ' signs around the zoo explaining these rules.' }
+            ]
+          },
+          {
+            speaker: 'B',
+            segments: [
+              { text: 'I’ll make sure I follow the rules! I’m going to take plenty of photos today. I think I ' },
+              { blankId: 15 },
+              { text: ' a blog post about my experience after returning home. Could you tell me the best place to see the red pandas? Oh, ' },
+              { blankId: 16 },
+              { text: ' a map of the zoo that I can take with me? If yes, I ' },
+              { blankId: 17 },
+              { text: ' one for my friend as well!' }
+            ]
+          }
+        ],
+        questions: {
+          1: { prompt: '(you / visit)', answer: 'Are you visiting', options: ['Are you visiting', 'Did you visit', 'Will you visit', 'Do you visited'], tip: 'Tom is arriving at the zoo right now, so use Present Continuous: "Are you visiting".' },
+          2: { prompt: '(there is / there are)', answer: 'Are there', options: ['Are there', 'Is there', 'There are', 'There is'], tip: '"Any particular animals" is plural and in a question, so use "Are there".' },
+          3: { prompt: '(enjoy)', answer: 'are enjoying', options: ['are enjoying', 'enjoy', 'enjoyed', 'will enjoy'], tip: 'The time word "now" signals Present Continuous: "are enjoying".' },
+          4: { prompt: '(bring)', answer: 'brought', options: ['brought', 'bring', 'are bringing', 'will bring'], tip: '"Last year" + "rescued" signals Simple Past Tense: "brought".' },
+          5: { prompt: '(take)', answer: 'take', options: ['take', 'are taking', 'took', 'will take'], tip: '"Every day" describes a daily routine, so use Simple Present: "take".' },
+          6: { prompt: '(there is / there are + negative)', answer: 'there are not', options: ['there are not', 'there is not', 'are there', 'there are'], tip: '"Any lions or tigers" is plural and negative ("because we focus on smaller animals"): "there are not".' },
+          7: { prompt: '(you / organise)', answer: 'Did you organise', options: ['Did you organise', 'Do you organise', 'Are you organising', 'Will you organise'], tip: '"Last month" indicates a finished past time, so form a Simple Past question: "Did you organise".' },
+          8: { prompt: '(have)', answer: 'had', options: ['had', 'have', 'are having', 'will have'], tip: 'Answering about last month’s workshop uses Simple Past: "had".' },
+          9: { prompt: '(organise)', answer: 'will organise', options: ['will organise', 'organised', 'organise', 'are organised'], tip: '"Next month" points to a future plan, so use Simple Future: "will organise".' },
+          10: { prompt: '(prepare)', answer: 'are preparing', options: ['are preparing', 'prepare', 'prepared', 'will prepare'], tip: '"As you can see" shows an action happening right now: "are preparing".' },
+          11: { prompt: '(sign up)', answer: 'will sign up', options: ['will sign up', 'signed up', 'am signing up', 'sign up'], tip: '"I think I... when I get home" expresses a future intention: "will sign up".' },
+          12: { prompt: '(there is / there are)', answer: 'is there', options: ['is there', 'are there', 'there is', 'there are'], tip: '"Any special rule" is singular and in a question, so use "is there".' },
+          13: { prompt: '(need)', answer: 'need', options: ['need', 'are needing', 'needed', 'will need'], tip: 'Zoo rules are general facts, so use Simple Present: "need".' },
+          14: { prompt: '(there is / there are)', answer: 'There are', options: ['There are', 'There is', 'Are there', 'Is there'], tip: '"Signs" is plural in a positive statement, so use "There are".' },
+          15: { prompt: '(write)', answer: 'will write', options: ['will write', 'wrote', 'am writing', 'write'], tip: '"I think I... after returning home" is a future plan: "will write".' },
+          16: { prompt: '(there is / there are)', answer: 'is there', options: ['is there', 'are there', 'there is', 'there are'], tip: '"A map" is singular and in a question, so use "is there".' },
+          17: { prompt: '(take)', answer: 'will take', options: ['will take', 'took', 'am taking', 'take'], tip: 'In an "If yes..." future result clause, use Simple Future: "will take".' }
+        }
+      },
+      {
+        id: 'w1-wh',
+        world: 'World 1 · Original Worksheet',
+        topic: 'Pet (Golden Retriever)',
+        type: 'wh',
+        badgeId: 'lucky-friend',
+        title: 'Chatting About Lucky',
+        subtitle: 'Wh-Questions Word Order Challenge (8 Questions)',
+        icon: '🐕',
+        themeColor: 'amber',
+        instructions: 'Tap the scrambled word tiles in the correct order to form each Wh-question for Lucy!',
+        characters: {
+          A: { name: 'You', avatar: '🙋', align: 'right', bubbleBg: 'bg-amber-50 border-amber-200' },
+          B: { name: 'Lucy', avatar: '👧', align: 'left', bubbleBg: 'bg-white border-slate-200' }
+        },
+        items: [
+          {
+            id: 1,
+            leadIn: 'Hey, Lucy! I heard that you have a new pet.',
+            words: ['What', 'pet', 'have', 'you', 'got?'],
+            reply: "I've got a golden retriever called Lucky. He's very playful and friendly!",
+            tip: 'Use "What + noun (pet) + have + subject + got?" to ask about the type of pet.'
+          },
+          {
+            id: 2,
+            leadIn: 'Tell me about his personality!',
+            suffixText: ', big dogs or small dogs?',
+            words: ['Which', 'type', 'of', 'dog', 'does', 'Lucky', 'get', 'along', 'with', 'best'],
+            reply: 'He gets along better with small dogs because they are usually less frightening to him.',
+            tip: 'Use "Which" when choosing between specific options (big dogs or small dogs).'
+          },
+          {
+            id: 3,
+            leadIn: "That's true! By the way,",
+            words: ['Why', 'did', 'you', 'name', 'him', '"Lucky"?'],
+            reply: 'We named him "Lucky" because we hoped he’d bring good luck to our family.',
+            tip: 'Lucy’s answer starts with "because...", so ask with "Why + did + subject + base verb".'
+          },
+          {
+            id: 4,
+            leadIn: 'I see!',
+            words: ['When', 'did', 'you', 'bring', 'him', 'home?'],
+            reply: 'We brought him home last December.',
+            tip: '"Last December" is a time expression, so use "When + did + you + bring...".'
+          },
+          {
+            id: 5,
+            leadIn: "That's so sweet! Adopting a pet is a big decision for a family.",
+            words: ['Whose', 'idea', 'was', 'it', 'to', 'adopt', 'Lucky?'],
+            reply: "It was my dad's idea to adopt Lucky. He wanted to give an abandoned dog a loving home.",
+            tip: '"My dad\'s idea" shows possession, so start with "Whose idea was it...".'
+          },
+          {
+            id: 6,
+            leadIn: "That's very kind of him!",
+            words: ['Where', 'was', 'the', 'animal', 'shelter?'],
+            reply: 'Admiralty.',
+            tip: '"Admiralty" is a place, so ask with "Where + was + the animal shelter?".'
+          },
+          {
+            id: 7,
+            leadIn: "That's convenient! I imagine everyone in your family has a role in looking after Lucky. So,",
+            words: ['Who', 'is', 'responsible', 'for', 'cleaning', 'his', 'sleeping', 'area?'],
+            reply: 'My younger sister is responsible for cleaning his sleeping area every day. She loves helping us take care of Lucky.',
+            tip: 'When "Who" asks about the subject ("My younger sister"), do not add "do/does"—use "Who is responsible...".'
+          },
+          {
+            id: 8,
+            leadIn: "That's very thoughtful of her!",
+            words: ['How', 'does', 'she', 'clean', 'his', 'sleeping', 'area?'],
+            reply: 'She cleans his sleeping area by using a pet-safe cleaning spray and a clean cloth.',
+            tip: '"By using a pet-safe cleaning spray..." explains the method, so ask with "How + does + she + clean...".'
+          }
+        ]
+      },
+
+      // ----------------- WORLD 2: GENERATED - SCHOOL -----------------
+      {
+        id: 'w2-tenses',
+        world: 'World 2 · Topic: School',
+        topic: 'School Open Day',
+        type: 'tenses',
+        badgeId: 'school-scholar',
+        title: 'Sunnyvale School Open Day',
+        subtitle: 'Mixed Tenses & "There is / There are" (12 Questions)',
+        icon: '🏫',
+        themeColor: 'indigo',
+        instructions: 'Practice mixed tenses and "there is / there are" during a tour of Sunnyvale Secondary School!',
+        characters: {
+          A: { name: 'Miss Chan (Ambassador)', avatar: '👩‍🏫', align: 'left', bubbleBg: 'bg-indigo-50 border-indigo-200' },
+          B: { name: 'Leo (P6 Visitor)', avatar: '🎒', align: 'right', bubbleBg: 'bg-white border-slate-200' }
+        },
+        dialogue: [
+          {
+            speaker: 'A',
+            segments: [
+              { text: 'Welcome to Sunnyvale Secondary School! ' },
+              { blankId: 1 },
+              { text: ' our Open Day so far?' }
+            ]
+          },
+          {
+            speaker: 'B',
+            segments: [
+              { text: 'Yes, it’s amazing! ' },
+              { blankId: 2 },
+              { text: ' any science experiments in the laboratory right now?' }
+            ]
+          },
+          {
+            speaker: 'A',
+            segments: [
+              { text: 'Yes! Look through the window—our Form 1 students ' },
+              { blankId: 3 },
+              { text: ' a mini volcano model at the moment.' }
+            ]
+          },
+          {
+            speaker: 'B',
+            segments: [
+              { text: 'Cool! Did your school build this science wing recently?' }
+            ]
+          },
+          {
+            speaker: 'A',
+            segments: [
+              { text: 'Yes, we ' },
+              { blankId: 4 },
+              { text: ' this new wing two years ago. Every morning, students ' },
+              { blankId: 5 },
+              { text: ' the smart tablets here for their lessons.' }
+            ]
+          },
+          {
+            speaker: 'B',
+            segments: [
+              { text: 'That sounds very modern! ' },
+              { blankId: 6 },
+              { text: ' a swimming pool on the campus?' }
+            ]
+          },
+          {
+            speaker: 'A',
+            segments: [
+              { text: 'Sadly, ' },
+              { blankId: 7 },
+              { text: ' a swimming pool here because our campus is in the city centre, but we have a huge indoor sports hall!' }
+            ]
+          },
+          {
+            speaker: 'B',
+            segments: [
+              { text: 'What about school clubs? ' },
+              { blankId: 8 },
+              { text: ' a play last term?' }
+            ]
+          },
+          {
+            speaker: 'A',
+            segments: [
+              { text: 'Yes! They ' },
+              { blankId: 9 },
+              { text: ' first prize in the inter-school drama competition! Next month, the Robotics Club ' },
+              { blankId: 10 },
+              { text: ' a national contest in Kowloon.' }
+            ]
+          },
+          {
+            speaker: 'B',
+            segments: [
+              { text: 'I love building robots! ' },
+              { blankId: 11 },
+              { text: ' brochures about the Robotics Club at the entrance?' }
+            ]
+          },
+          {
+            speaker: 'A',
+            segments: [
+              { text: 'Yes, right by the main gate. If you apply to our school, I ' },
+              { blankId: 12 },
+              { text: ' you around the robotics workshop next time!' }
+            ]
+          }
+        ],
+        questions: {
+          1: { prompt: '(you / enjoy)', answer: 'Are you enjoying', options: ['Are you enjoying', 'Do you enjoy', 'Did you enjoy', 'Will you enjoy'], tip: '"So far" during an ongoing visit uses Present Continuous: "Are you enjoying".' },
+          2: { prompt: '(there is / there are)', answer: 'Are there', options: ['Are there', 'Is there', 'There are', 'There is'], tip: '"Any science experiments" is plural and in a question: "Are there".' },
+          3: { prompt: '(test)', answer: 'are testing', options: ['are testing', 'test', 'tested', 'will test'], tip: '"At the moment" signals Present Continuous: "are testing".' },
+          4: { prompt: '(open)', answer: 'opened', options: ['opened', 'open', 'are opening', 'will open'], tip: '"Two years ago" is a finished past time, so use Simple Past: "opened".' },
+          5: { prompt: '(use)', answer: 'use', options: ['use', 'are using', 'used', 'will use'], tip: '"Every morning" describes a regular school habit: Simple Present "use".' },
+          6: { prompt: '(there is / there are)', answer: 'Is there', options: ['Is there', 'Are there', 'There is', 'There are'], tip: '"A swimming pool" is singular and in a question: "Is there".' },
+          7: { prompt: '(there is / there are + negative)', answer: 'there is not', options: ['there is not', 'there are not', 'is there', 'there is'], tip: '"A swimming pool" is singular and negative ("Sadly..."): "there is not".' },
+          8: { prompt: '(the Drama Club / perform)', answer: 'Did the Drama Club perform', options: ['Did the Drama Club perform', 'Does the Drama Club perform', 'Is the Drama Club performing', 'Will the Drama Club perform'], tip: '"Last term" requires Simple Past question form: "Did the Drama Club perform".' },
+          9: { prompt: '(win)', answer: 'won', options: ['won', 'win', 'are winning', 'will win'], tip: 'Talking about last term’s competition uses Simple Past: "won".' },
+          10: { prompt: '(join)', answer: 'will join', options: ['will join', 'joined', 'joins', 'is joining'], tip: '"Next month" refers to the future, so use Simple Future: "will join".' },
+          11: { prompt: '(there is / there are)', answer: 'Are there', options: ['Are there', 'Is there', 'There are', 'There is'], tip: '"Brochures" is plural in a question: "Are there".' },
+          12: { prompt: '(show)', answer: 'will show', options: ['will show', 'showed', 'am showing', 'show'], tip: 'A promise about "next time" uses Simple Future: "will show".' }
+        }
+      },
+      {
+        id: 'w2-wh',
+        world: 'World 2 · Topic: School',
+        topic: 'School Life & Clubs',
+        type: 'wh',
+        badgeId: 'campus-reporter',
+        title: 'Campus Life Interview',
+        subtitle: 'Wh-Questions Word Order Challenge (8 Questions)',
+        icon: '📚',
+        themeColor: 'sky',
+        instructions: 'Unscramble the words to ask Chloe about her secondary school subjects, clubs, and daily routine!',
+        characters: {
+          A: { name: 'You', avatar: '🙋', align: 'right', bubbleBg: 'bg-sky-50 border-sky-200' },
+          B: { name: 'Chloe (F.1 Student)', avatar: '🧑‍🎓', align: 'left', bubbleBg: 'bg-white border-slate-200' }
+        },
+        items: [
+          {
+            id: 1,
+            leadIn: 'Hi Chloe! You look excited today.',
+            words: ['What', 'subject', 'do', 'you', 'have', 'next?'],
+            reply: 'We have Computer Literacy next! We are learning how to code mini games.',
+            tip: 'Use "What + noun (subject) + do + you + base verb" to ask about the lesson.'
+          },
+          {
+            id: 2,
+            leadIn: 'Awesome!',
+            words: ['Which', 'club', 'did', 'you', 'join', 'this', 'year?'],
+            reply: 'I joined the Choir instead of the Art Club because I love singing.',
+            tip: 'Use "Which club" when selecting from the school’s club options.'
+          },
+          {
+            id: 3,
+            leadIn: 'You have a great voice!',
+            words: ['Why', 'did', 'you', 'choose', 'the', 'Choir?'],
+            reply: 'Because our music teacher is super friendly and we get to perform at the school concert!',
+            tip: 'Chloe answers with "Because...", so start with "Why + did + subject + base verb".'
+          },
+          {
+            id: 4,
+            leadIn: 'That sounds thrilling!',
+            words: ['When', 'will', 'the', 'school', 'concert', 'take', 'place?'],
+            reply: 'It will take place on the last Friday of November.',
+            tip: '"On the last Friday of November" is a future date, so ask with "When + will + subject + take place?".'
+          },
+          {
+            id: 5,
+            leadIn: 'Look at that shiny gold trophy on the classroom shelf!',
+            words: ['Whose', 'trophy', 'is', 'that', 'on', 'the', 'shelf?'],
+            reply: "That's our class monitor's trophy! He won it in the Speech Festival.",
+            tip: '"Our class monitor\'s trophy" shows ownership, so ask with "Whose trophy...".'
+          },
+          {
+            id: 6,
+            leadIn: 'The bell is about to ring for recess.',
+            words: ['Where', 'do', 'you', 'usually', 'eat', 'lunch?'],
+            reply: 'I usually eat lunch in the covered playground with my best friends.',
+            tip: '"In the covered playground" is a location, so start with "Where + do + you...".'
+          },
+          {
+            id: 7,
+            leadIn: 'Your English notebook looks very neat.',
+            words: ['Who', 'teaches', 'your', 'English', 'class?'],
+            reply: 'Miss Wong teaches our English class. Her lessons are always lively!',
+            tip: 'Asking for the person ("Miss Wong") as the subject uses "Who + verb (teaches)...".'
+          },
+          {
+            id: 8,
+            leadIn: 'One last question before class starts!',
+            words: ['How', 'do', 'you', 'travel', 'to', 'school', 'every', 'morning?'],
+            reply: 'I take the MTR for three stops and then walk for five minutes.',
+            tip: 'Asking about the mode of transport ("take the MTR") uses "How + do + you + travel...".'
+          }
+        ]
+      },
+
+      // ----------------- WORLD 3: GENERATED - PET -----------------
+      {
+        id: 'w3-tenses',
+        world: 'World 3 · Topic: Pet',
+        topic: 'Pet Clinic Visit',
+        type: 'tenses',
+        badgeId: 'pet-whisperer',
+        title: 'Paws & Whiskers Vet Clinic',
+        subtitle: 'Mixed Tenses & "There is / There are" (12 Questions)',
+        icon: '🐱',
+        themeColor: 'rose',
+        instructions: 'Help Maya and Dr. Ho talk about kitten Mochi using the right tenses and "there is / there are"!',
+        characters: {
+          A: { name: 'Dr. Ho (Vet)', avatar: '🩺', align: 'left', bubbleBg: 'bg-rose-50 border-rose-200' },
+          B: { name: 'Maya (Cat Owner)', avatar: '👩', align: 'right', bubbleBg: 'bg-white border-slate-200' }
+        },
+        dialogue: [
+          {
+            speaker: 'A',
+            segments: [
+              { text: 'Good afternoon, Maya! Why ' },
+              { blankId: 1 },
+              { text: ' your kitten Mochi to the clinic today?' }
+            ]
+          },
+          {
+            speaker: 'B',
+            segments: [
+              { text: 'Hi Dr. Ho! Mochi ' },
+              { blankId: 2 },
+              { text: ' much yesterday, and he seems sleepy. ' },
+              { blankId: 3 },
+              { text: ' any other sick kittens here today?' }
+            ]
+          },
+          {
+            speaker: 'A',
+            segments: [
+              { text: 'Let me check him. Look, he ' },
+              { blankId: 4 },
+              { text: ' softly right now, which is a good sign!' }
+            ]
+          },
+          {
+            speaker: 'B',
+            segments: [
+              { text: 'Phew! Last week, I ' },
+              { blankId: 5 },
+              { text: ' a new brand of cat food for him. Could that be the reason?' }
+            ]
+          },
+          {
+            speaker: 'A',
+            segments: [
+              { text: 'Yes! Kittens have sensitive stomachs. Usually, a young kitten ' },
+              { blankId: 6 },
+              { text: ' three small meals of familiar food every day.' }
+            ]
+          },
+          {
+            speaker: 'B',
+            segments: [
+              { text: 'I see! ' },
+              { blankId: 7 },
+              { text: ' any special medicine that I should give him?' }
+            ]
+          },
+          {
+            speaker: 'A',
+            segments: [
+              { text: 'No, ' },
+              { blankId: 8 },
+              { text: ' any medicine needed because his temperature is normal. ' },
+              { blankId: 9 },
+              { text: ' him his old cat food tonight?' }
+            ]
+          },
+          {
+            speaker: 'B',
+            segments: [
+              { text: 'Yes, I ' },
+              { blankId: 10 },
+              { text: ' back to his old food as soon as we get home!' }
+            ]
+          },
+          {
+            speaker: 'A',
+            segments: [
+              { text: 'Great. Also, ' },
+              { blankId: 11 },
+              { text: ' free pet nutrition leaflets at our reception desk. Please take one!' }
+            ]
+          },
+          {
+            speaker: 'B',
+            segments: [
+              { text: 'Thank you so much! I ' },
+              { blankId: 12 },
+              { text: ' Mochi back next month for his regular check-up.' }
+            ]
+          }
+        ],
+        questions: {
+          1: { prompt: '(you / bring)', answer: 'are you bringing', options: ['are you bringing', 'do you bring', 'did you bring', 'will you bring'], tip: 'Asking about Maya’s current visit today uses Present Continuous: "are you bringing".' },
+          2: { prompt: '(not / eat)', answer: 'did not eat', options: ['did not eat', 'does not eat', 'is not eating', 'will not eat'], tip: '"Yesterday" + negative "not" requires Simple Past negative: "did not eat".' },
+          3: { prompt: '(there is / there are)', answer: 'Are there', options: ['Are there', 'Is there', 'There are', 'There is'], tip: '"Any other sick kittens" is plural and in a question: "Are there".' },
+          4: { prompt: '(purr)', answer: 'is purring', options: ['is purring', 'purrs', 'purred', 'will purr'], tip: '"Look... right now" signals Present Continuous: "is purring".' },
+          5: { prompt: '(buy)', answer: 'bought', options: ['bought', 'buy', 'am buying', 'will buy'], tip: '"Last week" indicates a past action, so use Simple Past: "bought".' },
+          6: { prompt: '(need)', answer: 'needs', options: ['needs', 'is needing', 'needed', 'will need'], tip: '"Usually... every day" + singular "a young kitten" uses Simple Present: "needs".' },
+          7: { prompt: '(there is / there are)', answer: 'Is there', options: ['Is there', 'Are there', 'There is', 'There are'], tip: '"Any special medicine" (uncountable/singular) in a question uses "Is there".' },
+          8: { prompt: '(there is / there are + negative)', answer: 'there is not', options: ['there is not', 'there are not', 'is there', 'there is'], tip: '"No..." + uncountable "medicine" takes singular negative: "there is not".' },
+          9: { prompt: '(you / feed)', answer: 'Will you feed', options: ['Will you feed', 'Did you feed', 'Do you feed', 'Are you fed'], tip: '"Tonight" asks about a future action, so use Simple Future: "Will you feed".' },
+          10: { prompt: '(switch)', answer: 'will switch', options: ['will switch', 'switched', 'am switching', 'switch'], tip: '"As soon as we get home" expresses a future promise: "will switch".' },
+          11: { prompt: '(there is / there are)', answer: 'there are', options: ['there are', 'there is', 'are there', 'is there'], tip: '"Leaflets" is plural in a statement, so use "there are".' },
+          12: { prompt: '(bring)', answer: 'will bring', options: ['will bring', 'brought', 'am bringing', 'bring'], tip: '"Next month" signals Simple Future: "will bring".' }
+        }
+      },
+      {
+        id: 'w3-wh',
+        world: 'World 3 · Topic: Pet',
+        topic: 'Pet Hamster Care',
+        type: 'wh',
+        badgeId: 'hamster-hero',
+        title: 'Peanut the Dwarf Hamster',
+        subtitle: 'Wh-Questions Word Order Challenge (8 Questions)',
+        icon: '🐹',
+        themeColor: 'teal',
+        instructions: 'Put the words in the right order to ask Ben all about caring for his pet hamster Peanut!',
+        characters: {
+          A: { name: 'You', avatar: '🙋', align: 'right', bubbleBg: 'bg-teal-50 border-teal-200' },
+          B: { name: 'Ben (Pet Owner)', avatar: '👦', align: 'left', bubbleBg: 'bg-white border-slate-200' }
+        },
+        items: [
+          {
+            id: 1,
+            leadIn: 'Hey Ben! I heard you got a tiny furry pet recently.',
+            words: ['What', 'kind', 'of', 'pet', 'do', 'you', 'have?'],
+            reply: 'I have a dwarf hamster named Peanut! He is tiny and super active at night.',
+            tip: 'Use "What kind of pet + do + you + have?" to ask about the species.'
+          },
+          {
+            id: 2,
+            leadIn: 'He sounds adorable!',
+            words: ['Which', 'snack', 'does', 'Peanut', 'like', 'best?'],
+            reply: 'He likes crunchy sunflower seeds best, though he also nibbles on carrots!',
+            tip: 'Use "Which snack + does + Peanut + like best?" for his favourite treat.'
+          },
+          {
+            id: 3,
+            leadIn: 'I heard a squeaky spinning sound from your room earlier.',
+            words: ['Why', 'does', 'he', 'run', 'on', 'his', 'wheel', 'at', 'night?'],
+            reply: 'Because hamsters are nocturnal animals, so they sleep during the day and play at night!',
+            tip: 'Ben explains the reason with "Because...", so start with "Why + does + he...".'
+          },
+          {
+            id: 4,
+            leadIn: 'That makes total sense!',
+            words: ['When', 'did', 'you', 'get', 'Peanut?'],
+            reply: 'I got him on my birthday two months ago.',
+            tip: '"Two months ago" is a past time, so ask with "When + did + you + get...".'
+          },
+          {
+            id: 5,
+            leadIn: 'Look over there by the windowsill.',
+            words: ['Whose', 'cage', 'is', 'that', 'next', 'to', 'the', 'window?'],
+            reply: "That's Peanut's old travel cage. We bought a much bigger wooden cage for him last week!",
+            tip: '"Peanut\'s old travel cage" shows possession, so begin with "Whose cage...".'
+          },
+          {
+            id: 6,
+            leadIn: 'A wooden cage sounds very cosy!',
+            words: ['Where', 'do', 'you', 'keep', 'his', 'cage?'],
+            reply: 'I keep it on a quiet table in my bedroom away from direct sunlight.',
+            tip: '"On a quiet table in my bedroom" is a place, so ask with "Where + do + you + keep...".'
+          },
+          {
+            id: 7,
+            leadIn: 'What if your family goes travelling?',
+            words: ['Who', 'feeds', 'Peanut', 'when', 'you', 'go', 'on', 'holiday?'],
+            reply: 'My cousin comes over every evening to feed him and refill his water bottle.',
+            tip: 'Asking about the helper ("My cousin") uses "Who + verb (feeds)...".'
+          },
+          {
+            id: 8,
+            leadIn: 'Good hygiene is super important for small pets.',
+            words: ['How', 'often', 'do', 'you', 'clean', 'his', 'cage?'],
+            reply: 'I clean his cage once a week using soft paper bedding so it stays fresh.',
+            tip: '"Once a week" tells frequency, so start with "How often + do + you + clean...".'
+          }
+        ]
+      }
+    ];
+
+    const BADGES = [
+      { id: 'zoo-ranger', title: 'Zoo Ranger', desc: 'Complete Green Valley Zoo Tour', icon: '🐼' },
+      { id: 'lucky-friend', title: 'Lucky’s Best Friend', desc: 'Master Lucy’s Pet Wh-Questions', icon: '🐕' },
+      { id: 'school-scholar', title: 'Sunnyvale Scholar', desc: 'Complete School Open Day Tenses', icon: '🏫' },
+      { id: 'campus-reporter', title: 'Campus Reporter', desc: 'Master School Life Wh-Questions', icon: '📚' },
+      { id: 'pet-whisperer', title: 'Pet Whisperer', desc: 'Complete Paws & Whiskers Clinic', icon: '🐱' },
+      { id: 'hamster-hero', title: 'Hamster Hero', desc: 'Master Hamster Care Wh-Questions', icon: '🐹' }
+    ];
+
+    /* =========================================================================
+       2. APPLICATION STATE & AUDIO SYNTHESIZER
+       ========================================================================= */
+    const state = {
+      view: 'home', // 'home' | 'mission'
+      activeMissionId: null,
+      xp: 0,
+      streak: 0,
+      bestStreak: 0,
+      soundEnabled: true,
+      completedMissions: {}, // { [missionId]: { stars, accuracy, score, total } }
+      unlockedBadges: new Set(),
+
+      // Per-mission runtime state
+      missionRuntime: {
+        // For Tenses mode:
+        selectedBlankId: 1,
+        answeredBlanks: {}, // { [blankId]: { chosen, isCorrect, attempts } }
+        showTip: false,
+
+        // For Wh-Questions mode:
+        currentWhIndex: 0,
+        whBankTiles: [],     // [{ id, text, used }]
+        whPlacedTiles: [],   // [{ id, text }]
+        whCompleted: {},     // { [itemId]: { attempts, firstTry } }
+        whFeedback: null,    // { type: 'error'|'success', msg }
+        showWhTip: false
+      }
+    };
+
+    // Sound effects powered by Tone.js (safe fallback if blocked)
+    let synth = null;
+    function playSound(type) {
+      if (!state.soundEnabled) return;
+      try {
+        if (typeof Tone !== 'undefined') {
+          if (Tone.context.state !== 'running') {
+            Tone.start();
+          }
+          if (!synth) {
+            synth = new Tone.PolySynth(Tone.Synth, {
+              oscillator: { type: 'triangle' },
+              envelope: { attack: 0.01, decay: 0.15, sustain: 0.05, release: 0.2 }
+            }).toDestination();
+            synth.volume.value = -8;
+          }
+          const now = Tone.now();
+          if (type === 'tap') {
+            synth.triggerAttackRelease('C5', '32n', now);
+          } else if (type === 'correct') {
+            synth.triggerAttackRelease(['C5', 'E5', 'G5'], '16n', now);
+          } else if (type === 'wrong') {
+            synth.triggerAttackRelease(['E3', 'Eb3'], '16n', now);
+          } else if (type === 'victory') {
+            synth.triggerAttackRelease('C5', '16n', now);
+            synth.triggerAttackRelease('E5', '16n', now + 0.1);
+            synth.triggerAttackRelease('G5', '16n', now + 0.2);
+            synth.triggerAttackRelease(['C6', 'E6'], '8n', now + 0.32);
+          }
+        }
+      } catch (e) {
+        // Ignore audio errors silently
+      }
+    }
+
+    function toggleSound() {
+      state.soundEnabled = !state.soundEnabled;
+      document.getElementById('sound-icon').textContent = state.soundEnabled ? '🔊' : '🔇';
+      showToast(state.soundEnabled ? 'Sound effects ON' : 'Sound effects MUTED');
+    }
+
+    /* =========================================================================
+       3. HUD, TOASTS & CONFETTI HELPERS
+       ========================================================================= */
+    function updateHUD() {
+      const level = Math.floor(state.xp / 100) + 1;
+      const xpInLevel = state.xp % 100;
+      document.getElementById('hud-level').textContent = `Lv.${level}`;
+      document.getElementById('hud-xp-text').textContent = `${xpInLevel} / 100`;
+      document.getElementById('hud-xp-bar').style.width = `${xpInLevel}%`;
+      document.getElementById('hud-xp-mobile').textContent = `${state.xp} XP`;
+      document.getElementById('hud-streak').textContent = state.streak;
+      document.getElementById('hud-badge-count').textContent = `${state.unlockedBadges.size}/${BADGES.length}`;
+
+      const streakBox = document.getElementById('hud-streak-box');
+      if (state.streak >= 3) {
+        streakBox.classList.add('ring-2', 'ring-amber-400', 'bg-amber-100');
+      } else {
+        streakBox.classList.remove('ring-2', 'ring-amber-400', 'bg-amber-100');
+      }
+    }
+
+    let toastTimeout = null;
+    function showToast(msg) {
+      const banner = document.getElementById('toast-banner');
+      document.getElementById('toast-text').textContent = msg;
+      banner.classList.remove('opacity-0', '-translate-y-2');
+      banner.classList.add('opacity-100', 'translate-y-0');
+      clearTimeout(toastTimeout);
+      toastTimeout = setTimeout(() => {
+        banner.classList.remove('opacity-100', 'translate-y-0');
+        banner.classList.add('opacity-0', '-translate-y-2');
+      }, 2200);
+    }
+
+    function launchConfetti() {
+      const colors = ['#6366f1', '#10b981', '#f59e0b', '#ec4899', '#06b6d4'];
+      for (let i = 0; i < 45; i++) {
+        const piece = document.createElement('div');
+        piece.className = 'confetti-piece rounded-sm';
+        piece.style.left = Math.random() * 100 + 'vw';
+        piece.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+        piece.style.animationDuration = (Math.random() * 1.5 + 1.5) + 's';
+        piece.style.animationDelay = (Math.random() * 0.4) + 's';
+        document.body.appendChild(piece);
+        setTimeout(() => piece.remove(), 3500);
+      }
+    }
+
+    /* =========================================================================
+       4. NAVIGATION & HOME DASHBOARD RENDERING
+       ========================================================================= */
+    function goHome() {
+      state.view = 'home';
+      state.activeMissionId = null;
+      render();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function startMission(missionId) {
+      playSound('tap');
+      const mission = MISSIONS.find(m => m.id === missionId);
+      if (!mission) return;
+
+      state.view = 'mission';
+      state.activeMissionId = missionId;
+
+      if (mission.type === 'tenses') {
+        state.missionRuntime = {
+          selectedBlankId: 1,
+          answeredBlanks: {},
+          showTip: false
+        };
+      } else {
+        state.missionRuntime = {
+          currentWhIndex: 0,
+          whBankTiles: [],
+          whPlacedTiles: [],
+          whCompleted: {},
+          whFeedback: null,
+          showWhTip: false
+        };
+        setupWhQuestion(mission, 0);
+      }
+
+      render();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function renderHome() {
+      const completedCount = Object.keys(state.completedMissions).length;
+      const totalStars = Object.values(state.completedMissions).reduce((sum, m) => sum + m.stars, 0);
+      const maxStars = MISSIONS.length * 3;
+
+      // Group missions into the 3 Worlds
+      const worlds = [
+        {
+          name: 'World 1: Original Worksheet (Zoo & Pet)',
+          desc: 'Based directly on your F.1 English Unit Quiz exercises.',
+          tag: 'Worksheet Base',
+          tagStyle: 'bg-emerald-100 text-emerald-800',
+          missions: MISSIONS.filter(m => m.id.startsWith('w1'))
+        },
+        {
+          name: 'World 2: School Adventures',
+          desc: 'New practice quests set at Sunnyvale Secondary School.',
+          tag: 'Topic: School',
+          tagStyle: 'bg-indigo-100 text-indigo-800',
+          missions: MISSIONS.filter(m => m.id.startsWith('w2'))
+        },
+        {
+          name: 'World 3: Pet Care World',
+          desc: 'New practice quests about kittens, vets, and pet hamsters.',
+          tag: 'Topic: Pet',
+          tagStyle: 'bg-rose-100 text-rose-800',
+          missions: MISSIONS.filter(m => m.id.startsWith('w3'))
+        }
+      ];
+
+      return `
+        <!-- Hero Banner -->
+        <section class="bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-700 rounded-3xl p-6 sm:p-8 text-white shadow-xl mb-8 relative overflow-hidden">
+          <div class="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+            <div class="max-w-xl">
+              <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/15 backdrop-blur-sm text-xs font-bold uppercase tracking-wider mb-3">
+                <span>✨ Interactive Grammar Adventure</span>
+              </div>
+              <h2 class="font-display font-bold text-2xl sm:text-4xl leading-tight mb-2">
+                Master Mixed Tenses &amp; Wh-Questions!
+              </h2>
+              <p class="text-indigo-100 text-sm sm:text-base leading-relaxed">
+                Choose the right verb tenses in real-life dialogues and unscramble word tiles to build accurate Wh-questions across Zoo, School, and Pet quests.
+              </p>
+            </div>
+
+            <!-- Overall Progress Card -->
+            <div class="bg-white/15 backdrop-blur-md border border-white/20 rounded-2xl p-4 sm:p-5 flex sm:flex-col justify-around sm:justify-center items-center gap-4 min-w-[180px]">
+              <div class="text-center">
+                <div class="text-2xl sm:text-3xl font-display font-bold">${completedCount}/${MISSIONS.length}</div>
+                <div class="text-xs text-indigo-100 font-medium">Quests Cleared</div>
+              </div>
+              <div class="h-8 w-px sm:h-px sm:w-full bg-white/20"></div>
+              <div class="text-center">
+                <div class="text-2xl sm:text-3xl font-display font-bold text-amber-300">⭐ ${totalStars}/${maxStars}</div>
+                <div class="text-xs text-indigo-100 font-medium">Stars Earned</div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Worlds & Mission Cards -->
+        <div class="space-y-8">
+          ${worlds.map(w => `
+            <section>
+              <div class="flex flex-wrap items-center justify-between gap-2 mb-3.5 px-1">
+                <div>
+                  <div class="flex items-center gap-2.5">
+                    <h3 class="font-display font-bold text-xl text-slate-800">${w.name}</h3>
+                    <span class="px-2.5 py-0.5 rounded-full text-xs font-bold ${w.tagStyle}">${w.tag}</span>
+                  </div>
+                  <p class="text-xs sm:text-sm text-slate-500 mt-0.5">${w.desc}</p>
+                </div>
+              </div>
+
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                ${w.missions.map(m => renderMissionCard(m)).join('')}
+              </div>
+            </section>
+          `).join('')}
+        </div>
+      `;
+    }
+
+    function renderMissionCard(mission) {
+      const record = state.completedMissions[mission.id];
+      const isTenses = mission.type === 'tenses';
+      const modeBadge = isTenses
+        ? '<span class="px-2.5 py-1 rounded-xl text-xs font-bold bg-blue-50 text-blue-700 border border-blue-200">🎯 Multiple Choice Tenses</span>'
+        : '<span class="px-2.5 py-1 rounded-xl text-xs font-bold bg-amber-50 text-amber-700 border border-amber-200">🧩 Wh-Word Ordering</span>';
+
+      const starsHtml = record
+        ? '⭐'.repeat(record.stars) + '<span class="opacity-25">' + '⭐'.repeat(3 - record.stars) + '</span>'
+        : '<span class="opacity-25">⭐⭐⭐</span>';
+
+      return `
+        <div class="bg-white rounded-3xl p-5 border-2 ${record ? 'border-emerald-300' : 'border-slate-200'} shadow-sm hover:shadow-md transition-all flex flex-col justify-between gap-4">
+          <div>
+            <div class="flex items-start justify-between gap-3 mb-3">
+              <div class="flex items-center gap-3">
+                <div class="w-12 h-12 rounded-2xl bg-slate-100 flex items-center justify-center text-2xl shadow-inner">
+                  ${mission.icon}
+                </div>
+                <div>
+                  <h4 class="font-display font-bold text-lg text-slate-800 leading-snug">${mission.title}</h4>
+                  <p class="text-xs text-slate-500 font-medium">${mission.subtitle}</p>
+                </div>
+              </div>
+              <div class="text-sm tracking-tighter whitespace-nowrap" title="Stars Earned">
+                ${starsHtml}
+              </div>
+            </div>
+            <div class="flex flex-wrap items-center gap-2 mt-2">
+              ${modeBadge}
+              ${record ? `<span class="px-2.5 py-1 rounded-xl text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">✓ ${record.accuracy}% Best</span>` : ''}
+            </div>
+          </div>
+
+          <button onclick="startMission('${mission.id}')" class="btn-3d w-full py-3 px-4 rounded-2xl ${record ? 'bg-emerald-600 hover:bg-emerald-700 border-emerald-800' : 'bg-indigo-600 hover:bg-indigo-700 border-indigo-800'} text-white font-display font-semibold text-sm sm:text-base border-b-4 flex items-center justify-center gap-2">
+            <span>${record ? 'Play Again' : 'Start Quest'}</span>
+            <span>→</span>
+          </button>
+        </div>
+      `;
+    }
+
+    /* =========================================================================
+       5. MISSION TYPE A: MIXED TENSES & THERE IS/ARE (MULTIPLE CHOICE)
+       ========================================================================= */
+    function renderTensesMission(mission) {
+      const rt = state.missionRuntime;
+      const totalQs = Object.keys(mission.questions).length;
+      const answeredCount = Object.keys(rt.answeredBlanks).length;
+      const progressPct = Math.round((answeredCount / totalQs) * 100);
+
+      const activeQId = rt.selectedBlankId;
+      const activeQ = mission.questions[activeQId];
+      const activeAnswerState = rt.answeredBlanks[activeQId];
+
+      return `
+        <!-- Mission Top Sub-Header -->
+        <div class="bg-white rounded-3xl p-4 sm:p-5 border border-slate-200 shadow-sm mb-4">
+          <div class="flex flex-wrap items-center justify-between gap-3 mb-3">
+            <div class="flex items-center gap-3">
+              <button onclick="goHome()" class="p-2.5 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-sm transition-colors" title="Back to Map">
+                ← Map
+              </button>
+              <div>
+                <div class="flex items-center gap-2">
+                  <span class="text-xl">${mission.icon}</span>
+                  <h2 class="font-display font-bold text-lg sm:text-xl text-slate-800">${mission.title}</h2>
+                </div>
+                <p class="text-xs text-slate-500">${mission.instructions}</p>
+              </div>
+            </div>
+
+            <div class="flex items-center gap-2 bg-indigo-50 px-3 py-1.5 rounded-2xl border border-indigo-100">
+              <span class="text-xs font-bold text-indigo-700">Progress: ${answeredCount}/${totalQs}</span>
+            </div>
+          </div>
+
+          <!-- Progress Bar -->
+          <div class="w-full h-2.5 bg-slate-100 rounded-full overflow-hidden">
+            <div class="h-full bg-gradient-to-r from-emerald-400 to-emerald-600 transition-all duration-300 rounded-full" style="width: ${progressPct}%"></div>
+          </div>
+
+          <!-- Quick Jump Number Pills -->
+          <div class="flex flex-wrap gap-1.5 mt-3 pt-3 border-t border-slate-100">
+            ${Object.keys(mission.questions).map(idStr => {
+              const id = Number(idStr);
+              const ans = rt.answeredBlanks[id];
+              const isSelected = id === activeQId;
+              let pillClass = 'bg-slate-100 text-slate-600 border-slate-200 hover:bg-slate-200';
+              if (ans && ans.isCorrect) {
+                pillClass = 'bg-emerald-500 text-white border-emerald-600';
+              } else if (isSelected) {
+                pillClass = 'bg-indigo-600 text-white border-indigo-700 ring-2 ring-indigo-300';
+              }
+              return `
+                <button onclick="selectTenseBlank(${id})" class="w-8 h-8 rounded-xl text-xs font-bold border transition-all ${pillClass}">
+                  ${id}
+                </button>
+              `;
+            }).join('')}
+          </div>
+        </div>
+
+        <!-- Dialogue Chat Container -->
+        <div class="bg-white rounded-3xl p-4 sm:p-6 border border-slate-200 shadow-sm space-y-4 mb-56 sm:mb-48">
+          ${mission.dialogue.map(turn => {
+            const char = mission.characters[turn.speaker];
+            const isRight = char.align === 'right';
+            return `
+              <div class="flex items-start gap-3 ${isRight ? 'flex-row-reverse' : ''}">
+                <div class="w-10 h-10 rounded-2xl bg-slate-100 border border-slate-200 flex items-center justify-center text-xl shrink-0 shadow-sm">
+                  ${char.avatar}
+                </div>
+                <div class="max-w-[85%] sm:max-w-[78%]">
+                  <div class="text-[11px] font-bold text-slate-400 mb-1 ${isRight ? 'text-right' : 'text-left'}">
+                    ${char.name}
+                  </div>
+                  <div class="p-3.5 sm:p-4 rounded-2xl border ${char.bubbleBg} text-sm sm:text-base leading-relaxed text-slate-800 shadow-xs">
+                    ${turn.segments.map(seg => {
+                      if (seg.text) return `<span>${seg.text}</span>`;
+                      if (seg.example) {
+                        return `<span class="inline-block px-2.5 py-0.5 mx-0.5 rounded-lg bg-slate-200/80 text-slate-700 font-semibold underline decoration-slate-400" title="Example">${seg.example} <span class="text-[10px] uppercase text-slate-500">(e.g.)</span></span>`;
+                      }
+                      if (seg.blankId) {
+                        const bId = seg.blankId;
+                        const qObj = mission.questions[bId];
+                        const ansObj = rt.answeredBlanks[bId];
+                        const isCurrent = bId === activeQId;
+
+                        if (ansObj && ansObj.isCorrect) {
+                          return `
+                            <button onclick="selectTenseBlank(${bId})" class="inline-flex items-center gap-1 px-2.5 py-0.5 mx-0.5 my-0.5 rounded-xl bg-emerald-100 border-2 border-emerald-400 text-emerald-900 font-bold text-sm transition-transform hover:scale-105">
+                              <span class="text-[10px] bg-emerald-600 text-white px-1.5 rounded-md">${bId}</span>
+                              <span>${ansObj.chosen}</span>
+                              <span class="text-emerald-600">✓</span>
+                            </button>
+                          `;
+                        }
+
+                        return `
+                          <button id="blank-chip-${bId}" onclick="selectTenseBlank(${bId})" class="inline-flex items-center gap-1.5 px-3 py-1 mx-0.5 my-0.5 rounded-xl border-2 font-semibold text-sm transition-all ${isCurrent ? 'bg-indigo-600 text-white border-indigo-700 shadow-md scale-105' : 'bg-amber-50 text-amber-900 border-amber-300 hover:bg-amber-100'}">
+                            <span class="text-xs font-bold ${isCurrent ? 'bg-white text-indigo-700' : 'bg-amber-200 text-amber-900'} px-1.5 py-0.2 rounded-md">[${bId}]</span>
+                            <span>${qObj.prompt}</span>
+                          </button>
+                        `;
+                      }
+                      return '';
+                    }).join('')}
+                  </div>
+                </div>
+              </div>
+            `;
+          }).join('')}
+        </div>
+
+        <!-- Sticky Bottom Option Deck for Active Blank -->
+        <div class="fixed bottom-0 inset-x-0 z-30 bg-white/95 backdrop-blur-md border-t-2 border-indigo-200 shadow-2xl p-3 sm:p-4">
+          <div class="max-w-4xl mx-auto">
+            <div class="flex flex-wrap items-center justify-between gap-2 mb-2.5">
+              <div class="flex items-center gap-2">
+                <span class="px-2.5 py-1 rounded-xl bg-indigo-600 text-white font-display font-bold text-xs sm:text-sm">
+                  Blank [${activeQId}]
+                </span>
+                <span class="font-bold text-slate-800 text-sm sm:text-base">
+                  Prompt: <span class="text-indigo-700">${activeQ.prompt}</span>
+                </span>
+              </div>
+
+              <button onclick="toggleTenseTip()" class="px-3 py-1 rounded-xl bg-amber-100 hover:bg-amber-200 text-amber-900 text-xs font-bold flex items-center gap-1 transition-colors">
+                <span>💡</span>
+                <span>${rt.showTip ? 'Hide Clue' : 'Grammar Clue'}</span>
+              </button>
+            </div>
+
+            ${rt.showTip ? `
+              <div class="mb-2.5 px-3.5 py-2 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-xs sm:text-sm font-medium animate-pop-in">
+                💡 <strong>Clue:</strong> ${activeQ.tip}
+              </div>
+            ` : ''}
+
+            ${activeAnswerState && activeAnswerState.isCorrect ? `
+              <div class="p-3 rounded-2xl bg-emerald-50 border border-emerald-200 flex flex-wrap items-center justify-between gap-2">
+                <div class="text-xs sm:text-sm text-emerald-900 font-medium">
+                  ✅ <strong>Correct!</strong> ${activeQ.tip}
+                </div>
+                ${answeredCount < totalQs ? `
+                  <button onclick="jumpToNextUnansweredTense()" class="btn-3d px-4 py-1.5 rounded-xl bg-emerald-600 text-white font-display font-semibold text-xs sm:text-sm border-b-2 border-emerald-800">
+                    Next Blank →
+                  </button>
+                ` : `
+                  <button onclick="finishMission('${mission.id}')" class="btn-3d px-4 py-1.5 rounded-xl bg-indigo-600 text-white font-display font-semibold text-xs sm:text-sm border-b-2 border-indigo-800">
+                    Finish Quest 🏆
+                  </button>
+                `}
+              </div>
+            ` : `
+              <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                ${activeQ.options.map(opt => {
+                  const wasWrong = activeAnswerState && activeAnswerState.wrongChoices && activeAnswerState.wrongChoices.includes(opt);
+                  return `
+                    <button
+                      onclick="submitTenseOption(${activeQId}, '${opt.replace(/'/g, "\\'")}')"
+                      ${wasWrong ? 'disabled' : ''}
+                      class="btn-3d py-3 px-3 rounded-2xl font-semibold text-xs sm:text-sm border-2 border-b-4 transition-all ${
+                        wasWrong
+                          ? 'bg-rose-50 border-rose-200 text-rose-400 line-through cursor-not-allowed opacity-70'
+                          : 'bg-white hover:bg-indigo-50 border-slate-200 hover:border-indigo-400 text-slate-800'
+                      }"
+                    >
+                      ${opt}
+                    </button>
+                  `;
+                }).join('')}
+              </div>
+            `}
+          </div>
+        </div>
+      `;
+    }
+
+    function selectTenseBlank(blankId) {
+      playSound('tap');
+      state.missionRuntime.selectedBlankId = blankId;
+      state.missionRuntime.showTip = false;
+      render();
+      const chip = document.getElementById(`blank-chip-${blankId}`);
+      if (chip) {
+        chip.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }
+
+    function toggleTenseTip() {
+      playSound('tap');
+      state.missionRuntime.showTip = !state.missionRuntime.showTip;
+      render();
+    }
+
+    function jumpToNextUnansweredTense() {
+      const mission = MISSIONS.find(m => m.id === state.activeMissionId);
+      const ids = Object.keys(mission.questions).map(Number);
+      const currentIdx = ids.indexOf(state.missionRuntime.selectedBlankId);
+      for (let i = 1; i <= ids.length; i++) {
+        const candidateId = ids[(currentIdx + i) % ids.length];
+        if (!state.missionRuntime.answeredBlanks[candidateId]?.isCorrect) {
+          selectTenseBlank(candidateId);
+          return;
+        }
+      }
+    }
+
+    function submitTenseOption(blankId, chosenOption) {
+      const mission = MISSIONS.find(m => m.id === state.activeMissionId);
+      const question = mission.questions[blankId];
+      const existing = state.missionRuntime.answeredBlanks[blankId] || { attempts: 0, wrongChoices: [] };
+
+      if (chosenOption === question.answer) {
+        playSound('correct');
+        const isFirstTry = existing.attempts === 0;
+        state.missionRuntime.answeredBlanks[blankId] = {
+          chosen: chosenOption,
+          isCorrect: true,
+          attempts: existing.attempts + 1,
+          firstTry: isFirstTry
+        };
+
+        // Gamification rewards
+        state.streak += 1;
+        state.bestStreak = Math.max(state.bestStreak, state.streak);
+        const bonus = state.streak >= 3 ? 5 : 0;
+        const earned = (isFirstTry ? 10 : 5) + bonus;
+        state.xp += earned;
+        updateHUD();
+
+        showToast(`+${earned} XP! ${state.streak >= 3 ? `🔥 ${state.streak}x Streak!` : 'Spot on!'}`);
+
+        // Check if all blanks are solved
+        const totalQs = Object.keys(mission.questions).length;
+        const solvedCount = Object.values(state.missionRuntime.answeredBlanks).filter(a => a.isCorrect).length;
+
+        render();
+        if (solvedCount === totalQs) {
+          setTimeout(() => finishMission(mission.id), 650);
+        } else {
+          setTimeout(() => jumpToNextUnansweredTense(), 750);
+        }
+      } else {
+        playSound('wrong');
+        state.streak = 0;
+        updateHUD();
+        existing.attempts += 1;
+        if (!existing.wrongChoices.includes(chosenOption)) {
+          existing.wrongChoices.push(chosenOption);
+        }
+        state.missionRuntime.answeredBlanks[blankId] = existing;
+        state.missionRuntime.showTip = true;
+        showToast('Not quite! Check the grammar clue 💡');
+        render();
+      }
+    }
+
+    /* =========================================================================
+       6. MISSION TYPE B: WH-QUESTIONS (WORD ORDERING BUILDER)
+       ========================================================================= */
+    function shuffleArray(arr) {
+      const copy = [...arr];
+      for (let i = copy.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [copy[i], copy[j]] = [copy[j], copy[i]];
+      }
+      // Guarantee shuffled order differs from original when length > 1
+      if (copy.length > 1 && copy.every((val, idx) => val === arr[idx])) {
+        [copy[0], copy[1]] = [copy[1], copy[0]];
+      }
+      return copy;
+    }
+
+    function setupWhQuestion(mission, index) {
+      const item = mission.items[index];
+      const shuffled = shuffleArray(item.words);
+      state.missionRuntime.currentWhIndex = index;
+      state.missionRuntime.whBankTiles = shuffled.map((word, idx) => ({
+        id: `tile-${index}-${idx}`,
+        text: word,
+        used: false
+      }));
+      state.missionRuntime.whPlacedTiles = [];
+      state.missionRuntime.whFeedback = null;
+      state.missionRuntime.showWhTip = false;
+    }
+
+    function renderWhMission(mission) {
+      const rt = state.missionRuntime;
+      const totalItems = mission.items.length;
+      const completedCount = Object.keys(rt.whCompleted).length;
+      const progressPct = Math.round((completedCount / totalItems) * 100);
+      const currentIdx = rt.currentWhIndex;
+      const activeItem = mission.items[currentIdx];
+
+      return `
+        <!-- Top Mission Header -->
+        <div class="bg-white rounded-3xl p-4 sm:p-5 border border-slate-200 shadow-sm mb-4">
+          <div class="flex flex-wrap items-center justify-between gap-3 mb-3">
+            <div class="flex items-center gap-3">
+              <button onclick="goHome()" class="p-2.5 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-sm transition-colors">
+                ← Map
+              </button>
+              <div>
+                <div class="flex items-center gap-2">
+                  <span class="text-xl">${mission.icon}</span>
+                  <h2 class="font-display font-bold text-lg sm:text-xl text-slate-800">${mission.title}</h2>
+                </div>
+                <p class="text-xs text-slate-500">${mission.instructions}</p>
+              </div>
+            </div>
+
+            <div class="bg-amber-50 px-3 py-1.5 rounded-2xl border border-amber-200 text-xs font-bold text-amber-800">
+              Question ${currentIdx + 1} of ${totalItems}
+            </div>
+          </div>
+
+          <!-- Progress Bar -->
+          <div class="w-full h-2.5 bg-slate-100 rounded-full overflow-hidden">
+            <div class="h-full bg-gradient-to-r from-amber-400 to-orange-500 transition-all duration-300 rounded-full" style="width: ${progressPct}%"></div>
+          </div>
+        </div>
+
+        <!-- Dialogue History + Active Word-Ordering Stage -->
+        <div class="space-y-4 pb-10">
+          ${mission.items.slice(0, currentIdx + 1).map((item, idx) => {
+            const isDone = Boolean(rt.whCompleted[item.id]);
+            const charYou = mission.characters.A;
+            const charPartner = mission.characters.B;
+
+            if (isDone) {
+              return `
+                <!-- Completed Question Bubble -->
+                <div class="flex items-start gap-3 flex-row-reverse animate-pop-in">
+                  <div class="w-10 h-10 rounded-2xl bg-slate-100 border border-slate-200 flex items-center justify-center text-xl shrink-0">
+                    ${charYou.avatar}
+                  </div>
+                  <div class="max-w-[85%] sm:max-w-[78%]">
+                    <div class="text-[11px] font-bold text-slate-400 mb-1 text-right">${charYou.name}</div>
+                    <div class="p-3.5 sm:p-4 rounded-2xl border ${charYou.bubbleBg} text-sm sm:text-base text-slate-800 shadow-xs">
+                      <span>${item.leadIn} </span>
+                      <span class="font-bold text-emerald-700 underline decoration-emerald-400">${item.words.join(' ')}</span>${item.suffixText || ''}
+                      <span class="ml-1.5 text-emerald-600 font-bold">✓</span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Partner Reply Bubble -->
+                <div class="flex items-start gap-3 animate-pop-in">
+                  <div class="w-10 h-10 rounded-2xl bg-slate-100 border border-slate-200 flex items-center justify-center text-xl shrink-0">
+                    ${charPartner.avatar}
+                  </div>
+                  <div class="max-w-[85%] sm:max-w-[78%]">
+                    <div class="text-[11px] font-bold text-slate-400 mb-1">${charPartner.name}</div>
+                    <div class="p-3.5 sm:p-4 rounded-2xl border ${charPartner.bubbleBg} text-sm sm:text-base text-slate-800 shadow-xs">
+                      ${item.reply}
+                    </div>
+                  </div>
+                </div>
+              `;
+            }
+
+            // Active Question Builder Card
+            const allPlaced = rt.whPlacedTiles.length === item.words.length;
+            return `
+              <div class="bg-white rounded-3xl p-4 sm:p-6 border-2 border-indigo-300 shadow-lg animate-pop-in">
+                <div class="flex items-center justify-between gap-2 mb-3">
+                  <span class="px-3 py-1 rounded-xl bg-indigo-600 text-white font-display font-bold text-xs">
+                    Question [${item.id}] · Build the Question
+                  </span>
+                  <button onclick="toggleWhTip()" class="px-3 py-1 rounded-xl bg-amber-100 hover:bg-amber-200 text-amber-900 text-xs font-bold flex items-center gap-1 transition-colors">
+                    <span>💡</span>
+                    <span>${rt.showWhTip ? 'Hide Clue' : 'Grammar Clue'}</span>
+                  </button>
+                </div>
+
+                <!-- Context Lead-In & Partner's Answer Clue -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
+                  <div class="p-3.5 rounded-2xl bg-slate-50 border border-slate-200">
+                    <div class="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1">${charYou.avatar} ${charYou.name} says:</div>
+                    <p class="text-sm text-slate-700 font-medium">"${item.leadIn} <span class="text-indigo-600 font-bold">[ ? ]</span>${item.suffixText || ''}"</p>
+                  </div>
+                  <div class="p-3.5 rounded-2xl bg-emerald-50/70 border border-emerald-200">
+                    <div class="text-[11px] font-bold uppercase tracking-wider text-emerald-700 mb-1">${charPartner.avatar} ${charPartner.name} replies:</div>
+                    <p class="text-sm text-slate-800 font-medium">"${item.reply}"</p>
+                  </div>
+                </div>
+
+                ${rt.showWhTip ? `
+                  <div class="mb-4 px-4 py-2.5 rounded-2xl bg-amber-50 border border-amber-200 text-amber-900 text-xs sm:text-sm font-medium">
+                    💡 <strong>Clue:</strong> ${item.tip}
+                  </div>
+                ` : ''}
+
+                <!-- Answer Construction Tray -->
+                <div class="mb-4">
+                  <div class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Your Question Order (Tap a placed word to remove):</div>
+                  <div id="wh-tray" class="min-h-[64px] p-3 rounded-2xl bg-indigo-50/60 border-2 border-dashed ${rt.whFeedback?.type === 'error' ? 'border-rose-400 bg-rose-50/50 animate-shake' : 'border-indigo-300'} flex flex-wrap items-center gap-2">
+                    ${rt.whPlacedTiles.length === 0
+                      ? `<span class="text-xs sm:text-sm text-slate-400 italic px-1">Tap the word tiles below in order to build the question...</span>`
+                      : rt.whPlacedTiles.map(tile => `
+                          <button onclick="removeWhTile('${tile.id}')" class="btn-3d px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm sm:text-base border-b-4 border-indigo-800 shadow-xs">
+                            ${tile.text}
+                          </button>
+                        `).join('')
+                    }
+                  </div>
+                </div>
+
+                <!-- Feedback Banner -->
+                ${rt.whFeedback ? `
+                  <div class="mb-4 p-3 rounded-2xl text-xs sm:text-sm font-semibold ${rt.whFeedback.type === 'error' ? 'bg-rose-100 text-rose-800 border border-rose-200' : 'bg-emerald-100 text-emerald-800 border border-emerald-200'}">
+                    ${rt.whFeedback.msg}
+                  </div>
+                ` : ''}
+
+                <!-- Scrambled Word Bank -->
+                <div class="mb-5">
+                  <div class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Scrambled Words:</div>
+                  <div class="flex flex-wrap gap-2">
+                    ${rt.whBankTiles.map(tile => `
+                      <button
+                        onclick="placeWhTile('${tile.id}')"
+                        ${tile.used ? 'disabled' : ''}
+                        class="btn-3d px-3.5 py-2.5 rounded-xl font-semibold text-sm sm:text-base border-2 border-b-4 transition-all ${
+                          tile.used
+                            ? 'bg-slate-100 border-slate-200 text-slate-300 cursor-default'
+                            : 'bg-white hover:bg-amber-50 border-slate-300 hover:border-amber-400 text-slate-800 shadow-xs'
+                        }"
+                      >
+                        ${tile.text}
+                      </button>
+                    `).join('')}
+                  </div>
+                </div>
+
+                <!-- Action Controls -->
+                <div class="flex flex-wrap items-center justify-between gap-2 pt-3 border-t border-slate-100">
+                  <div class="flex items-center gap-2">
+                    <button onclick="clearWhTray()" class="btn-3d px-3.5 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs sm:text-sm border-b-2 border-slate-300">
+                      ↺ Clear
+                    </button>
+                    <button onclick="hintNextWhWord()" class="btn-3d px-3.5 py-2.5 rounded-xl bg-amber-100 hover:bg-amber-200 text-amber-900 font-semibold text-xs sm:text-sm border-b-2 border-amber-300">
+                      ✨ Auto-Place Next Word
+                    </button>
+                  </div>
+
+                  <button
+                    onclick="checkWhOrder()"
+                    ${!allPlaced ? 'disabled' : ''}
+                    class="btn-3d px-6 py-2.5 rounded-2xl font-display font-bold text-sm sm:text-base border-b-4 transition-all ${
+                      allPlaced
+                        ? 'bg-emerald-600 hover:bg-emerald-700 text-white border-emerald-800 shadow-md'
+                        : 'bg-slate-200 text-slate-400 border-slate-300 cursor-not-allowed'
+                    }"
+                  >
+                    Check Order ✓
+                  </button>
+                </div>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      `;
+    }
+
+    function placeWhTile(tileId) {
+      playSound('tap');
+      const tile = state.missionRuntime.whBankTiles.find(t => t.id === tileId);
+      if (!tile || tile.used) return;
+      tile.used = true;
+      state.missionRuntime.whPlacedTiles.push({ id: tile.id, text: tile.text });
+      state.missionRuntime.whFeedback = null;
+      render();
+    }
+
+    function removeWhTile(tileId) {
+      playSound('tap');
+      const bankTile = state.missionRuntime.whBankTiles.find(t => t.id === tileId);
+      if (bankTile) bankTile.used = false;
+      state.missionRuntime.whPlacedTiles = state.missionRuntime.whPlacedTiles.filter(t => t.id !== tileId);
+      state.missionRuntime.whFeedback = null;
+      render();
+    }
+
+    function clearWhTray() {
+      playSound('tap');
+      state.missionRuntime.whBankTiles.forEach(t => (t.used = false));
+      state.missionRuntime.whPlacedTiles = [];
+      state.missionRuntime.whFeedback = null;
+      render();
+    }
+
+    function toggleWhTip() {
+      playSound('tap');
+      state.missionRuntime.showWhTip = !state.missionRuntime.showWhTip;
+      render();
+    }
+
+    function hintNextWhWord() {
+      playSound('tap');
+      const mission = MISSIONS.find(m => m.id === state.activeMissionId);
+      const item = mission.items[state.missionRuntime.currentWhIndex];
+      const placed = state.missionRuntime.whPlacedTiles;
+
+      // Keep any prefix that is already in the exact right spot
+      let validPrefixLen = 0;
+      while (validPrefixLen < placed.length && placed[validPrefixLen].text === item.words[validPrefixLen]) {
+        validPrefixLen++;
+      }
+
+      if (validPrefixLen >= item.words.length) return;
+
+      // Reset all bank tiles, re-apply valid prefix, then place the next required word
+      state.missionRuntime.whBankTiles.forEach(t => (t.used = false));
+      const newPlaced = [];
+
+      for (let i = 0; i <= validPrefixLen; i++) {
+        const neededText = item.words[i];
+        const matchTile = state.missionRuntime.whBankTiles.find(t => !t.used && t.text === neededText);
+        if (matchTile) {
+          matchTile.used = true;
+          newPlaced.push({ id: matchTile.id, text: matchTile.text });
+        }
+      }
+
+      state.missionRuntime.whPlacedTiles = newPlaced;
+      state.missionRuntime.whFeedback = null;
+      showToast(`Placed "${item.words[validPrefixLen]}" in position ${validPrefixLen + 1}!`);
+      render();
+    }
+
+    function checkWhOrder() {
+      const mission = MISSIONS.find(m => m.id === state.activeMissionId);
+      const idx = state.missionRuntime.currentWhIndex;
+      const item = mission.items[idx];
+      const attemptSentence = state.missionRuntime.whPlacedTiles.map(t => t.text).join(' ');
+      const targetSentence = item.words.join(' ');
+
+      const prevRecord = state.missionRuntime.whCompleted[item.id] || { attempts: 0 };
+
+      if (attemptSentence === targetSentence) {
+        playSound('correct');
+        const isFirstTry = prevRecord.attempts === 0;
+        state.missionRuntime.whCompleted[item.id] = {
+          attempts: prevRecord.attempts + 1,
+          firstTry: isFirstTry
+        };
+
+        state.streak += 1;
+        state.bestStreak = Math.max(state.bestStreak, state.streak);
+        const bonus = state.streak >= 3 ? 5 : 0;
+        const earned = (isFirstTry ? 15 : 8) + bonus;
+        state.xp += earned;
+        updateHUD();
+
+        showToast(`+${earned} XP! Great question order!`);
+
+        if (idx + 1 < mission.items.length) {
+          setupWhQuestion(mission, idx + 1);
+          render();
+          setTimeout(() => {
+            window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+          }, 100);
+        } else {
+          render();
+          setTimeout(() => finishMission(mission.id), 650);
+        }
+      } else {
+        playSound('wrong');
+        state.streak = 0;
+        updateHUD();
+        state.missionRuntime.whCompleted[item.id] = { attempts: prevRecord.attempts + 1, firstTry: false };
+        delete state.missionRuntime.whCompleted[item.id]; // keep incomplete until solved
+        // Store attempt count cleanly on item object
+        item._wrongAttempts = (item._wrongAttempts || 0) + 1;
+        state.missionRuntime.showWhTip = true;
+        state.missionRuntime.whFeedback = {
+          type: 'error',
+          msg: `Not quite right! Check the question structure: Wh-word + helping verb + subject + main verb. (${item.tip})`
+        };
+        render();
+      }
+    }
+
+    /* =========================================================================
+       7. MISSION COMPLETION, STARS, BADGES & MODALS
+       ========================================================================= */
+    function finishMission(missionId) {
+      playSound('victory');
+      launchConfetti();
+
+      const mission = MISSIONS.find(m => m.id === missionId);
+      let total = 0;
+      let firstTryCount = 0;
+
+      if (mission.type === 'tenses') {
+        const entries = Object.values(state.missionRuntime.answeredBlanks);
+        total = Object.keys(mission.questions).length;
+        firstTryCount = entries.filter(e => e.firstTry).length;
+      } else {
+        total = mission.items.length;
+        firstTryCount = mission.items.filter(item => !item._wrongAttempts).length;
+        // Reset temporary wrong attempt trackers for future replays
+        mission.items.forEach(item => { item._wrongAttempts = 0; });
+      }
+
+      const accuracy = Math.round((firstTryCount / total) * 100);
+      const stars = accuracy >= 85 ? 3 : accuracy >= 60 ? 2 : 1;
+      const bonusXp = stars * 25;
+      state.xp += bonusXp;
+
+      const prevBest = state.completedMissions[missionId];
+      if (!prevBest || accuracy > prevBest.accuracy) {
+        state.completedMissions[missionId] = {
+          stars,
+          accuracy,
+          score: `${firstTryCount}/${total}`
+        };
+      }
+
+      // Unlock mission badge
+      let newlyUnlockedBadge = null;
+      if (mission.badgeId && !state.unlockedBadges.has(mission.badgeId)) {
+        state.unlockedBadges.add(mission.badgeId);
+        newlyUnlockedBadge = BADGES.find(b => b.id === mission.badgeId);
+      }
+
+      updateHUD();
+
+      // Populate Complete Modal
+      document.getElementById('complete-stars').innerHTML =
+        '⭐'.repeat(stars) + '<span class="opacity-25">' + '⭐'.repeat(3 - stars) + '</span>';
+      document.getElementById('complete-title').textContent =
+        stars === 3 ? 'Flawless Mastery!' : stars === 2 ? 'Great Job!' : 'Quest Cleared!';
+      document.getElementById('complete-subtitle').textContent = mission.title;
+      document.getElementById('complete-score').textContent = `${firstTryCount}/${total}`;
+      document.getElementById('complete-accuracy').textContent = `${accuracy}%`;
+      document.getElementById('complete-xp').textContent = `+${bonusXp} Bonus`;
+
+      const badgeBox = document.getElementById('complete-badge-unlock');
+      if (newlyUnlockedBadge) {
+        badgeBox.classList.remove('hidden');
+        badgeBox.innerHTML = `🎉 <strong>New Trophy Unlocked:</strong> ${newlyUnlockedBadge.icon} ${newlyUnlockedBadge.title}!`;
+      } else {
+        badgeBox.classList.add('hidden');
+      }
+
+      const modal = document.getElementById('complete-modal');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    function retryCurrentMission() {
+      const modal = document.getElementById('complete-modal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+      if (state.activeMissionId) {
+        startMission(state.activeMissionId);
+      }
+    }
+
+    function closeCompleteModalAndGoHome() {
+      const modal = document.getElementById('complete-modal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+      goHome();
+    }
+
+    function openTrophyModal() {
+      playSound('tap');
+      const grid = document.getElementById('trophy-grid');
+      grid.innerHTML = BADGES.map(b => {
+        const unlocked = state.unlockedBadges.has(b.id);
+        return `
+          <div class="p-3.5 rounded-2xl border-2 flex items-center gap-3 ${unlocked ? 'bg-amber-50/70 border-amber-300' : 'bg-slate-50 border-slate-200 opacity-60'}">
+            <div class="w-12 h-12 rounded-2xl ${unlocked ? 'bg-amber-100' : 'bg-slate-200 grayscale'} flex items-center justify-center text-2xl shrink-0">
+              ${b.icon}
+            </div>
+            <div>
+              <div class="font-display font-bold text-sm text-slate-800 flex items-center gap-1.5">
+                <span>${b.title}</span>
+                ${unlocked ? '<span class="text-emerald-600 text-xs">✓</span>' : '<span class="text-slate-400 text-xs">🔒</span>'}
+              </div>
+              <p class="text-xs text-slate-500">${b.desc}</p>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      const modal = document.getElementById('trophy-modal');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    function closeTrophyModal() {
+      const modal = document.getElementById('trophy-modal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    /* =========================================================================
+       8. MAIN RENDER LOOP
+       ========================================================================= */
+    function render() {
+      const main = document.getElementById('app-main');
+      if (state.view === 'home') {
+        main.innerHTML = renderHome();
+      } else if (state.view === 'mission') {
+        const mission = MISSIONS.find(m => m.id === state.activeMissionId);
+        if (!mission) {
+          goHome();
+          return;
+        }
+        if (mission.type === 'tenses') {
+          main.innerHTML = renderTensesMission(mission);
+        } else {
+          main.innerHTML = renderWhMission(mission);
+        }
+      }
+    }
+
+    // Initialize app on window load
+    window.onload = function () {
+      updateHUD();
+      render();
+    };
+  </script>
+</body>
+</html>
