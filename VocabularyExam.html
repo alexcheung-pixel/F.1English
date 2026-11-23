@@ -1,0 +1,2320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>F.1 Vocabulary Quest — Interactive Cloze Adventure</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Inter for UI, Fredoka for friendly gamified headings, Playfair Display for Certificate -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Inter:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,700;1,600&display=swap" rel="stylesheet">
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f4f8;
+            color: #1e293b;
+            overflow-x: hidden;
+        }
+        .font-game {
+            font-family: 'Fredoka', sans-serif;
+        }
+        .font-cert {
+            font-family: 'Playfair Display', serif;
+        }
+        /* Contextual Clue Highlighter Effect */
+        .clue-highlight {
+            background: linear-gradient(120deg, #fef08a 0%, #fde047 100%);
+            color: #0f172a;
+            padding: 2px 6px;
+            border-radius: 6px;
+            font-weight: 600;
+            border-bottom: 2px solid #eab308;
+            transition: all 0.25s ease;
+        }
+        .clue-highlight.active-clue {
+            background: linear-gradient(120deg, #fde047 0%, #facc15 100%);
+            box-shadow: 0 0 0 3px rgba(250, 204, 21, 0.45);
+            border-bottom-color: #ca8a04;
+        }
+        .clues-hidden .clue-highlight {
+            background: transparent;
+            padding: 0;
+            border-bottom: none;
+            font-weight: inherit;
+            box-shadow: none;
+        }
+
+        /* Animations */
+        @keyframes popIn {
+            0% { transform: scale(0.92); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        .animate-pop {
+            animation: popIn 0.28s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-6px); }
+            75% { transform: translateX(6px); }
+        }
+        .animate-shake {
+            animation: shake 0.3s ease-in-out;
+        }
+        @keyframes floatUp {
+            0% { transform: translateY(0) scale(1); opacity: 1; }
+            100% { transform: translateY(-36px) scale(1.15); opacity: 0; }
+        }
+        .xp-floater {
+            animation: floatUp 0.9s ease-out forwards;
+            pointer-events: none;
+        }
+        @keyframes pulseSpeak {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.25); }
+        }
+        .speaking-active {
+            animation: pulseSpeak 0.45s ease-in-out infinite;
+            background-color: #4f46e5 !important;
+            color: #ffffff !important;
+        }
+
+        /* Certificate Ornate Pattern */
+        .cert-frame {
+            background-color: #fffdf7;
+            background-image: radial-gradient(#e2d5b5 0.75px, transparent 0.75px);
+            background-size: 16px 16px;
+        }
+
+        /* Print Styles: Only print the certificate cleanly */
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            #certificate-printable, #certificate-printable * {
+                visibility: visible;
+            }
+            #certificate-printable {
+                position: fixed;
+                left: 0;
+                top: 0;
+                width: 100%;
+                margin: 0;
+                box-shadow: none !important;
+                border-width: 8px !important;
+            }
+            .no-print {
+                display: none !important;
+            }
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col selection:bg-indigo-200 selection:text-indigo-900">
+
+    <!-- Confetti Overlay Canvas -->
+    <canvas id="confetti-canvas" class="fixed inset-0 pointer-events-none z-50"></canvas>
+
+    <!-- Floating XP Toast Container -->
+    <div id="floating-feedback" class="fixed top-20 right-6 z-40 flex flex-col items-end gap-2 pointer-events-none"></div>
+
+    <!-- Top Navigation Bar (Hidden on Welcome Screen) -->
+    <header id="top-nav" class="hidden sticky top-0 z-30 bg-white/95 backdrop-blur border-b border-slate-200 shadow-sm">
+        <div class="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between gap-2">
+            <!-- Student Profile Pill -->
+            <div class="flex items-center gap-2.5">
+                <div id="nav-avatar" class="w-10 h-10 rounded-xl bg-indigo-100 text-2xl flex items-center justify-center shadow-inner border border-indigo-200">🦉</div>
+                <div>
+                    <div class="flex items-center gap-1.5">
+                        <span id="nav-student-name" class="font-bold text-slate-800 text-sm sm:text-base truncate max-w-[130px] sm:max-w-[200px]">Student</span>
+                        <span id="nav-student-class" class="hidden sm:inline-block text-xs font-semibold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">F.1</span>
+                    </div>
+                    <button onclick="openEditNameModal()" class="text-xs text-indigo-600 hover:underline font-medium">Change Name</button>
+                </div>
+            </div>
+
+            <!-- Gamification Stats -->
+            <div class="flex items-center gap-2 sm:gap-4">
+                <!-- Streak Counter -->
+                <div id="streak-pill" class="flex items-center gap-1 bg-orange-50 border border-orange-200 text-orange-700 px-2.5 py-1.5 rounded-xl font-bold text-xs sm:text-sm transition-transform">
+                    <span>🔥</span>
+                    <span id="nav-streak">0</span>
+                    <span class="hidden md:inline">Streak</span>
+                </div>
+
+                <!-- XP Counter -->
+                <div class="flex items-center gap-1.5 bg-amber-50 border border-amber-200 text-amber-800 px-3 py-1.5 rounded-xl font-extrabold text-xs sm:text-sm shadow-sm">
+                    <span>⭐</span>
+                    <span id="nav-xp">0</span>
+                    <span>XP</span>
+                </div>
+
+                <!-- Word Bank Helper Button -->
+                <button onclick="toggleWordBankModal()" class="flex items-center gap-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 px-3 py-1.5 rounded-xl font-semibold text-xs sm:text-sm transition active:scale-95" title="Open Vocabulary Word Bank">
+                    <span>📖</span>
+                    <span class="hidden sm:inline">Word Bank</span>
+                </button>
+
+                <!-- Sound Toggle -->
+                <button id="sound-toggle-btn" onclick="toggleSound()" class="w-9 h-9 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center transition active:scale-95" title="Toggle Sound Effects">
+                    🔊
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- MAIN CONTENT CONTAINER -->
+    <main class="flex-1 flex flex-col">
+
+        <!-- =========================================================
+             SCREEN 1: STUDENT WELCOME & NAME ENTRY
+             ========================================================= -->
+        <section id="screen-welcome" class="flex-1 flex items-center justify-center p-4 sm:p-6 bg-gradient-to-br from-indigo-600 via-blue-600 to-cyan-500">
+            <div class="w-full max-w-lg bg-white rounded-3xl shadow-2xl p-6 sm:p-10 animate-pop border border-white/40">
+                <div class="text-center mb-6">
+                    <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-indigo-50 text-indigo-700 font-bold text-xs uppercase tracking-wider mb-3 border border-indigo-100">
+                        <span>🎓 Form 1 English Challenge</span>
+                    </div>
+                    <h1 class="font-game text-3xl sm:text-4xl font-bold text-slate-900 tracking-tight">
+                        Vocabulary Quest!
+                    </h1>
+                    <p class="text-slate-600 text-sm sm:text-base mt-2">
+                        Read the stories, spot the <span class="clue-highlight">yellow clues</span>, and win your official Achievement Certificate!
+                    </p>
+                </div>
+
+                <!-- Student Name Form -->
+                <form id="welcome-form" onsubmit="handleStartAdventure(event)" class="space-y-5">
+                    <div>
+                        <label for="input-student-name" class="block text-sm font-bold text-slate-700 mb-1.5">
+                            What is your name? <span class="text-rose-500">*</span>
+                        </label>
+                        <input
+                            type="text"
+                            id="input-student-name"
+                            required
+                            maxlength="35"
+                            placeholder="e.g. Chan Tai Man / Emily Wong"
+                            class="w-full px-4 py-3.5 rounded-2xl border-2 border-slate-200 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/15 outline-none text-base sm:text-lg font-semibold text-slate-800 transition"
+                        >
+                        <p class="text-xs text-slate-400 mt-1">Your name will appear on your final Achievement Certificate.</p>
+                    </div>
+
+                    <div>
+                        <label for="input-student-class" class="block text-sm font-bold text-slate-700 mb-1.5">
+                            Class & Class Number <span class="text-slate-400 font-normal">(Optional)</span>
+                        </label>
+                        <input
+                            type="text"
+                            id="input-student-class"
+                            maxlength="15"
+                            placeholder="e.g. 1A (12)"
+                            class="w-full px-4 py-3 rounded-2xl border-2 border-slate-200 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/15 outline-none text-base font-medium text-slate-800 transition"
+                        >
+                    </div>
+
+                    <!-- Mascot Avatar Picker -->
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 mb-2">Choose Your Study Buddy:</label>
+                        <div class="grid grid-cols-4 gap-3" id="avatar-picker">
+                            <button type="button" onclick="selectAvatar('🦉', this)" class="avatar-btn active-avatar flex flex-col items-center p-3 rounded-2xl border-2 border-indigo-500 bg-indigo-50 transition transform hover:scale-105">
+                                <span class="text-3xl">🦉</span>
+                                <span class="text-xs font-bold text-indigo-700 mt-1">Owl</span>
+                            </button>
+                            <button type="button" onclick="selectAvatar('🐱', this)" class="avatar-btn flex flex-col items-center p-3 rounded-2xl border-2 border-slate-200 hover:border-indigo-300 bg-white transition transform hover:scale-105">
+                                <span class="text-3xl">🐱</span>
+                                <span class="text-xs font-semibold text-slate-600 mt-1">Kitty</span>
+                            </button>
+                            <button type="button" onclick="selectAvatar('🚀', this)" class="avatar-btn flex flex-col items-center p-3 rounded-2xl border-2 border-slate-200 hover:border-indigo-300 bg-white transition transform hover:scale-105">
+                                <span class="text-3xl">🚀</span>
+                                <span class="text-xs font-semibold text-slate-600 mt-1">Rocket</span>
+                            </button>
+                            <button type="button" onclick="selectAvatar('🤖', this)" class="avatar-btn flex flex-col items-center p-3 rounded-2xl border-2 border-slate-200 hover:border-indigo-300 bg-white transition transform hover:scale-105">
+                                <span class="text-3xl">🤖</span>
+                                <span class="text-xs font-semibold text-slate-600 mt-1">Robo</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <button
+                        type="submit"
+                        class="w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 text-white font-game font-bold text-xl shadow-lg shadow-indigo-500/30 transition transform active:scale-[0.98] flex items-center justify-center gap-2"
+                    >
+                        <span>Start Learning Adventure</span>
+                        <span>➔</span>
+                    </button>
+                </form>
+            </div>
+        </section>
+
+        <!-- =========================================================
+             SCREEN 2: MISSION HUB (CHOOSE SET & DIFFICULTY LEVEL)
+             ========================================================= -->
+        <section id="screen-hub" class="hidden flex-1 max-w-6xl w-full mx-auto px-4 py-6 sm:py-8 space-y-8 animate-pop">
+            <!-- Welcome Banner -->
+            <div class="bg-gradient-to-r from-indigo-600 to-blue-600 rounded-3xl p-6 sm:p-8 text-white shadow-lg flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                <div>
+                    <h2 class="font-game text-2xl sm:text-3xl font-bold">
+                        Welcome, <span id="hub-greeting-name">Explorer</span>! 👋
+                    </h2>
+                    <p class="text-indigo-100 text-sm sm:text-base mt-1">
+                        Choose a story below and pick your difficulty level. Complete any story (15 questions) to earn your certificate!
+                    </p>
+                </div>
+                <div class="flex items-center gap-3 bg-white/15 backdrop-blur-sm px-4 py-3 rounded-2xl border border-white/20 shrink-0">
+                    <div class="text-center px-2">
+                        <div class="text-2xl font-extrabold" id="hub-completed-count">0/3</div>
+                        <div class="text-xs text-indigo-100 font-medium">Stories Done</div>
+                    </div>
+                    <div class="h-8 w-px bg-white/25"></div>
+                    <div class="text-center px-2">
+                        <div class="text-2xl font-extrabold" id="hub-total-xp">0</div>
+                        <div class="text-xs text-indigo-100 font-medium">Total XP</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 1: Choose Difficulty Level -->
+            <div class="bg-white rounded-3xl p-5 sm:p-6 shadow-sm border border-slate-200">
+                <h3 class="font-game text-lg sm:text-xl font-bold text-slate-800 mb-3 flex items-center gap-2">
+                    <span class="w-7 h-7 rounded-lg bg-indigo-100 text-indigo-700 flex items-center justify-center text-sm font-extrabold">1</span>
+                    <span>Choose Your Difficulty Level</span>
+                </h3>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-3.5" id="level-selector">
+                    <!-- Level 1 -->
+                    <button type="button" onclick="selectDifficulty(1)" id="lvl-btn-1" class="lvl-card text-left p-4 rounded-2xl border-2 border-emerald-500 bg-emerald-50/70 transition relative">
+                        <div class="flex items-center justify-between mb-1">
+                            <span class="px-2.5 py-0.5 rounded-full bg-emerald-500 text-white text-xs font-bold">LEVEL 1 • EASY</span>
+                            <span class="text-sm font-extrabold text-emerald-700">100 XP / Q</span>
+                        </div>
+                        <div class="font-bold text-slate-900 text-base sm:text-lg mt-1">Multiple Choice (A, B, C, D)</div>
+                        <p class="text-xs sm:text-sm text-slate-600 mt-1">Pick the best answer from 4 choices using the yellow clues.</p>
+                    </button>
+
+                    <!-- Level 2 -->
+                    <button type="button" onclick="selectDifficulty(2)" id="lvl-btn-2" class="lvl-card text-left p-4 rounded-2xl border-2 border-slate-200 hover:border-amber-400 bg-white transition relative">
+                        <div class="flex items-center justify-between mb-1">
+                            <span class="px-2.5 py-0.5 rounded-full bg-amber-500 text-white text-xs font-bold">LEVEL 2 • MEDIUM</span>
+                            <span class="text-sm font-extrabold text-amber-700">150 XP / Q</span>
+                        </div>
+                        <div class="font-bold text-slate-900 text-base sm:text-lg mt-1">First-Letter Hints</div>
+                        <p class="text-xs sm:text-sm text-slate-600 mt-1">Type the word! We give you the first letter(s) to help you start.</p>
+                    </button>
+
+                    <!-- Level 3 -->
+                    <button type="button" onclick="selectDifficulty(3)" id="lvl-btn-3" class="lvl-card text-left p-4 rounded-2xl border-2 border-slate-200 hover:border-rose-400 bg-white transition relative">
+                        <div class="flex items-center justify-between mb-1">
+                            <span class="px-2.5 py-0.5 rounded-full bg-rose-500 text-white text-xs font-bold">LEVEL 3 • CHALLENGE</span>
+                            <span class="text-sm font-extrabold text-rose-700">200 XP / Q</span>
+                        </div>
+                        <div class="font-bold text-slate-900 text-base sm:text-lg mt-1">Open Cloze (No Hints)</div>
+                        <p class="text-xs sm:text-sm text-slate-600 mt-1">True master mode! No options and no letters—use the clues only.</p>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Step 2: Choose Story Set -->
+            <div>
+                <h3 class="font-game text-lg sm:text-xl font-bold text-slate-800 mb-3 flex items-center gap-2 px-1">
+                    <span class="w-7 h-7 rounded-lg bg-indigo-100 text-indigo-700 flex items-center justify-center text-sm font-extrabold">2</span>
+                    <span>Choose a Story Mission (15 Questions Each)</span>
+                </h3>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-5" id="sets-grid">
+                    <!-- Set Cards injected by JS -->
+                </div>
+            </div>
+
+            <!-- Earned Certificates Shelf (if any completed) -->
+            <div id="past-certificates-box" class="hidden bg-white rounded-3xl p-6 shadow-sm border border-amber-200">
+                <h3 class="font-game text-lg font-bold text-slate-800 mb-3 flex items-center gap-2">
+                    <span>🏆</span>
+                    <span>Your Earned Certificates</span>
+                </h3>
+                <div id="past-certificates-list" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3"></div>
+            </div>
+        </section>
+
+        <!-- =========================================================
+             SCREEN 3: INTERACTIVE CLOZE GAMEPLAY
+             ========================================================= -->
+        <section id="screen-play" class="hidden flex-1 max-w-6xl w-full mx-auto px-4 py-4 sm:py-6 flex flex-col gap-4">
+            <!-- Top Mission Control Bar -->
+            <div class="bg-white rounded-2xl p-3.5 sm:p-4 shadow-sm border border-slate-200 flex flex-wrap items-center justify-between gap-3">
+                <div class="flex items-center gap-3">
+                    <button onclick="returnToHub()" class="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs sm:text-sm transition flex items-center gap-1">
+                        <span>←</span>
+                        <span>Stories</span>
+                    </button>
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <span id="play-set-badge" class="text-xs font-extrabold px-2 py-0.5 rounded-md bg-indigo-100 text-indigo-700">SET 1</span>
+                            <span id="play-level-badge" class="text-xs font-extrabold px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-700">LEVEL 1</span>
+                        </div>
+                        <h2 id="play-story-title" class="font-game font-bold text-slate-900 text-base sm:text-lg leading-tight mt-0.5">Story Title</h2>
+                    </div>
+                </div>
+
+                <!-- Controls & Progress -->
+                <div class="flex items-center gap-3 ml-auto">
+                    <!-- Toggle Yellow Clue Highlighter -->
+                    <button id="toggle-clues-btn" onclick="toggleCluesVisibility()" class="px-3 py-2 rounded-xl bg-amber-100 hover:bg-amber-200 text-amber-900 border border-amber-300 font-bold text-xs sm:text-sm transition flex items-center gap-1.5" title="Show or Hide Yellow Clue Highlights">
+                        <span>🖍️</span>
+                        <span id="toggle-clues-label">Clues: ON</span>
+                    </button>
+
+                    <!-- Progress Pill -->
+                    <div class="bg-slate-100 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-extrabold text-slate-700">
+                        <span id="play-progress-text">0 / 15</span> Done
+                    </div>
+                </div>
+
+                <!-- Full Width Progress Bar -->
+                <div class="w-full h-2.5 bg-slate-100 rounded-full overflow-hidden">
+                    <div id="play-progress-bar" class="h-full bg-gradient-to-r from-emerald-400 to-indigo-500 transition-all duration-500 rounded-full" style="width: 0%"></div>
+                </div>
+            </div>
+
+            <!-- Interactive Word Bank (Placed Before the Exercise) -->
+            <div id="exercise-wordbank" class="bg-white rounded-3xl p-4 sm:p-5 shadow-sm border-2 border-indigo-100">
+                <div class="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-slate-100">
+                    <div>
+                        <h3 class="font-game text-base sm:text-lg font-bold text-indigo-950 flex items-center gap-2">
+                            <span>📖 Word Bank</span>
+                            <span class="text-xs font-sans font-semibold px-2.5 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200">40 Scope Words</span>
+                        </h3>
+                        <p class="text-xs sm:text-sm text-slate-500 mt-0.5">
+                            Syllables are shown in <strong>different colours</strong> to help you spell! Tap a <strong>word</strong> for Traditional Chinese (except HK places), or tap <strong>🔊</strong> to listen slowly.
+                        </p>
+                    </div>
+                    <button type="button" onclick="toggleExerciseWordBankBody()" id="wb-collapse-btn" class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition">
+                        Hide Word Bank ▲
+                    </button>
+                </div>
+
+                <div id="exercise-wordbank-body" class="mt-3 space-y-3">
+                    <!-- Category Filter Tabs -->
+                    <div class="flex flex-wrap gap-1.5" id="wb-category-tabs">
+                        <button type="button" onclick="filterExerciseWordBank('all')" data-wb-cat="all" class="wb-cat-btn px-3 py-1 rounded-xl text-xs font-bold bg-indigo-600 text-white transition">All (40)</button>
+                        <button type="button" onclick="filterExerciseWordBank('places')" data-wb-cat="places" class="wb-cat-btn px-3 py-1 rounded-xl text-xs font-bold bg-slate-100 text-slate-700 hover:bg-slate-200 transition">🏫 Places & Facilities (8)</button>
+                        <button type="button" onclick="filterExerciseWordBank('clubs')" data-wb-cat="clubs" class="wb-cat-btn px-3 py-1 rounded-xl text-xs font-bold bg-slate-100 text-slate-700 hover:bg-slate-200 transition">🎨 Clubs & Subjects (8)</button>
+                        <button type="button" onclick="filterExerciseWordBank('adjectives')" data-wb-cat="adjectives" class="wb-cat-btn px-3 py-1 rounded-xl text-xs font-bold bg-slate-100 text-slate-700 hover:bg-slate-200 transition">✨ Adjectives (15)</button>
+                        <button type="button" onclick="filterExerciseWordBank('animals')" data-wb-cat="animals" class="wb-cat-btn px-3 py-1 rounded-xl text-xs font-bold bg-slate-100 text-slate-700 hover:bg-slate-200 transition">🐾 Animals & Pet Care (9)</button>
+                    </div>
+
+                    <!-- Interactive Word Chips Container -->
+                    <div id="exercise-wordbank-grid" class="flex flex-wrap gap-2.5 max-h-72 overflow-y-auto pr-1">
+                        <!-- Word chips injected by JS -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Two-Column Play Area (Passage Left/Top, Interactive Answer Console Right/Bottom) -->
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start flex-1">
+
+                <!-- Passage Reading Card (7 cols on desktop) -->
+                <div id="passage-container" class="lg:col-span-7 bg-white rounded-3xl p-5 sm:p-8 shadow-sm border border-slate-200 leading-loose text-base sm:text-lg text-slate-800 space-y-4">
+                    <!-- Story Paragraphs rendered dynamically -->
+                </div>
+
+                <!-- Interactive Answer Console (5 cols on desktop, sticky) -->
+                <div class="lg:col-span-5 lg:sticky lg:top-24 space-y-4">
+                    <div id="answer-console" class="bg-white rounded-3xl p-5 sm:p-6 shadow-md border-2 border-indigo-100">
+                        <!-- Active Blank Header -->
+                        <div class="flex items-center justify-between mb-3">
+                            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-600 text-white font-game font-bold text-sm">
+                                <span>Question</span>
+                                <span id="console-q-num">[1]</span>
+                                <span>of 15</span>
+                            </span>
+                            <div class="flex items-center gap-1">
+                                <button onclick="jumpBlank(-1)" class="w-8 h-8 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold flex items-center justify-center" title="Previous Blank">‹</button>
+                                <button onclick="jumpBlank(1)" class="w-8 h-8 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold flex items-center justify-center" title="Next Blank">›</button>
+                            </div>
+                        </div>
+
+                        <!-- Highlighted Contextual Clue Box -->
+                        <div class="bg-amber-50 border border-amber-200 rounded-2xl p-3.5 mb-4">
+                            <div class="text-xs font-extrabold uppercase tracking-wider text-amber-700 mb-1 flex items-center gap-1">
+                                <span>💡 Contextual Clue in Story:</span>
+                            </div>
+                            <p id="console-clue-text" class="text-sm sm:text-base font-semibold text-slate-800 italic">
+                                "..."
+                            </p>
+                        </div>
+
+                        <!-- Dynamic Input Area (Level 1 MC vs Level 2/3 Typing) -->
+                        <div id="console-input-area">
+                            <!-- Injected dynamically -->
+                        </div>
+
+                        <!-- Feedback Message Box -->
+                        <div id="console-feedback" class="hidden mt-4 p-3.5 rounded-2xl text-sm font-bold flex items-center gap-2"></div>
+                    </div>
+
+                    <!-- Quick Blank Navigator Grid (1 to 15) -->
+                    <div class="bg-white rounded-3xl p-4 shadow-sm border border-slate-200">
+                        <div class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2.5 flex items-center justify-between">
+                            <span>Jump to Question:</span>
+                            <span class="text-emerald-600 font-semibold">Green = Solved</span>
+                        </div>
+                        <div id="blank-navigator" class="grid grid-cols-5 gap-2">
+                            <!-- 15 numbered pills -->
+                        </div>
+
+                        <!-- Claim Certificate Button (Appears when all 15 are solved) -->
+                        <button id="claim-cert-btn" onclick="finishSetAndShowCertificate()" class="hidden w-full mt-4 py-3.5 px-4 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-game font-bold text-lg shadow-lg shadow-amber-500/30 transition transform animate-bounce flex items-center justify-center gap-2">
+                            <span>🏆</span>
+                            <span>Claim My Certificate!</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- =========================================================
+             SCREEN 4: ACHIEVEMENT & PRINTABLE CERTIFICATE
+             ========================================================= -->
+        <section id="screen-certificate" class="hidden flex-1 max-w-4xl w-full mx-auto px-4 py-6 sm:py-10 space-y-6 animate-pop">
+            <!-- Celebration Header (Hidden when printing) -->
+            <div class="no-print text-center space-y-2">
+                <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-100 text-emerald-800 font-bold text-sm">
+                    <span>🎉 Mission Accomplished!</span>
+                </div>
+                <h2 class="font-game text-3xl sm:text-4xl font-bold text-slate-900">
+                    Congratulations, <span id="cert-hero-name" class="text-indigo-600">Student</span>!
+                </h2>
+                <p class="text-slate-600 text-sm sm:text-base">
+                    You completed all 15 blanks! Here are the achievements you unlocked:
+                </p>
+            </div>
+
+            <!-- Unlocked Achievements Badges Row (Hidden when printing) -->
+            <div id="cert-badges-row" class="no-print grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <!-- Badges injected by JS -->
+            </div>
+
+            <!-- OFFICIAL CERTIFICATE CARD -->
+            <div id="certificate-printable" class="cert-frame relative rounded-3xl border-[10px] border-double border-amber-500 shadow-2xl p-6 sm:p-12 text-center overflow-hidden">
+                <!-- Decorative Corner Ornaments -->
+                <div class="absolute top-3 left-3 w-10 h-10 border-t-4 border-l-4 border-indigo-800 rounded-tl-lg opacity-60"></div>
+                <div class="absolute top-3 right-3 w-10 h-10 border-t-4 border-r-4 border-indigo-800 rounded-tr-lg opacity-60"></div>
+                <div class="absolute bottom-3 left-3 w-10 h-10 border-b-4 border-l-4 border-indigo-800 rounded-bl-lg opacity-60"></div>
+                <div class="absolute bottom-3 right-3 w-10 h-10 border-b-4 border-r-4 border-indigo-800 rounded-br-lg opacity-60"></div>
+
+                <!-- School / Program Header -->
+                <div class="text-xs sm:text-sm font-extrabold tracking-[0.2em] uppercase text-indigo-800 mb-2">
+                    Form 1 English Language • Contextual Cloze Challenge
+                </div>
+                <h1 class="font-cert text-3xl sm:text-5xl font-bold text-slate-900 tracking-tight mb-3">
+                    Certificate of Achievement
+                </h1>
+                <div class="w-32 h-1 bg-gradient-to-r from-transparent via-amber-500 to-transparent mx-auto mb-5"></div>
+
+                <p class="text-slate-600 text-sm sm:text-base italic">This certificate is proudly awarded to</p>
+
+                <!-- Student Name -->
+                <div class="my-3">
+                    <div id="cert-student-name" class="font-cert text-3xl sm:text-5xl font-bold text-indigo-700 border-b-2 border-slate-300 inline-block px-6 pb-1">
+                        Student Name
+                    </div>
+                    <div id="cert-student-class" class="text-sm font-bold text-slate-500 mt-1"></div>
+                </div>
+
+                <!-- Achievement Rank Banner -->
+                <div class="my-5 inline-flex items-center gap-2 px-5 py-2 rounded-full bg-amber-100 border-2 border-amber-400 text-amber-900 font-game font-bold text-base sm:text-xl shadow-sm">
+                    <span id="cert-rank-icon">🥇</span>
+                    <span id="cert-rank-title">Gold Vocabulary Master</span>
+                </div>
+
+                <!-- Completion Description -->
+                <p class="text-slate-700 text-sm sm:text-lg max-w-2xl mx-auto leading-relaxed">
+                    for successfully completing <strong id="cert-set-name" class="text-slate-900">Set 1: My New Secondary School Life</strong>
+                    at <strong id="cert-level-name" class="text-indigo-700">Level 1 (Multiple Choice)</strong> using contextual clues.
+                </p>
+
+                <!-- Stats Summary Box -->
+                <div class="grid grid-cols-3 gap-3 max-w-lg mx-auto my-6 bg-white/90 rounded-2xl p-4 border border-amber-200 shadow-sm">
+                    <div>
+                        <div class="text-xs font-bold uppercase text-slate-400">First-Try Score</div>
+                        <div id="cert-score" class="text-xl sm:text-2xl font-extrabold text-slate-900">15 / 15</div>
+                    </div>
+                    <div class="border-x border-slate-200">
+                        <div class="text-xs font-bold uppercase text-slate-400">Accuracy</div>
+                        <div id="cert-accuracy" class="text-xl sm:text-2xl font-extrabold text-emerald-600">100%</div>
+                    </div>
+                    <div>
+                        <div class="text-xs font-bold uppercase text-slate-400">XP Earned</div>
+                        <div id="cert-xp" class="text-xl sm:text-2xl font-extrabold text-amber-600">+1500 XP</div>
+                    </div>
+                </div>
+
+                <!-- Footer Signatures & Date -->
+                <div class="flex flex-col sm:flex-row items-center justify-between gap-6 max-w-xl mx-auto mt-8 pt-4 text-xs sm:text-sm text-slate-600">
+                    <div class="text-center">
+                        <div id="cert-date" class="font-bold text-slate-800 border-b border-slate-400 px-6 pb-1">23 Nov 2026</div>
+                        <div class="mt-1 text-xs uppercase tracking-wider text-slate-400">Date Completed</div>
+                    </div>
+
+                    <!-- Gold Seal SVG -->
+                    <div class="w-16 h-16 rounded-full bg-gradient-to-br from-amber-300 via-amber-500 to-yellow-600 flex items-center justify-center text-white shadow-md border-4 border-amber-200">
+                        <span class="text-2xl">★</span>
+                    </div>
+
+                    <div class="text-center">
+                        <div class="font-cert italic font-bold text-slate-800 border-b border-slate-400 px-6 pb-1">F.1 English Department</div>
+                        <div class="mt-1 text-xs uppercase tracking-wider text-slate-400">Verified Achievement</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Buttons (Hidden when printing) -->
+            <div class="no-print flex flex-wrap items-center justify-center gap-3 pt-2">
+                <button onclick="downloadCertificatePNG()" class="px-6 py-3.5 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-game font-bold text-base sm:text-lg shadow-lg shadow-emerald-500/25 transition flex items-center gap-2 active:scale-95">
+                    <span>📥</span>
+                    <span>Save Certificate Image (PNG)</span>
+                </button>
+                <button onclick="window.print()" class="px-6 py-3.5 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-game font-bold text-base sm:text-lg shadow-lg shadow-indigo-500/25 transition flex items-center gap-2 active:scale-95">
+                    <span>🖨️</span>
+                    <span>Print / Save PDF</span>
+                </button>
+                <button onclick="returnToHub()" class="px-6 py-3.5 rounded-2xl bg-white hover:bg-slate-50 text-slate-800 border-2 border-slate-200 font-game font-bold text-base sm:text-lg transition flex items-center gap-2 active:scale-95">
+                    <span>🗺️</span>
+                    <span>Try Another Story / Level</span>
+                </button>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- =========================================================
+         MODAL 1: VOCABULARY SCOPE WORD BANK (40 ITEMS)
+         ========================================================= -->
+    <div id="modal-wordbank" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl max-w-3xl w-full max-h-[85vh] flex flex-col shadow-2xl animate-pop overflow-hidden">
+            <div class="p-5 border-b border-slate-200 flex items-center justify-between bg-indigo-50">
+                <div>
+                    <h3 class="font-game text-xl font-bold text-indigo-950">📖 Unit Vocabulary Scope (40 Words)</h3>
+                    <p class="text-xs text-indigo-700">Use this word bank to check spelling and word meanings!</p>
+                </div>
+                <button onclick="toggleWordBankModal()" class="w-9 h-9 rounded-xl bg-white text-slate-600 hover:text-slate-900 font-bold shadow-sm">✕</button>
+            </div>
+            <div class="p-5 overflow-y-auto grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+                <div class="bg-blue-50/60 p-4 rounded-2xl border border-blue-100">
+                    <h4 class="font-extrabold text-blue-900 mb-2">🏫 Places & Facilities (8)</h4>
+                    <div class="flex flex-wrap gap-1.5" id="wb-places"></div>
+                </div>
+                <div class="bg-purple-50/60 p-4 rounded-2xl border border-purple-100">
+                    <h4 class="font-extrabold text-purple-900 mb-2">🎨 Clubs & Subjects (8)</h4>
+                    <div class="flex flex-wrap gap-1.5" id="wb-clubs"></div>
+                </div>
+                <div class="bg-amber-50/60 p-4 rounded-2xl border border-amber-100">
+                    <h4 class="font-extrabold text-amber-900 mb-2">✨ Adjectives (15)</h4>
+                    <div class="flex flex-wrap gap-1.5" id="wb-adjectives"></div>
+                </div>
+                <div class="bg-emerald-50/60 p-4 rounded-2xl border border-emerald-100">
+                    <h4 class="font-extrabold text-emerald-900 mb-2">🐾 Animals & Pet Care (9)</h4>
+                    <div class="flex flex-wrap gap-1.5" id="wb-animals"></div>
+                </div>
+            </div>
+            <div class="p-4 border-t border-slate-100 bg-slate-50 text-right">
+                <button onclick="toggleWordBankModal()" class="px-5 py-2 rounded-xl bg-indigo-600 text-white font-bold text-sm">Got it!</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- =========================================================
+         MODAL 2: EDIT STUDENT NAME
+         ========================================================= -->
+    <div id="modal-edit-name" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl animate-pop">
+            <h3 class="font-game text-xl font-bold text-slate-900 mb-4">✏️ Update Student Details</h3>
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-xs font-bold uppercase text-slate-500 mb-1">Student Name</label>
+                    <input type="text" id="edit-name-input" maxlength="35" class="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-indigo-500 outline-none font-bold">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold uppercase text-slate-500 mb-1">Class & Number (Optional)</label>
+                    <input type="text" id="edit-class-input" maxlength="15" class="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-indigo-500 outline-none font-medium">
+                </div>
+                <div class="flex justify-end gap-2 pt-2">
+                    <button onclick="closeEditNameModal()" class="px-4 py-2.5 rounded-xl bg-slate-100 text-slate-700 font-bold text-sm">Cancel</button>
+                    <button onclick="saveEditedName()" class="px-5 py-2.5 rounded-xl bg-indigo-600 text-white font-bold text-sm">Save Changes</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Offscreen Canvas for High-Res PNG Certificate Export -->
+    <canvas id="export-cert-canvas" width="1200" height="850" class="hidden"></canvas>
+
+    <!-- =========================================================
+         APPLICATION JAVASCRIPT & DATA
+         ========================================================= -->
+    <script>
+        // -------------------------------------------------------------
+        // 1. VOCABULARY SCOPE DATA (40 ITEMS WITH TRADITIONAL CHINESE)
+        // -------------------------------------------------------------
+        // Note: Hong Kong place names have hkPlace: true and no Chinese translation shown.
+        const VOCAB_SCOPE = {
+            places: [
+                { word: "Admiralty", syllables: ["Ad", "mi", "ral", "ty"], zh: null, hkPlace: true },
+                { word: "Causeway Bay", syllables: ["Cause", "way", " ", "Bay"], zh: null, hkPlace: true },
+                { word: "Fortress Hill", syllables: ["For", "tress", " ", "Hill"], zh: null, hkPlace: true },
+                { word: "Lantau Island", syllables: ["Lan", "tau", " ", "Is", "land"], zh: null, hkPlace: true },
+                { word: "assembly hall", syllables: ["as", "sem", "bly", " ", "hall"], zh: "禮堂", hkPlace: false },
+                { word: "dormitories", syllables: ["dor", "mi", "to", "ries"], zh: "宿舍", hkPlace: false },
+                { word: "science laboratory", syllables: ["sci", "ence", " ", "la", "bo", "ra", "to", "ry"], zh: "科學實驗室", hkPlace: false },
+                { word: "vending machine", syllables: ["ven", "ding", " ", "ma", "chine"], zh: "自動售賣機", hkPlace: false }
+            ],
+            clubs: [
+                { word: "Astronomy Club", syllables: ["As", "tro", "no", "my", " ", "Club"], zh: "天文學會", hkPlace: false },
+                { word: "Debating Society", syllables: ["De", "ba", "ting", " ", "So", "ci", "e", "ty"], zh: "辯論學會", hkPlace: false },
+                { word: "Environment Club", syllables: ["En", "vi", "ron", "ment", " ", "Club"], zh: "環保學會", hkPlace: false },
+                { word: "Physical Education", syllables: ["Phy", "si", "cal", " ", "E", "du", "ca", "tion"], zh: "體育（科）", hkPlace: false },
+                { word: "School Orchestra", syllables: ["School", " ", "Or", "ches", "tra"], zh: "學校管弦樂團", hkPlace: false },
+                { word: "Social Services Club", syllables: ["So", "cial", " ", "Ser", "vi", "ces", " ", "Club"], zh: "社會服務團", hkPlace: false },
+                { word: "Technology Club", syllables: ["Tech", "no", "lo", "gy", " ", "Club"], zh: "科技學會", hkPlace: false },
+                { word: "Visual Arts", syllables: ["Vi", "su", "al", " ", "Arts"], zh: "視覺藝術（科）", hkPlace: false }
+            ],
+            adjectives: [
+                { word: "ambitious", syllables: ["am", "bi", "tious"], zh: "有抱負的；有野心的", hkPlace: false },
+                { word: "complicated", syllables: ["com", "pli", "ca", "ted"], zh: "複雜的", hkPlace: false },
+                { word: "curious", syllables: ["cu", "ri", "ous"], zh: "好奇的", hkPlace: false },
+                { word: "disappointed", syllables: ["dis", "ap", "poin", "ted"], zh: "失望的", hkPlace: false },
+                { word: "enthusiastic", syllables: ["en", "thu", "si", "as", "tic"], zh: "熱情的；熱衷的", hkPlace: false },
+                { word: "essential", syllables: ["es", "sen", "tial"], zh: "必要的；不可缺少的", hkPlace: false },
+                { word: "humorous", syllables: ["hu", "mo", "rous"], zh: "幽默的；風趣的", hkPlace: false },
+                { word: "independent", syllables: ["in", "de", "pen", "dent"], zh: "獨立的", hkPlace: false },
+                { word: "international", syllables: ["in", "ter", "na", "tio", "nal"], zh: "國際的", hkPlace: false },
+                { word: "motivated", syllables: ["mo", "ti", "va", "ted"], zh: "有動力的；積極的", hkPlace: false },
+                { word: "mysterious", syllables: ["mys", "te", "ri", "ous"], zh: "神秘的", hkPlace: false },
+                { word: "practical", syllables: ["prac", "ti", "cal"], zh: "實用的；切合實際的", hkPlace: false },
+                { word: "significant", syllables: ["sig", "ni", "fi", "cant"], zh: "重大的；顯著的", hkPlace: false },
+                { word: "sceptical", syllables: ["scep", "ti", "cal"], zh: "懷疑的", hkPlace: false },
+                { word: "successful", syllables: ["suc", "cess", "ful"], zh: "成功的", hkPlace: false }
+            ],
+            animals: [
+                { word: "adoption", syllables: ["a", "dop", "tion"], zh: "領養", hkPlace: false },
+                { word: "domestic", syllables: ["do", "mes", "tic"], zh: "家養的；馴養的", hkPlace: false },
+                { word: "exotic", syllables: ["e", "xo", "tic"], zh: "珍奇的；外來的", hkPlace: false },
+                { word: "feathers", syllables: ["fea", "thers"], zh: "羽毛", hkPlace: false },
+                { word: "fur", syllables: ["fur"], zh: "毛皮；軟毛", hkPlace: false },
+                { word: "rescue", syllables: ["res", "cue"], zh: "拯救；救援", hkPlace: false },
+                { word: "shelter", syllables: ["shel", "ter"], zh: "收容所；庇護所", hkPlace: false },
+                { word: "vaccinations", syllables: ["vac", "ci", "na", "tions"], zh: "疫苗接種；打預防針", hkPlace: false },
+                { word: "whiskers", syllables: ["whis", "kers"], zh: "鬍鬚（動物的）", hkPlace: false }
+            ]
+        };
+
+        // -------------------------------------------------------------
+        // 2. THREE COMPLETE CLOZE PASSAGE SETS (15 QUESTIONS EACH)
+        // -------------------------------------------------------------
+        // Segment format:
+        // { t: "plain text" }
+        // { c: "highlighted contextual clue text", q: 1 } (linked to question id)
+        // { b: 1 } (interactive blank #1)
+        const CLOZE_SETS = [
+            {
+                id: 1,
+                icon: "🏫",
+                title: "My New Secondary School Life in Hong Kong",
+                subtitle: "Diary Entry • School Facilities, Subjects & Clubs",
+                color: "blue",
+                paragraphs: [
+                    [
+                        { t: "Every morning, I take the MTR to " },
+                        { b: 1 },
+                        { t: ". " },
+                        { c: "When I get off the train at this busy station on Hong Kong Island", q: 1 },
+                        { t: ", I walk up the hill to my new school. At 8:00 a.m., all students meet in the " },
+                        { b: 2 },
+                        { t: ". " },
+                        { c: "This big room has a stage and hundreds of chairs for the whole school", q: 2 },
+                        { t: " to listen to the principal." }
+                    ],
+                    [
+                        { t: "After morning assembly, we go to the " },
+                        { b: 3 },
+                        { t: ". " },
+                        { c: "In this special room, we wear safety glasses and do fun experiments", q: 3 },
+                        { t: " with our teacher. At recess, I feel thirsty. I put a coin into the " },
+                        { b: 4 },
+                        { t: " " },
+                        { c: "near the playground to buy a cold drink", q: 4 },
+                        { t: "." }
+                    ],
+                    [
+                        { t: "We have many interesting lessons. On Tuesday afternoons, we have " },
+                        { b: 5 },
+                        { t: ". " },
+                        { c: "We wear our sports uniforms, run around the court, and play basketball", q: 5 },
+                        { t: ". My best friend Leo likes drawing and painting. His favourite subject is " },
+                        { b: 6 },
+                        { t: " " },
+                        { c: "because he loves making colourful pictures", q: 6 },
+                        { t: "." }
+                    ],
+                    [
+                        { t: "After school, we can join different clubs. I join the " },
+                        { b: 7 },
+                        { t: ". " },
+                        { c: "We use a telescope to look at the moon, stars, and planets", q: 7 },
+                        { t: " in the night sky. Leo joins the " },
+                        { b: 8 },
+                        { t: ". " },
+                        { c: "He loves computers and enjoys learning how to build small robots", q: 8 },
+                        { t: ". We also care about the Earth. Members of the " },
+                        { b: 9 },
+                        { t: " " },
+                        { c: "collect plastic bottles for recycling and plant green trees", q: 9 },
+                        { t: " around the campus." }
+                    ],
+                    [
+                        { t: "I am very " },
+                        { b: 10 },
+                        { t: " about everything in my new school. " },
+                        { c: "I always ask my teachers many questions because I want to learn new things", q: 10 },
+                        { t: ". Our English teacher is very " },
+                        { b: 11 },
+                        { t: ". " },
+                        { c: "She smiles a lot, speaks with great energy, and makes every lesson exciting", q: 11 },
+                        { t: ". My deskmate Ben is " },
+                        { b: 12 },
+                        { t: ". " },
+                        { c: "He always tells funny jokes and makes everyone laugh", q: 12 },
+                        { t: " during lunch." }
+                    ],
+                    [
+                        { t: "At first, reading the school timetable was " },
+                        { b: 13 },
+                        { t: ". " },
+                        { c: "There were too many rooms and subjects, so it was hard to understand", q: 13 },
+                        { t: ". Now I know how to plan my day. Good time management is " },
+                        { b: 14 },
+                        { t: " " },
+                        { c: "because every student needs it to finish homework on time", q: 14 },
+                        { t: ". I hope to become a " },
+                        { b: 15 },
+                        { t: " student this year. " },
+                        { c: "If I work hard, I can get good grades and reach my goals", q: 15 },
+                        { t: "." }
+                    ]
+                ],
+                questions: [
+                    { id: 1, answer: "Admiralty", hint: "A________", clue: "When I get off the train at this busy station on Hong Kong Island", options: ["Lantau Island", "Admiralty", "Causeway Bay", "Fortress Hill"] },
+                    { id: 2, answer: "assembly hall", hint: "a_______ h___", clue: "This big room has a stage and hundreds of chairs for the whole school", options: ["science laboratory", "dormitories", "assembly hall", "vending machine"] },
+                    { id: 3, answer: "science laboratory", hint: "s______ l_________", clue: "In this special room, we wear safety glasses and do fun experiments", options: ["assembly hall", "vending machine", "dormitories", "science laboratory"] },
+                    { id: 4, answer: "vending machine", hint: "v______ m______", clue: "near the playground to buy a cold drink", options: ["vending machine", "assembly hall", "science laboratory", "shelter"] },
+                    { id: 5, answer: "Physical Education", hint: "P_______ E________", clue: "We wear our sports uniforms, run around the court, and play basketball", options: ["Visual Arts", "Physical Education", "Debating Society", "School Orchestra"] },
+                    { id: 6, answer: "Visual Arts", hint: "V_____ A___", clue: "because he loves making colourful pictures", options: ["Physical Education", "Technology Club", "Visual Arts", "Astronomy Club"] },
+                    { id: 7, answer: "Astronomy Club", hint: "A________ C___", clue: "We use a telescope to look at the moon, stars, and planets", options: ["Environment Club", "Technology Club", "Social Services Club", "Astronomy Club"] },
+                    { id: 8, answer: "Technology Club", hint: "T_________ C___", clue: "He loves computers and enjoys learning how to build small robots", options: ["Technology Club", "Astronomy Club", "Environment Club", "Debating Society"] },
+                    { id: 9, answer: "Environment Club", hint: "E__________ C___", clue: "collect plastic bottles for recycling and plant green trees", options: ["School Orchestra", "Social Services Club", "Environment Club", "Astronomy Club"] },
+                    { id: 10, answer: "curious", hint: "c______", clue: "I always ask my teachers many questions because I want to learn new things", options: ["disappointed", "curious", "sceptical", "humorous"] },
+                    { id: 11, answer: "enthusiastic", hint: "e___________", clue: "She smiles a lot, speaks with great energy, and makes every lesson exciting", options: ["enthusiastic", "complicated", "mysterious", "disappointed"] },
+                    { id: 12, answer: "humorous", hint: "h_______", clue: "He always tells funny jokes and makes everyone laugh", options: ["sceptical", "mysterious", "humorous", "complicated"] },
+                    { id: 13, answer: "complicated", hint: "c__________", clue: "There were too many rooms and subjects, so it was hard to understand", options: ["essential", "practical", "successful", "complicated"] },
+                    { id: 14, answer: "essential", hint: "e________", clue: "because every student needs it to finish homework on time", options: ["mysterious", "essential", "disappointed", "humorous"] },
+                    { id: 15, answer: "successful", hint: "s_________", clue: "If I work hard, I can get good grades and reach my goals", options: ["successful", "sceptical", "complicated", "disappointed"] }
+                ]
+            },
+            {
+                id: 2,
+                icon: "⛺",
+                title: "A Weekend Trip & International School Camp",
+                subtitle: "Blog Post • Hong Kong Places, Camp & Feelings",
+                color: "indigo",
+                paragraphs: [
+                    [
+                        { t: "Last Saturday, my family went shopping in " },
+                        { b: 1 },
+                        { t: ". " },
+                        { c: "This crowded area on Hong Kong Island is famous for its big shopping malls and busy streets", q: 1 },
+                        { t: ". After shopping, we took the MTR for two stops to " },
+                        { b: 2 },
+                        { t: " " },
+                        { c: "to visit my aunt, who lives in a flat near Victoria Park", q: 2 },
+                        { t: "." }
+                    ],
+                    [
+                        { t: "On Sunday, our school held a camp on " },
+                        { b: 3 },
+                        { t: ". " },
+                        { c: "We took a ferry across the sea to this big island, which is near the airport", q: 3 },
+                        { t: ". At the campsite, boys and girls slept in different " },
+                        { b: 4 },
+                        { t: ". " },
+                        { c: "These big bedrooms had many bunk beds for all the students", q: 4 },
+                        { t: "." }
+                    ],
+                    [
+                        { t: "It was an " },
+                        { b: 5 },
+                        { t: " camp. " },
+                        { c: "Students from Japan, Korea, Australia, and Hong Kong joined the activities together", q: 5 },
+                        { t: ". In the morning, I joined a workshop held by the " },
+                        { b: 6 },
+                        { t: ". " },
+                        { c: "Two teams stood on stage and argued for and against a topic", q: 6 },
+                        { t: " in English. After lunch, we listened to a concert by the " },
+                        { b: 7 },
+                        { t: ". " },
+                        { c: "Fifty students played violins, flutes, and drums together", q: 7 },
+                        { t: " beautifully. Next, the " },
+                        { b: 8 },
+                        { t: " taught us how to help people in need. " },
+                        { c: "Last month, they visited elderly people and gave them warm clothes", q: 8 },
+                        { t: "." }
+                    ],
+                    [
+                        { t: "At night, our teacher told us a " },
+                        { b: 9 },
+                        { t: " story about an old house in the woods. " },
+                        { c: "Nobody knew who lived there, and strange lights appeared at midnight", q: 9 },
+                        { t: ". At first, I was " },
+                        { b: 10 },
+                        { t: " about the ghost story. " },
+                        { c: "I did not believe it was true and thought the teacher made it up", q: 10 },
+                        { t: "." }
+                    ],
+                    [
+                        { t: "During the camp, I met a girl named Chloe. She is very " },
+                        { b: 11 },
+                        { t: " " },
+                        { c: "and dreams of becoming a famous scientist one day", q: 11 },
+                        { t: ". Meeting hard-working students made me feel " },
+                        { b: 12 },
+                        { t: ". " },
+                        { c: "Now I have a strong reason to study harder and improve my English", q: 12 },
+                        { t: "." }
+                    ],
+                    [
+                        { t: "Living away from home for two days helped me become more " },
+                        { b: 13 },
+                        { t: ". " },
+                        { c: "I washed my own clothes and packed my bag without my parents' help", q: 13 },
+                        { t: ". We also learned " },
+                        { b: 14 },
+                        { t: " skills, " },
+                        { c: "such as cooking simple meals and fixing a broken tent, which are very useful in daily life", q: 14 },
+                        { t: ". When the camp ended on Sunday evening, we all felt a little " },
+                        { b: 15 },
+                        { t: ". " },
+                        { c: "We were sad because we wanted to stay for one more day", q: 15 },
+                        { t: "." }
+                    ]
+                ],
+                questions: [
+                    { id: 1, answer: "Causeway Bay", hint: "C_______ B__", clue: "This crowded area on Hong Kong Island is famous for its big shopping malls and busy streets", options: ["Lantau Island", "Causeway Bay", "Admiralty", "Fortress Hill"] },
+                    { id: 2, answer: "Fortress Hill", hint: "F_______ H___", clue: "to visit my aunt, who lives in a flat near Victoria Park", options: ["Fortress Hill", "Lantau Island", "Admiralty", "Causeway Bay"] },
+                    { id: 3, answer: "Lantau Island", hint: "L_____ I_____", clue: "We took a ferry across the sea to this big island, which is near the airport", options: ["Admiralty", "Fortress Hill", "Causeway Bay", "Lantau Island"] },
+                    { id: 4, answer: "dormitories", hint: "d__________", clue: "These big bedrooms had many bunk beds for all the students", options: ["vending machines", "assembly halls", "dormitories", "science laboratories"] },
+                    { id: 5, answer: "international", hint: "i____________", clue: "Students from Japan, Korea, Australia, and Hong Kong joined the activities together", options: ["domestic", "international", "exotic", "complicated"] },
+                    { id: 6, answer: "Debating Society", hint: "D_______ S______", clue: "Two teams stood on stage and argued for and against a topic", options: ["School Orchestra", "Astronomy Club", "Debating Society", "Environment Club"] },
+                    { id: 7, answer: "School Orchestra", hint: "S_____ O________", clue: "Fifty students played violins, flutes, and drums together", options: ["Debating Society", "Technology Club", "Visual Arts", "School Orchestra"] },
+                    { id: 8, answer: "Social Services Club", hint: "S_____ S_______ C___", clue: "Last month, they visited elderly people and gave them warm clothes", options: ["Social Services Club", "Astronomy Club", "Debating Society", "School Orchestra"] },
+                    { id: 9, answer: "mysterious", hint: "m_________", clue: "Nobody knew who lived there, and strange lights appeared at midnight", options: ["humorous", "practical", "mysterious", "independent"] },
+                    { id: 10, answer: "sceptical", hint: "s________", clue: "I did not believe it was true and thought the teacher made it up", options: ["enthusiastic", "sceptical", "ambitious", "motivated"] },
+                    { id: 11, answer: "ambitious", hint: "a________", clue: "and dreams of becoming a famous scientist one day", options: ["ambitious", "disappointed", "sceptical", "mysterious"] },
+                    { id: 12, answer: "motivated", hint: "m________", clue: "Now I have a strong reason to study harder and improve my English", options: ["disappointed", "sceptical", "motivated", "complicated"] },
+                    { id: 13, answer: "independent", hint: "i__________", clue: "I washed my own clothes and packed my bag without my parents' help", options: ["mysterious", "independent", "disappointed", "humorous"] },
+                    { id: 14, answer: "practical", hint: "p________", clue: "such as cooking simple meals and fixing a broken tent, which are very useful in daily life", options: ["sceptical", "mysterious", "practical", "disappointed"] },
+                    { id: 15, answer: "disappointed", hint: "d___________", clue: "We were sad because we wanted to stay for one more day", options: ["enthusiastic", "humorous", "ambitious", "disappointed"] }
+                ]
+            },
+            {
+                id: 3,
+                icon: "🐾",
+                title: "Volunteering at an Animal Care Centre",
+                subtitle: "Newsletter Article • Pets, Body Parts & Caring",
+                color: "emerald",
+                paragraphs: [
+                    [
+                        { t: "Last Saturday, members of our school's " },
+                        { b: 1 },
+                        { t: " visited an animal centre. " },
+                        { c: "Our club loves helping the community and caring for animals in need", q: 1 },
+                        { t: ". We spent the morning at a local animal " },
+                        { b: 2 },
+                        { t: ". " },
+                        { c: "This safe place gives food and a home to lost or unwanted dogs and cats", q: 2 },
+                        { t: ". The workers there work hard to " },
+                        { b: 3 },
+                        { t: " hurt animals from the streets. " },
+                        { c: "They save the animals from danger and bring them back to health", q: 3 },
+                        { t: "." }
+                    ],
+                    [
+                        { t: "Most of the animals at the centre are " },
+                        { b: 4 },
+                        { t: " animals, " },
+                        { c: "such as friendly dogs, cats, and rabbits that can live happily inside a family home", q: 4 },
+                        { t: ". However, the centre also has a few " },
+                        { b: 5 },
+                        { t: " pets, " },
+                        { c: "like colourful lizards and snakes, which come from faraway countries and need special care", q: 5 },
+                        { t: "." }
+                    ],
+                    [
+                        { t: "First, we helped brush a white puppy. It had soft, thick " },
+                        { b: 6 },
+                        { t: " " },
+                        { c: "all over its body to keep it warm in winter", q: 6 },
+                        { t: ". Next, I fed a small grey kitten. It had long " },
+                        { b: 7 },
+                        { t: " " },
+                        { c: "growing on both sides of its nose and mouth", q: 7 },
+                        { t: ", which help it feel things in the dark. In another room, we saw two green parrots. Their bright " },
+                        { b: 8 },
+                        { t: " " },
+                        { c: "covered their wings and helped them fly around the cage", q: 8 },
+                        { t: ". One little puppy was very " },
+                        { b: 9 },
+                        { t: ". " },
+                        { c: "It walked up to us, sniffed our shoes, and wanted to explore everything around it", q: 9 },
+                        { t: "." }
+                    ],
+                    [
+                        { t: "A vet visited the centre in the afternoon to give the animals " },
+                        { b: 10 },
+                        { t: ". " },
+                        { c: "These injections protect dogs and cats from serious illnesses", q: 10 },
+                        { t: ". The vet told us that clean water, healthy food, and daily exercise are " },
+                        { b: 11 },
+                        { t: " " },
+                        { c: "because animals cannot stay healthy without them", q: 11 },
+                        { t: ". She also gave us " },
+                        { b: 12 },
+                        { t: " tips on how to hold a small rabbit safely. " },
+                        { c: "These simple, useful steps were easy for us to follow", q: 12 },
+                        { t: "." }
+                    ],
+                    [
+                        { t: "Many families came to the centre in the afternoon for " },
+                        { b: 13 },
+                        { t: ". " },
+                        { c: "They filled out forms so they could legally take a homeless pet home as part of their family", q: 13 },
+                        { t: ". Giving a homeless dog a loving family makes a " },
+                        { b: 14 },
+                        { t: " difference. " },
+                        { c: "This big, important change turns a sad animal into a happy pet", q: 14 },
+                        { t: ". By 5:00 p.m., ten animals had found new homes. Everyone was happy because the event was very " },
+                        { b: 15 },
+                        { t: " " },
+                        { c: "and achieved everything we hoped for", q: 15 },
+                        { t: "." }
+                    ]
+                ],
+                questions: [
+                    { id: 1, answer: "Social Services Club", hint: "S_____ S_______ C___", clue: "Our club loves helping the community and caring for animals in need", options: ["Astronomy Club", "Technology Club", "Social Services Club", "Debating Society"] },
+                    { id: 2, answer: "shelter", hint: "s______", clue: "This safe place gives food and a home to lost or unwanted dogs and cats", options: ["dormitory", "shelter", "assembly hall", "science laboratory"] },
+                    { id: 3, answer: "rescue", hint: "r_____", clue: "They save the animals from danger and bring them back to health", options: ["rescue", "adoption", "shelter", "vaccinations"] },
+                    { id: 4, answer: "domestic", hint: "d_______", clue: "such as friendly dogs, cats, and rabbits that can live happily inside a family home", options: ["exotic", "mysterious", "international", "domestic"] },
+                    { id: 5, answer: "exotic", hint: "e_____", clue: "like colourful lizards and snakes, which come from faraway countries and need special care", options: ["domestic", "exotic", "humorous", "practical"] },
+                    { id: 6, answer: "fur", hint: "f__", clue: "all over its body to keep it warm in winter", options: ["feathers", "whiskers", "fur", "vaccinations"] },
+                    { id: 7, answer: "whiskers", hint: "w_______", clue: "growing on both sides of its nose and mouth, which help it feel things in the dark", options: ["fur", "feathers", "adoption", "whiskers"] },
+                    { id: 8, answer: "feathers", hint: "f_______", clue: "covered their wings and helped them fly around the cage", options: ["whiskers", "fur", "feathers", "shelter"] },
+                    { id: 9, answer: "curious", hint: "c______", clue: "It walked up to us, sniffed our shoes, and wanted to explore everything around it", options: ["curious", "disappointed", "complicated", "sceptical"] },
+                    { id: 10, answer: "vaccinations", hint: "v___________", clue: "These injections protect dogs and cats from serious illnesses", options: ["whiskers", "vaccinations", "feathers", "dormitories"] },
+                    { id: 11, answer: "essential", hint: "e________", clue: "because animals cannot stay healthy without them", options: ["complicated", "mysterious", "essential", "disappointed"] },
+                    { id: 12, answer: "practical", hint: "p________", clue: "These simple, useful steps were easy for us to follow", options: ["practical", "sceptical", "exotic", "mysterious"] },
+                    { id: 13, answer: "adoption", hint: "a_______", clue: "They filled out forms so they could legally take a homeless pet home as part of their family", options: ["shelter", "vaccinations", "adoption", "rescue"] },
+                    { id: 14, answer: "significant", hint: "s__________", clue: "This big, important change turns a sad animal into a happy pet", options: ["complicated", "significant", "sceptical", "disappointed"] },
+                    { id: 15, answer: "successful", hint: "s_________", clue: "and achieved everything we hoped for", options: ["mysterious", "complicated", "disappointed", "successful"] }
+                ]
+            }
+        ];
+
+        // -------------------------------------------------------------
+        // 3. APPLICATION STATE
+        // -------------------------------------------------------------
+        let state = {
+            studentName: "",
+            studentClass: "",
+            avatar: "🦉",
+            xp: 0,
+            streak: 0,
+            maxStreak: 0,
+            soundEnabled: true,
+            cluesVisible: true,
+            selectedDifficulty: 1, // 1, 2, or 3
+            activeSetId: 1,
+            activeBlankId: 1,
+            // Progress for current run: { [blankId]: { solved: bool, attempts: number, userAnswer: string, firstTry: bool, hintUsed: bool } }
+            currentRun: {},
+            runXpEarned: 0,
+            runCompleted: false,
+            // Earned certificates history: Array of cert objects
+            certificates: [],
+            // Word Bank UI states
+            wbCategory: 'all',
+            wbExpanded: true,
+            revealedWords: {}
+        };
+
+        // -------------------------------------------------------------
+        // 4. WEB AUDIO API SOUND EFFECTS (NO EXTERNAL URLS)
+        // -------------------------------------------------------------
+        let audioCtx = null;
+
+        function getAudioContext() {
+            if (!audioCtx) {
+                const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+                if (AudioContextClass) {
+                    audioCtx = new AudioContextClass();
+                }
+            }
+            return audioCtx;
+        }
+
+        function playSound(type) {
+            if (!state.soundEnabled) return;
+            try {
+                const ctx = getAudioContext();
+                if (!ctx) return;
+                if (ctx.state === 'suspended') {
+                    ctx.resume();
+                }
+                const now = ctx.currentTime;
+
+                if (type === 'correct') {
+                    // Cheerful ascending triad
+                    [523.25, 659.25, 783.99].forEach((freq, idx) => {
+                        const osc = ctx.createOscillator();
+                        const gain = ctx.createGain();
+                        osc.type = 'triangle';
+                        osc.frequency.setValueAtTime(freq, now + idx * 0.07);
+                        gain.gain.setValueAtTime(0.16, now + idx * 0.07);
+                        gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.07 + 0.35);
+                        osc.connect(gain);
+                        gain.connect(ctx.destination);
+                        osc.start(now + idx * 0.07);
+                        osc.stop(now + idx * 0.07 + 0.36);
+                    });
+                } else if (type === 'wrong') {
+                    // Gentle low double boop
+                    [240, 200].forEach((freq, idx) => {
+                        const osc = ctx.createOscillator();
+                        const gain = ctx.createGain();
+                        osc.type = 'sine';
+                        osc.frequency.setValueAtTime(freq, now + idx * 0.12);
+                        gain.gain.setValueAtTime(0.14, now + idx * 0.12);
+                        gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.12 + 0.22);
+                        osc.connect(gain);
+                        gain.connect(ctx.destination);
+                        osc.start(now + idx * 0.12);
+                        osc.stop(now + idx * 0.12 + 0.24);
+                    });
+                } else if (type === 'fanfare') {
+                    // Victory chord progression
+                    const notes = [523.25, 659.25, 783.99, 1046.50];
+                    notes.forEach((freq, idx) => {
+                        const osc = ctx.createOscillator();
+                        const gain = ctx.createGain();
+                        osc.type = 'triangle';
+                        osc.frequency.setValueAtTime(freq, now + idx * 0.1);
+                        gain.gain.setValueAtTime(0.2, now + idx * 0.1);
+                        gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.1 + 0.75);
+                        osc.connect(gain);
+                        gain.connect(ctx.destination);
+                        osc.start(now + idx * 0.1);
+                        osc.stop(now + idx * 0.1 + 0.8);
+                    });
+                }
+            } catch (err) {
+                // Fail silently if audio is blocked by device/browser policy
+            }
+        }
+
+        function toggleSound() {
+            state.soundEnabled = !state.soundEnabled;
+            document.getElementById('sound-toggle-btn').textContent = state.soundEnabled ? '🔊' : '🔇';
+        }
+
+        // -------------------------------------------------------------
+        // 5. CONFETTI & FLOATING XP ANIMATIONS
+        // -------------------------------------------------------------
+        window.addEventListener('resize', () => {
+            const canvas = document.getElementById('confetti-canvas');
+            if (canvas) {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+            }
+        });
+
+        function launchConfetti() {
+            const canvas = document.getElementById('confetti-canvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+
+            const colors = ['#f59e0b', '#10b981', '#6366f1', '#ec4899', '#3b82f6', '#facc15'];
+            const pieces = Array.from({ length: 110 }, () => ({
+                x: Math.random() * canvas.width,
+                y: Math.random() * canvas.height - canvas.height,
+                r: Math.random() * 6 + 4,
+                d: Math.random() * 40 + 10,
+                color: colors[Math.floor(Math.random() * colors.length)],
+                tilt: Math.random() * 10 - 5,
+                tiltAngle: 0,
+                tiltSpeed: Math.random() * 0.08 + 0.04
+            }));
+
+            let frames = 0;
+            function draw() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                pieces.forEach(p => {
+                    p.tiltAngle += p.tiltSpeed;
+                    p.y += (Math.cos(p.d) + 3.2);
+                    p.x += Math.sin(p.tiltAngle) * 1.5;
+                    ctx.beginPath();
+                    ctx.lineWidth = p.r;
+                    ctx.strokeStyle = p.color;
+                    ctx.moveTo(p.x + p.tilt + p.r / 2, p.y);
+                    ctx.lineTo(p.x + p.tilt, p.y + p.tilt + p.r / 2);
+                    ctx.stroke();
+                });
+                frames++;
+                if (frames < 170) {
+                    requestAnimationFrame(draw);
+                } else {
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                }
+            }
+            draw();
+        }
+
+        function spawnFloatingXP(text, isPositive = true) {
+            const container = document.getElementById('floating-feedback');
+            if (!container) return;
+            const toast = document.createElement('div');
+            toast.className = `xp-floater px-3.5 py-1.5 rounded-full font-game font-bold text-sm shadow-md border ${
+                isPositive
+                    ? 'bg-amber-400 text-amber-950 border-amber-500'
+                    : 'bg-slate-800 text-white border-slate-700'
+            }`;
+            toast.textContent = text;
+            container.appendChild(toast);
+            setTimeout(() => {
+                toast.remove();
+            }, 950);
+        }
+
+        // -------------------------------------------------------------
+        // 6. SCREEN NAVIGATION, ONBOARDING & STUDENT PROFILE
+        // -------------------------------------------------------------
+        function showScreen(screenName) {
+            const screens = ['welcome', 'hub', 'play', 'certificate'];
+            screens.forEach(name => {
+                const el = document.getElementById(`screen-${name}`);
+                if (el) {
+                    if (name === screenName) {
+                        el.classList.remove('hidden');
+                    } else {
+                        el.classList.add('hidden');
+                    }
+                }
+            });
+
+            const topNav = document.getElementById('top-nav');
+            if (topNav) {
+                if (screenName === 'welcome') {
+                    topNav.classList.add('hidden');
+                } else {
+                    topNav.classList.remove('hidden');
+                }
+            }
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function selectAvatar(emoji, btnEl) {
+            state.avatar = emoji;
+            document.querySelectorAll('.avatar-btn').forEach(btn => {
+                btn.classList.remove('active-avatar', 'border-indigo-500', 'bg-indigo-50');
+                btn.classList.add('border-slate-200', 'bg-white');
+                const label = btn.querySelector('span:last-child');
+                if (label) {
+                    label.classList.remove('text-indigo-700', 'font-bold');
+                    label.classList.add('text-slate-600', 'font-semibold');
+                }
+            });
+
+            if (btnEl) {
+                btnEl.classList.remove('border-slate-200', 'bg-white');
+                btnEl.classList.add('active-avatar', 'border-indigo-500', 'bg-indigo-50');
+                const activeLabel = btnEl.querySelector('span:last-child');
+                if (activeLabel) {
+                    activeLabel.classList.remove('text-slate-600', 'font-semibold');
+                    activeLabel.classList.add('text-indigo-700', 'font-bold');
+                }
+            }
+        }
+
+        function applyStudentIdentityToUI() {
+            document.getElementById('nav-avatar').textContent = state.avatar;
+            document.getElementById('nav-student-name').textContent = state.studentName;
+            document.getElementById('hub-greeting-name').textContent = state.studentName;
+
+            const navClassEl = document.getElementById('nav-student-class');
+            if (state.studentClass) {
+                navClassEl.textContent = state.studentClass;
+                navClassEl.classList.remove('hidden');
+            } else {
+                navClassEl.classList.add('hidden');
+            }
+        }
+
+        function handleStartAdventure(e) {
+            e.preventDefault();
+            const nameInput = document.getElementById('input-student-name');
+            const classInput = document.getElementById('input-student-class');
+            const trimmedName = nameInput.value.trim();
+            if (!trimmedName) return;
+
+            state.studentName = trimmedName;
+            state.studentClass = classInput.value.trim();
+
+            applyStudentIdentityToUI();
+            updateStatsUI();
+            populateWordBank();
+            renderHubSets();
+            showScreen('hub');
+        }
+
+        function returnToHub() {
+            updateStatsUI();
+            renderHubSets();
+            showScreen('hub');
+        }
+
+        function updateStatsUI() {
+            document.getElementById('nav-xp').textContent = state.xp;
+            document.getElementById('hub-total-xp').textContent = state.xp;
+            document.getElementById('nav-streak').textContent = state.streak;
+
+            const streakPill = document.getElementById('streak-pill');
+            if (streakPill) {
+                if (state.streak >= 3) {
+                    streakPill.classList.add('scale-105', 'ring-2', 'ring-orange-300');
+                } else {
+                    streakPill.classList.remove('scale-105', 'ring-2', 'ring-orange-300');
+                }
+            }
+        }
+
+        function openEditNameModal() {
+            document.getElementById('edit-name-input').value = state.studentName;
+            document.getElementById('edit-class-input').value = state.studentClass;
+            document.getElementById('modal-edit-name').classList.remove('hidden');
+        }
+
+        function closeEditNameModal() {
+            document.getElementById('modal-edit-name').classList.add('hidden');
+        }
+
+        function saveEditedName() {
+            const newName = document.getElementById('edit-name-input').value.trim();
+            const newClass = document.getElementById('edit-class-input').value.trim();
+            if (!newName) return;
+
+            state.studentName = newName;
+            state.studentClass = newClass;
+            applyStudentIdentityToUI();
+
+            // Update stored certificate records as well
+            state.certificates.forEach(c => {
+                c.studentName = newName;
+                c.studentClass = newClass;
+            });
+
+            // Also update certificate view if currently open
+            const certHero = document.getElementById('cert-hero-name');
+            const certName = document.getElementById('cert-student-name');
+            const certClass = document.getElementById('cert-student-class');
+            if (certHero) certHero.textContent = newName;
+            if (certName) certName.textContent = newName;
+            if (certClass) certClass.textContent = newClass ? `Class: ${newClass}` : '';
+            if (window.activeCertForExport) {
+                window.activeCertForExport.studentName = newName;
+                window.activeCertForExport.studentClass = newClass;
+            }
+
+            closeEditNameModal();
+        }
+
+        // Word Bank Modal & Pre-Exercise Interactive Word Bank
+        let cachedVoices = [];
+        let speakCleanupTimer = null;
+        if ('speechSynthesis' in window) {
+            try {
+                cachedVoices = window.speechSynthesis.getVoices();
+                window.speechSynthesis.onvoiceschanged = () => {
+                    cachedVoices = window.speechSynthesis.getVoices();
+                };
+            } catch (e) {
+                cachedVoices = [];
+            }
+        }
+
+        function getNaturalFemaleVoice() {
+            const voices = cachedVoices.length ? cachedVoices : (window.speechSynthesis ? window.speechSynthesis.getVoices() : []);
+            const enVoices = voices.filter(v => v.lang && v.lang.toLowerCase().startsWith('en'));
+            if (!enVoices.length) return null;
+
+            // Prioritize natural/neural female voices across Edge, Chrome, Safari, iOS & Android
+            const preferredFemaleKeywords = [
+                'jenny', 'aria', 'libby', 'sonia', 'ava', 'samantha', 'victoria',
+                'karen', 'moira', 'tessa', 'serena', 'google uk english female',
+                'google us english', 'zira', 'hazel', 'susan', 'catherine',
+                'fiona', 'allison', 'nicky', 'female'
+            ];
+            const maleKeywords = [
+                'david', 'mark', 'daniel', 'george', 'alex', 'fred', 'thomas',
+                'oliver', 'arthur', 'ryan', 'guy', 'male', 'james', 'william'
+            ];
+
+            for (const kw of preferredFemaleKeywords) {
+                const match = enVoices.find(v => v.name.toLowerCase().includes(kw));
+                if (match) return match;
+            }
+
+            // Fallback to any English voice that does not match common male voice names
+            const nonMaleVoice = enVoices.find(v => !maleKeywords.some(m => v.name.toLowerCase().includes(m)));
+            return nonMaleVoice || enVoices[0];
+        }
+
+        function speakWord(word, btnEl, event) {
+            if (event) event.stopPropagation();
+            if ('speechSynthesis' in window) {
+                try {
+                    window.speechSynthesis.cancel();
+                    if (speakCleanupTimer) clearTimeout(speakCleanupTimer);
+
+                    const utterance = new SpeechSynthesisUtterance(word);
+                    const femaleVoice = getNaturalFemaleVoice();
+                    if (femaleVoice) {
+                        utterance.voice = femaleVoice;
+                        utterance.lang = femaleVoice.lang;
+                    } else {
+                        utterance.lang = 'en-GB';
+                    }
+                    // Slow, clear pace for F.1 learners with a warm natural pitch
+                    utterance.rate = 0.68;
+                    utterance.pitch = 1.05;
+
+                    if (btnEl) {
+                        document.querySelectorAll('.speaking-active').forEach(el => el.classList.remove('speaking-active'));
+                        btnEl.classList.add('speaking-active');
+                        const clearBtnState = () => btnEl.classList.remove('speaking-active');
+                        utterance.onend = clearBtnState;
+                        utterance.onerror = clearBtnState;
+                        speakCleanupTimer = setTimeout(clearBtnState, 2800);
+                    }
+                    window.speechSynthesis.speak(utterance);
+                } catch (err) {
+                    if (btnEl) btnEl.classList.remove('speaking-active');
+                }
+            }
+        }
+
+        function handleWordChipClick(word, hkPlace, zhText) {
+            if (hkPlace) {
+                // Hong Kong place names do not show Chinese meaning; speak pronunciation instead
+                speakWord(word, null, null);
+                return;
+            }
+            state.revealedWords[word] = !state.revealedWords[word];
+            renderExerciseWordBank();
+            populateWordBankModalOnly();
+        }
+
+        function renderColoredSyllables(item) {
+            const syllableColors = [
+                'text-indigo-700',
+                'text-rose-600',
+                'text-emerald-700',
+                'text-purple-700'
+            ];
+            const parts = item.syllables || [item.word];
+            let colorIdx = 0;
+
+            return parts.map(part => {
+                if (part === ' ') {
+                    return ' ';
+                }
+                const colorClass = syllableColors[colorIdx % syllableColors.length];
+                colorIdx++;
+                return `<span class="${colorClass}">${part}</span>`;
+            }).join('');
+        }
+
+        function buildWordChipHTML(item) {
+            const isRevealed = !!state.revealedWords[item.word];
+            const safeWord = item.word.replace(/'/g, "\\'");
+            const safeZh = item.zh ? item.zh.replace(/'/g, "\\'") : '';
+            const coloredWordHTML = renderColoredSyllables(item);
+
+            return `
+                <div class="inline-flex items-center rounded-2xl border-2 ${isRevealed ? 'border-amber-400 bg-amber-50 shadow-sm' : 'border-slate-200 bg-slate-50/90 hover:border-indigo-300 hover:bg-indigo-50/50'} transition overflow-hidden">
+                    <button
+                        type="button"
+                        onclick="handleWordChipClick('${safeWord}', ${item.hkPlace}, '${safeZh}')"
+                        class="px-3.5 py-2 text-left flex items-center gap-2 text-base sm:text-lg font-extrabold tracking-wide"
+                        title="${item.hkPlace ? 'Hong Kong Place Name (Click speaker to listen)' : 'Click to show/hide Traditional Chinese meaning'}"
+                    >
+                        <span>${coloredWordHTML}</span>
+                        ${(!item.hkPlace && isRevealed && item.zh)
+                            ? `<span class="px-2 py-0.5 rounded-lg bg-amber-200/90 text-amber-950 font-bold text-xs sm:text-sm tracking-normal">${item.zh}</span>`
+                            : ''
+                        }
+                    </button>
+                    <button
+                        type="button"
+                        onclick="speakWord('${safeWord}', this, event)"
+                        class="px-2.5 py-2 border-l border-slate-200/80 bg-white hover:bg-indigo-100 text-indigo-600 text-base flex items-center justify-center transition"
+                        title="Listen slowly to pronunciation"
+                        aria-label="Listen slowly to ${item.word}"
+                    >
+                        🔊
+                    </button>
+                </div>
+            `;
+        }
+
+        function filterExerciseWordBank(category) {
+            state.wbCategory = category;
+            document.querySelectorAll('.wb-cat-btn').forEach(btn => {
+                if (btn.dataset.wbCat === category) {
+                    btn.className = "wb-cat-btn px-3 py-1 rounded-xl text-xs font-bold bg-indigo-600 text-white transition";
+                } else {
+                    btn.className = "wb-cat-btn px-3 py-1 rounded-xl text-xs font-bold bg-slate-100 text-slate-700 hover:bg-slate-200 transition";
+                }
+            });
+            renderExerciseWordBank();
+        }
+
+        function toggleExerciseWordBankBody() {
+            state.wbExpanded = !state.wbExpanded;
+            const body = document.getElementById('exercise-wordbank-body');
+            const btn = document.getElementById('wb-collapse-btn');
+            if (state.wbExpanded) {
+                body.classList.remove('hidden');
+                btn.textContent = 'Hide Word Bank ▲';
+            } else {
+                body.classList.add('hidden');
+                btn.textContent = 'Show Word Bank ▼';
+            }
+        }
+
+        function renderExerciseWordBank() {
+            const grid = document.getElementById('exercise-wordbank-grid');
+            if (!grid) return;
+
+            const prevScrollTop = grid.scrollTop;
+            let items = [];
+            if (state.wbCategory === 'all') {
+                items = [
+                    ...VOCAB_SCOPE.places,
+                    ...VOCAB_SCOPE.clubs,
+                    ...VOCAB_SCOPE.adjectives,
+                    ...VOCAB_SCOPE.animals
+                ];
+            } else {
+                items = VOCAB_SCOPE[state.wbCategory] || [];
+            }
+
+            grid.innerHTML = items.map(item => buildWordChipHTML(item)).join('');
+            grid.scrollTop = prevScrollTop;
+        }
+
+        function populateWordBankModalOnly() {
+            const fillList = (elId, items) => {
+                const container = document.getElementById(elId);
+                if (!container) return;
+                container.innerHTML = items.map(item => buildWordChipHTML(item)).join('');
+            };
+            fillList('wb-places', VOCAB_SCOPE.places);
+            fillList('wb-clubs', VOCAB_SCOPE.clubs);
+            fillList('wb-adjectives', VOCAB_SCOPE.adjectives);
+            fillList('wb-animals', VOCAB_SCOPE.animals);
+        }
+
+        function populateWordBank() {
+            renderExerciseWordBank();
+            populateWordBankModalOnly();
+        }
+
+        function toggleWordBankModal() {
+            populateWordBankModalOnly();
+            const modal = document.getElementById('modal-wordbank');
+            modal.classList.toggle('hidden');
+        }
+
+        // -------------------------------------------------------------
+        // 7. MISSION HUB LOGIC
+        // -------------------------------------------------------------
+        function selectDifficulty(level) {
+            state.selectedDifficulty = level;
+            const styles = {
+                1: { border: 'border-emerald-500', bg: 'bg-emerald-50/70' },
+                2: { border: 'border-amber-500', bg: 'bg-amber-50/70' },
+                3: { border: 'border-rose-500', bg: 'bg-rose-50/70' }
+            };
+            [1, 2, 3].forEach(l => {
+                const btn = document.getElementById(`lvl-btn-${l}`);
+                btn.classList.remove('border-emerald-500', 'bg-emerald-50/70', 'border-amber-500', 'bg-amber-50/70', 'border-rose-500', 'bg-rose-50/70');
+                btn.classList.add('border-slate-200', 'bg-white');
+            });
+            const activeBtn = document.getElementById(`lvl-btn-${level}`);
+            activeBtn.classList.remove('border-slate-200', 'bg-white');
+            activeBtn.classList.add(styles[level].border, styles[level].bg);
+        }
+
+        function renderHubSets() {
+            const grid = document.getElementById('sets-grid');
+            const uniqueSetsDone = new Set(state.certificates.map(c => c.setId)).size;
+            document.getElementById('hub-completed-count').textContent = `${uniqueSetsDone}/3`;
+
+            grid.innerHTML = CLOZE_SETS.map(set => {
+                const completedCerts = state.certificates.filter(c => c.setId === set.id);
+                const isDone = completedCerts.length > 0;
+                return `
+                    <div class="bg-white rounded-3xl p-6 shadow-sm hover:shadow-md border-2 ${isDone ? 'border-emerald-300' : 'border-slate-200'} flex flex-col justify-between transition">
+                        <div>
+                            <div class="flex items-center justify-between mb-3">
+                                <span class="w-12 h-12 rounded-2xl bg-indigo-50 text-2xl flex items-center justify-center border border-indigo-100">${set.icon}</span>
+                                ${isDone
+                                    ? `<span class="px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 text-xs font-extrabold">✓ Completed</span>`
+                                    : `<span class="px-3 py-1 rounded-full bg-slate-100 text-slate-600 text-xs font-bold">15 Blanks</span>`
+                                }
+                            </div>
+                            <div class="text-xs font-extrabold text-indigo-600 uppercase tracking-wider">Set ${set.id}</div>
+                            <h4 class="font-game text-xl font-bold text-slate-900 mt-0.5 leading-snug">${set.title}</h4>
+                            <p class="text-xs sm:text-sm text-slate-500 mt-1.5">${set.subtitle}</p>
+                        </div>
+
+                        <button onclick="startSet(${set.id})" class="mt-6 w-full py-3.5 px-4 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-game font-bold text-base shadow-md shadow-indigo-500/20 transition transform active:scale-95 flex items-center justify-center gap-2">
+                            <span>${isDone ? 'Play Again' : 'Start Story'}</span>
+                            <span>➔</span>
+                        </button>
+                    </div>
+                `;
+            }).join('');
+
+            // Render past certificates shelf if available
+            const shelfBox = document.getElementById('past-certificates-box');
+            const shelfList = document.getElementById('past-certificates-list');
+            if (state.certificates.length > 0) {
+                shelfBox.classList.remove('hidden');
+                shelfList.innerHTML = state.certificates.map((cert, idx) => `
+                    <button onclick="viewSavedCertificate(${idx})" class="text-left p-4 rounded-2xl bg-amber-50/70 hover:bg-amber-100/80 border border-amber-200 transition flex items-center justify-between gap-3">
+                        <div>
+                            <div class="text-xs font-extrabold text-amber-800">${cert.rankIcon} ${cert.rankTitle}</div>
+                            <div class="font-bold text-slate-900 text-sm truncate max-w-[200px]">Set ${cert.setId}: ${cert.setTitle}</div>
+                            <div class="text-xs text-slate-500">Level ${cert.level} • Score: ${cert.firstTryScore}/15</div>
+                        </div>
+                        <span class="text-indigo-600 font-bold text-xs shrink-0">View ➔</span>
+                    </button>
+                `).join('');
+            } else {
+                shelfBox.classList.add('hidden');
+            }
+        }
+
+        // -------------------------------------------------------------
+        // 8. CLOZE GAMEPLAY ENGINE
+        // -------------------------------------------------------------
+        function startSet(setId) {
+            state.activeSetId = setId;
+            state.activeBlankId = 1;
+            state.runXpEarned = 0;
+            state.runCompleted = false;
+            state.maxStreak = 0;
+            state.currentRun = {};
+
+            for (let i = 1; i <= 15; i++) {
+                state.currentRun[i] = {
+                    solved: false,
+                    attempts: 0,
+                    userAnswer: "",
+                    firstTry: false,
+                    hintUsed: false
+                };
+            }
+
+            const setObj = CLOZE_SETS.find(s => s.id === setId);
+            document.getElementById('play-set-badge').textContent = `SET ${setId}`;
+            document.getElementById('play-story-title').textContent = setObj.title;
+
+            const lvlBadge = document.getElementById('play-level-badge');
+            if (state.selectedDifficulty === 1) {
+                lvlBadge.textContent = "LEVEL 1 • MULTIPLE CHOICE";
+                lvlBadge.className = "text-xs font-extrabold px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-700";
+            } else if (state.selectedDifficulty === 2) {
+                lvlBadge.textContent = "LEVEL 2 • FIRST-LETTER HINTS";
+                lvlBadge.className = "text-xs font-extrabold px-2 py-0.5 rounded-md bg-amber-100 text-amber-700";
+            } else {
+                lvlBadge.textContent = "LEVEL 3 • OPEN CLOZE";
+                lvlBadge.className = "text-xs font-extrabold px-2 py-0.5 rounded-md bg-rose-100 text-rose-700";
+            }
+
+            document.getElementById('claim-cert-btn').classList.add('hidden');
+            showScreen('play');
+            renderExerciseWordBank();
+            renderPassage();
+            renderNavigator();
+            selectBlank(1);
+        }
+
+        function toggleCluesVisibility() {
+            state.cluesVisible = !state.cluesVisible;
+            const passageEl = document.getElementById('passage-container');
+            const labelEl = document.getElementById('toggle-clues-label');
+            if (state.cluesVisible) {
+                passageEl.classList.remove('clues-hidden');
+                labelEl.textContent = "Clues: ON";
+            } else {
+                passageEl.classList.add('clues-hidden');
+                labelEl.textContent = "Clues: OFF";
+            }
+        }
+
+        function renderPassage() {
+            const setObj = CLOZE_SETS.find(s => s.id === state.activeSetId);
+            const container = document.getElementById('passage-container');
+
+            let html = `<div class="border-b border-slate-100 pb-3 mb-2 flex items-center justify-between">
+                <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Tap any blank [1–15] to answer</span>
+                <span class="text-xs text-amber-700 font-semibold">Yellow = Contextual Clue</span>
+            </div>`;
+
+            setObj.paragraphs.forEach(para => {
+                html += `<p class="text-slate-800">`;
+                para.forEach(seg => {
+                    if (seg.t) {
+                        html += seg.t;
+                    } else if (seg.c) {
+                        const isActiveClue = seg.q === state.activeBlankId ? 'active-clue' : '';
+                        html += `<span class="clue-highlight ${isActiveClue}" data-clue-q="${seg.q}">${seg.c}</span>`;
+                    } else if (seg.b) {
+                        const qId = seg.b;
+                        const runItem = state.currentRun[qId];
+                        const isActive = qId === state.activeBlankId;
+                        const qData = setObj.questions.find(q => q.id === qId);
+
+                        if (runItem.solved) {
+                            html += `<button type="button" onclick="selectBlank(${qId})" class="inline-flex items-center gap-1 mx-1 px-2.5 py-0.5 rounded-lg font-bold text-emerald-800 bg-emerald-100 border-2 ${isActive ? 'border-indigo-600 ring-2 ring-indigo-300' : 'border-emerald-400'} transition">
+                                <span class="text-xs text-emerald-600">[${qId}]</span>
+                                <span>${qData.answer}</span>
+                                <span class="text-xs">✓</span>
+                            </button>`;
+                        } else {
+                            let placeholderText = `[ ${qId} ]`;
+                            if (state.selectedDifficulty === 2) {
+                                placeholderText = `[${qId}] ${qData.hint}`;
+                            }
+                            html += `<button type="button" onclick="selectBlank(${qId})" class="inline-flex items-center mx-1 px-3 py-0.5 rounded-lg font-mono font-bold text-sm sm:text-base transition ${
+                                isActive
+                                    ? 'bg-indigo-600 text-white shadow-md ring-4 ring-indigo-200 scale-105'
+                                    : 'bg-slate-100 hover:bg-indigo-50 text-indigo-700 border-2 border-dashed border-indigo-300'
+                            }">${placeholderText}</button>`;
+                        }
+                    }
+                });
+                html += `</p>`;
+            });
+
+            container.innerHTML = html;
+            updateProgressBar();
+        }
+
+        function updateProgressBar() {
+            const solvedCount = Object.values(state.currentRun).filter(r => r.solved).length;
+            document.getElementById('play-progress-text').textContent = `${solvedCount} / 15`;
+            document.getElementById('play-progress-bar').style.width = `${(solvedCount / 15) * 100}%`;
+
+            if (solvedCount === 15) {
+                document.getElementById('claim-cert-btn').classList.remove('hidden');
+            }
+        }
+
+        function renderNavigator() {
+            const nav = document.getElementById('blank-navigator');
+            let html = '';
+            for (let i = 1; i <= 15; i++) {
+                const runItem = state.currentRun[i];
+                const isActive = i === state.activeBlankId;
+                let cls = 'bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200';
+                if (runItem.solved) {
+                    cls = 'bg-emerald-500 text-white border border-emerald-600';
+                }
+                if (isActive) {
+                    cls += ' ring-2 ring-offset-1 ring-indigo-600 font-extrabold';
+                }
+                html += `<button type="button" onclick="selectBlank(${i})" class="py-2 rounded-xl text-xs sm:text-sm font-bold transition ${cls}">${i}</button>`;
+            }
+            nav.innerHTML = html;
+        }
+
+        function jumpBlank(delta) {
+            let nextId = state.activeBlankId + delta;
+            if (nextId < 1) nextId = 15;
+            if (nextId > 15) nextId = 1;
+            selectBlank(nextId);
+        }
+
+        function goToNextUnsolved() {
+            for (let offset = 1; offset <= 15; offset++) {
+                const candidate = ((state.activeBlankId - 1 + offset) % 15) + 1;
+                if (!state.currentRun[candidate].solved) {
+                    selectBlank(candidate);
+                    return;
+                }
+            }
+            // All 15 blanks solved
+            updateProgressBar();
+            const claimBtn = document.getElementById('claim-cert-btn');
+            if (claimBtn) {
+                claimBtn.classList.remove('hidden');
+                claimBtn.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
+        }
+
+        function selectBlank(qId) {
+            state.activeBlankId = qId;
+            renderPassage();
+            renderNavigator();
+
+            const setObj = CLOZE_SETS.find(s => s.id === state.activeSetId);
+            const qData = setObj.questions.find(q => q.id === qId);
+            const runItem = state.currentRun[qId];
+
+            document.getElementById('console-q-num').textContent = `[${qId}]`;
+            document.getElementById('console-clue-text').textContent = `"${qData.clue}"`;
+
+            const feedbackBox = document.getElementById('console-feedback');
+            feedbackBox.classList.add('hidden');
+
+            const inputArea = document.getElementById('console-input-area');
+
+            // If already solved, show solved state
+            if (runItem.solved) {
+                inputArea.innerHTML = `
+                    <div class="p-4 rounded-2xl bg-emerald-50 border-2 border-emerald-300 text-center space-y-2">
+                        <div class="text-2xl">🌟</div>
+                        <div class="text-xs font-extrabold uppercase text-emerald-700">Correct Answer</div>
+                        <div class="text-xl font-game font-bold text-emerald-950">${qData.answer}</div>
+                        <button type="button" onclick="goToNextUnsolved()" class="mt-2 w-full py-2.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm transition">
+                            Next Unsolved Question ➔
+                        </button>
+                    </div>
+                `;
+                return;
+            }
+
+            // LEVEL 1: MULTIPLE CHOICE (4 OPTIONS)
+            if (state.selectedDifficulty === 1) {
+                const letters = ['A', 'B', 'C', 'D'];
+                inputArea.innerHTML = `
+                    <div class="space-y-2.5">
+                        ${qData.options.map((opt, idx) => `
+                            <button type="button" onclick="submitMultipleChoice('${opt.replace(/'/g, "\\'")}', this)" class="mc-option-btn w-full text-left p-3.5 rounded-2xl border-2 border-slate-200 hover:border-indigo-500 hover:bg-indigo-50/70 font-bold text-slate-800 transition flex items-center gap-3 active:scale-[0.99]">
+                                <span class="w-8 h-8 rounded-xl bg-slate-100 text-slate-700 font-extrabold flex items-center justify-center shrink-0">${letters[idx]}</span>
+                                <span class="text-base">${opt}</span>
+                            </button>
+                        `).join('')}
+                    </div>
+                `;
+            }
+            // LEVEL 2 & LEVEL 3: TYPING GAP-FILL
+            else {
+                const showHintBox = state.selectedDifficulty === 2 || runItem.hintUsed;
+                inputArea.innerHTML = `
+                    <form onsubmit="submitTypedAnswer(event)" class="space-y-3">
+                        ${showHintBox ? `
+                            <div class="p-3 rounded-xl bg-indigo-50 border border-indigo-200 flex items-center justify-between">
+                                <span class="text-xs font-bold text-indigo-700">First-Letter Pattern:</span>
+                                <span class="font-mono font-extrabold text-base text-indigo-950 tracking-wider">${qData.hint}</span>
+                            </div>
+                        ` : `
+                            <div class="flex justify-end">
+                                <button type="button" onclick="useLetterLifebuoy()" class="text-xs font-bold text-indigo-600 hover:text-indigo-800 bg-indigo-50 px-3 py-1.5 rounded-lg border border-indigo-200 transition">
+                                    🛟 Need First-Letter Hint? (-25 XP)
+                                </button>
+                            </div>
+                        `}
+                        <div>
+                            <input
+                                type="text"
+                                id="typed-answer-input"
+                                autocomplete="off"
+                                autocapitalize="off"
+                                spellcheck="false"
+                                placeholder="Type the word or phrase here..."
+                                class="w-full px-4 py-3.5 rounded-2xl border-2 border-slate-300 focus:border-indigo-600 focus:ring-4 focus:ring-indigo-500/15 outline-none text-base sm:text-lg font-bold text-slate-900"
+                            >
+                        </div>
+                        <button type="submit" class="w-full py-3.5 px-5 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-game font-bold text-lg shadow-md transition active:scale-95">
+                            Check Answer ✓
+                        </button>
+                        <div id="stuck-helper-slot">
+                            ${runItem.attempts >= 3 ? `
+                                <button type="button" onclick="revealAnswerForWeakStudent()" class="w-full py-2 px-4 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold text-xs transition">
+                                    Still stuck? Show Answer & Continue
+                                </button>
+                            ` : ''}
+                        </div>
+                    </form>
+                `;
+                const inp = document.getElementById('typed-answer-input');
+                if (inp) inp.focus();
+            }
+        }
+
+        // Handle Level 1 Multiple Choice
+        function submitMultipleChoice(selectedOpt, btnEl) {
+            const setObj = CLOZE_SETS.find(s => s.id === state.activeSetId);
+            const qData = setObj.questions.find(q => q.id === state.activeBlankId);
+            const runItem = state.currentRun[state.activeBlankId];
+            if (runItem.solved) return;
+
+            runItem.attempts += 1;
+
+            if (selectedOpt.toLowerCase() === qData.answer.toLowerCase()) {
+                handleCorrectAnswer(qData.answer);
+            } else {
+                if (btnEl) {
+                    btnEl.disabled = true;
+                    btnEl.classList.remove('border-slate-200', 'hover:border-indigo-500', 'hover:bg-indigo-50/70');
+                    btnEl.classList.add('border-rose-400', 'bg-rose-50', 'text-rose-700', 'opacity-75', 'animate-shake');
+                }
+                handleWrongAnswer("Not quite! Look closely at the yellow clue in the story and try another option.");
+            }
+        }
+
+        // Handle Level 2 & 3 Typed Input
+        function submitTypedAnswer(e) {
+            e.preventDefault();
+            const inp = document.getElementById('typed-answer-input');
+            if (!inp) return;
+            const rawVal = inp.value.trim().replace(/\s+/g, ' ');
+            if (!rawVal) {
+                inp.focus();
+                return;
+            }
+
+            const setObj = CLOZE_SETS.find(s => s.id === state.activeSetId);
+            const qData = setObj.questions.find(q => q.id === state.activeBlankId);
+            const runItem = state.currentRun[state.activeBlankId];
+
+            runItem.attempts += 1;
+
+            if (rawVal.toLowerCase() === qData.answer.toLowerCase()) {
+                handleCorrectAnswer(qData.answer);
+            } else {
+                inp.classList.remove('border-slate-300');
+                inp.classList.add('border-rose-400', 'bg-rose-50', 'animate-shake');
+                setTimeout(() => inp.classList.remove('animate-shake'), 350);
+                inp.focus();
+                inp.select();
+
+                // Helpful feedback for weak F.1 students
+                let msg = "Almost! Check the yellow clue and try again.";
+                if (rawVal[0].toLowerCase() !== qData.answer[0].toLowerCase()) {
+                    msg = `Hint: The answer starts with the letter "${qData.answer[0]}".`;
+                } else if (Math.abs(rawVal.length - qData.answer.length) <= 2) {
+                    msg = "Very close! Check your spelling using the Word Bank (📖) above!";
+                }
+                handleWrongAnswer(msg);
+
+                // Show "Still stuck?" helper button after 3 attempts without hiding feedback
+                const stuckSlot = document.getElementById('stuck-helper-slot');
+                if (stuckSlot && runItem.attempts >= 3) {
+                    stuckSlot.innerHTML = `
+                        <button type="button" onclick="revealAnswerForWeakStudent()" class="w-full py-2 px-4 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold text-xs transition">
+                            Still stuck? Show Answer & Continue
+                        </button>
+                    `;
+                }
+            }
+        }
+
+        function useLetterLifebuoy() {
+            const runItem = state.currentRun[state.activeBlankId];
+            if (runItem.hintUsed) return;
+            runItem.hintUsed = true;
+            state.xp = Math.max(0, state.xp - 25);
+            updateStatsUI();
+            spawnFloatingXP('-25 XP (Hint)', false);
+            selectBlank(state.activeBlankId);
+        }
+
+        function revealAnswerForWeakStudent() {
+            const setObj = CLOZE_SETS.find(s => s.id === state.activeSetId);
+            const qData = setObj.questions.find(q => q.id === state.activeBlankId);
+            const runItem = state.currentRun[state.activeBlankId];
+            if (runItem.solved) return;
+
+            runItem.solved = true;
+            runItem.userAnswer = qData.answer;
+            runItem.firstTry = false;
+            state.streak = 0;
+            updateStatsUI();
+
+            renderPassage();
+            renderNavigator();
+            selectBlank(state.activeBlankId);
+
+            const feedbackBox = document.getElementById('console-feedback');
+            feedbackBox.className = "mt-4 p-3.5 rounded-2xl text-sm font-bold flex items-center gap-2 bg-indigo-50 text-indigo-800 border border-indigo-200";
+            feedbackBox.innerHTML = `<span>💡</span><span>The answer is "<strong>${qData.answer}</strong>". Let's keep going!</span>`;
+            feedbackBox.classList.remove('hidden');
+
+            setTimeout(() => {
+                goToNextUnsolved();
+            }, 1100);
+        }
+
+        function handleCorrectAnswer(answerText) {
+            const runItem = state.currentRun[state.activeBlankId];
+            runItem.solved = true;
+            runItem.userAnswer = answerText;
+            runItem.firstTry = (runItem.attempts === 1 && !runItem.hintUsed);
+
+            const baseXP = state.selectedDifficulty === 1 ? 100 : (state.selectedDifficulty === 2 ? 150 : 200);
+            const streakBonus = state.streak >= 2 ? 25 : 0;
+            const gained = (runItem.firstTry ? baseXP : Math.round(baseXP * 0.6)) + streakBonus;
+
+            state.xp += gained;
+            state.runXpEarned += gained;
+            state.streak += 1;
+            if (state.streak > state.maxStreak) {
+                state.maxStreak = state.streak;
+            }
+
+            updateStatsUI();
+            playSound('correct');
+            spawnFloatingXP(`+${gained} XP${streakBonus ? ' 🔥' : ''}`, true);
+
+            renderPassage();
+            renderNavigator();
+            selectBlank(state.activeBlankId);
+
+            const feedbackBox = document.getElementById('console-feedback');
+            feedbackBox.className = "mt-4 p-3.5 rounded-2xl text-sm font-bold flex items-center gap-2 bg-emerald-100 text-emerald-900 border border-emerald-300";
+            feedbackBox.innerHTML = `<span>🎉</span><span>Awesome! "${answerText}" is correct! (+${gained} XP)</span>`;
+            feedbackBox.classList.remove('hidden');
+
+            setTimeout(() => {
+                goToNextUnsolved();
+            }, 850);
+        }
+
+        function handleWrongAnswer(feedbackMsg) {
+            state.streak = 0;
+            updateStatsUI();
+            playSound('wrong');
+
+            const feedbackBox = document.getElementById('console-feedback');
+            feedbackBox.className = "mt-4 p-3.5 rounded-2xl text-sm font-bold flex items-center gap-2 bg-rose-100 text-rose-900 border border-rose-300 animate-pop";
+            feedbackBox.innerHTML = `<span>🤔</span><span>${feedbackMsg}</span>`;
+            feedbackBox.classList.remove('hidden');
+        }
+
+        // -------------------------------------------------------------
+        // 9. ACHIEVEMENTS & CERTIFICATE GENERATION
+        // -------------------------------------------------------------
+        function finishSetAndShowCertificate() {
+            if (state.runCompleted && state.certificates.length > 0) {
+                renderCertificateScreen(state.certificates[state.certificates.length - 1]);
+                return;
+            }
+
+            const setObj = CLOZE_SETS.find(s => s.id === state.activeSetId);
+            const firstTryCount = Object.values(state.currentRun).filter(r => r.firstTry).length;
+            const accuracy = Math.round((firstTryCount / 15) * 100);
+
+            const levelNames = {
+                1: "Level 1 (Multiple Choice)",
+                2: "Level 2 (First-Letter Hints)",
+                3: "Level 3 (Open Cloze Challenge)"
+            };
+
+            // Determine Achievement Rank
+            let rankIcon = "🥉";
+            let rankTitle = "Bronze Word Explorer";
+            if (state.selectedDifficulty === 3 && accuracy >= 80) {
+                rankIcon = "👑";
+                rankTitle = "Grand Champion Cloze Master";
+            } else if (accuracy >= 85 || state.selectedDifficulty >= 2) {
+                rankIcon = "🥇";
+                rankTitle = "Gold Vocabulary Master";
+            } else if (accuracy >= 60) {
+                rankIcon = "🥈";
+                rankTitle = "Silver Clue Detective";
+            }
+
+            // Build unlocked badges
+            const badges = [
+                { icon: "📘", title: "Story Finisher", desc: "Solved all 15 blanks" },
+                { icon: "🔍", title: "Clue Detective", desc: "Used contextual clues" }
+            ];
+            if (state.maxStreak >= 5) {
+                badges.push({ icon: "🔥", title: `${state.maxStreak}x Streak Star`, desc: "5+ answers in a row" });
+            } else {
+                badges.push({ icon: "💪", title: "Never Give Up", desc: "Completed the mission" });
+            }
+            if (accuracy === 100) {
+                badges.push({ icon: "💎", title: "100% Perfectionist", desc: "Zero mistakes made!" });
+            } else if (state.selectedDifficulty === 3) {
+                badges.push({ icon: "🚀", title: "Brave Challenger", desc: "Beat Open Cloze mode" });
+            } else {
+                badges.push({ icon: "⭐", title: "XP Collector", desc: `Earned +${state.runXpEarned} XP` });
+            }
+
+            const today = new Date();
+            const dateStr = today.toLocaleDateString('en-GB', {
+                day: 'numeric',
+                month: 'short',
+                year: 'numeric'
+            });
+
+            const certRecord = {
+                studentName: state.studentName,
+                studentClass: state.studentClass,
+                setId: setObj.id,
+                setTitle: setObj.title,
+                level: state.selectedDifficulty,
+                levelName: levelNames[state.selectedDifficulty],
+                firstTryScore: firstTryCount,
+                accuracy: accuracy,
+                xpEarned: state.runXpEarned,
+                rankIcon: rankIcon,
+                rankTitle: rankTitle,
+                date: dateStr,
+                badges: badges
+            };
+
+            state.runCompleted = true;
+            state.certificates.push(certRecord);
+            renderCertificateScreen(certRecord);
+            launchConfetti();
+            playSound('fanfare');
+        }
+
+        function viewSavedCertificate(index) {
+            const cert = state.certificates[index];
+            if (!cert) return;
+            renderCertificateScreen(cert);
+        }
+
+        function renderCertificateScreen(cert) {
+            window.activeCertForExport = cert;
+
+            document.getElementById('cert-hero-name').textContent = cert.studentName;
+            document.getElementById('cert-student-name').textContent = cert.studentName;
+
+            const classEl = document.getElementById('cert-student-class');
+            if (cert.studentClass) {
+                classEl.textContent = `Class: ${cert.studentClass}`;
+                classEl.classList.remove('hidden');
+            } else {
+                classEl.textContent = '';
+                classEl.classList.add('hidden');
+            }
+
+            document.getElementById('cert-rank-icon').textContent = cert.rankIcon;
+            document.getElementById('cert-rank-title').textContent = cert.rankTitle;
+            document.getElementById('cert-set-name').textContent = `Set ${cert.setId}: ${cert.setTitle}`;
+            document.getElementById('cert-level-name').textContent = cert.levelName;
+            document.getElementById('cert-score').textContent = `${cert.firstTryScore} / 15`;
+            document.getElementById('cert-accuracy').textContent = `${cert.accuracy}%`;
+            document.getElementById('cert-xp').textContent = `+${cert.xpEarned} XP`;
+            document.getElementById('cert-date').textContent = cert.date;
+
+            const badgesRow = document.getElementById('cert-badges-row');
+            badgesRow.innerHTML = cert.badges.map(b => `
+                <div class="bg-white rounded-2xl p-3.5 border border-slate-200 shadow-sm text-center">
+                    <div class="text-2xl mb-1">${b.icon}</div>
+                    <div class="font-bold text-slate-900 text-xs sm:text-sm">${b.title}</div>
+                    <div class="text-xs text-slate-500 mt-0.5">${b.desc}</div>
+                </div>
+            `).join('');
+
+            showScreen('certificate');
+        }
+
+        // -------------------------------------------------------------
+        // 10. HIGH-RESOLUTION PNG CERTIFICATE DOWNLOADER (CANVAS)
+        // -------------------------------------------------------------
+        function drawRoundRect(ctx, x, y, w, h, r) {
+            if (typeof ctx.roundRect === 'function') {
+                ctx.beginPath();
+                ctx.roundRect(x, y, w, h, r);
+                return;
+            }
+            const radius = Math.min(r, w / 2, h / 2);
+            ctx.beginPath();
+            ctx.moveTo(x + radius, y);
+            ctx.arcTo(x + w, y, x + w, y + h, radius);
+            ctx.arcTo(x + w, y + h, x, y + h, radius);
+            ctx.arcTo(x, y + h, x, y, radius);
+            ctx.arcTo(x, y, x + w, y, radius);
+            ctx.closePath();
+        }
+
+        function downloadCertificatePNG() {
+            const cert = window.activeCertForExport;
+            if (!cert) return;
+
+            try {
+                const canvas = document.getElementById('export-cert-canvas');
+                const ctx = canvas.getContext('2d');
+                const W = canvas.width;
+                const H = canvas.height;
+
+                // Warm ivory background
+                ctx.fillStyle = '#fffdf7';
+                ctx.fillRect(0, 0, W, H);
+
+                // Outer Gold Border
+                ctx.strokeStyle = '#f59e0b';
+                ctx.lineWidth = 18;
+                ctx.strokeRect(24, 24, W - 48, H - 48);
+
+                // Inner Indigo Border
+                ctx.strokeStyle = '#1e3a8a';
+                ctx.lineWidth = 4;
+                ctx.strokeRect(46, 46, W - 92, H - 92);
+
+                // Header Text
+                ctx.textAlign = 'center';
+                ctx.fillStyle = '#1e3a8a';
+                ctx.font = 'bold 20px Inter, sans-serif';
+                ctx.fillText('FORM 1 ENGLISH LANGUAGE  •  CONTEXTUAL CLOZE CHALLENGE', W / 2, 120);
+
+                // Main Title
+                ctx.fillStyle = '#0f172a';
+                ctx.font = 'bold 62px Georgia, serif';
+                ctx.fillText('Certificate of Achievement', W / 2, 195);
+
+                // Divider line
+                ctx.strokeStyle = '#f59e0b';
+                ctx.lineWidth = 4;
+                ctx.beginPath();
+                ctx.moveTo(W / 2 - 140, 222);
+                ctx.lineTo(W / 2 + 140, 222);
+                ctx.stroke();
+
+                // Subtitle
+                ctx.fillStyle = '#475569';
+                ctx.font = 'italic 24px Georgia, serif';
+                ctx.fillText('This certificate is proudly awarded to', W / 2, 275);
+
+                // Student Name
+                ctx.fillStyle = '#4338ca';
+                ctx.font = 'bold 64px Georgia, serif';
+                ctx.fillText(cert.studentName, W / 2, 355);
+
+                // Underline under Name
+                ctx.strokeStyle = '#cbd5e1';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(W / 2 - 260, 375);
+                ctx.lineTo(W / 2 + 260, 375);
+                ctx.stroke();
+
+                if (cert.studentClass) {
+                    ctx.fillStyle = '#64748b';
+                    ctx.font = 'bold 22px Inter, sans-serif';
+                    ctx.fillText(`Class: ${cert.studentClass}`, W / 2, 410);
+                }
+
+                // Achievement Rank Pill
+                ctx.fillStyle = '#fef3c7';
+                ctx.strokeStyle = '#f59e0b';
+                ctx.lineWidth = 3;
+                const pillW = 480;
+                const pillH = 56;
+                drawRoundRect(ctx, W / 2 - pillW / 2, 435, pillW, pillH, 28);
+                ctx.fill();
+                ctx.stroke();
+
+                ctx.fillStyle = '#78350f';
+                ctx.font = 'bold 28px Inter, sans-serif';
+                ctx.fillText(`★  ${cert.rankTitle}  ★`, W / 2, 472);
+
+                // Description
+                ctx.fillStyle = '#334155';
+                ctx.font = '24px Inter, sans-serif';
+                ctx.fillText(`for successfully completing Set ${cert.setId}: ${cert.setTitle}`, W / 2, 545);
+                ctx.fillStyle = '#4338ca';
+                ctx.font = 'bold 24px Inter, sans-serif';
+                ctx.fillText(`at ${cert.levelName}`, W / 2, 582);
+
+                // Stats Box
+                ctx.fillStyle = '#ffffff';
+                ctx.strokeStyle = '#fde68a';
+                ctx.lineWidth = 2;
+                drawRoundRect(ctx, W / 2 - 330, 615, 660, 95, 18);
+                ctx.fill();
+                ctx.stroke();
+
+                // 3 Columns in Stats Box
+                const cols = [
+                    { label: 'FIRST-TRY SCORE', val: `${cert.firstTryScore} / 15`, x: W / 2 - 210, color: '#0f172a' },
+                    { label: 'ACCURACY', val: `${cert.accuracy}%`, x: W / 2, color: '#059669' },
+                    { label: 'XP EARNED', val: `+${cert.xpEarned} XP`, x: W / 2 + 210, color: '#d97706' }
+                ];
+                cols.forEach(c => {
+                    ctx.fillStyle = '#94a3b8';
+                    ctx.font = 'bold 15px Inter, sans-serif';
+                    ctx.fillText(c.label, c.x, 650);
+                    ctx.fillStyle = c.color;
+                    ctx.font = 'bold 30px Inter, sans-serif';
+                    ctx.fillText(c.val, c.x, 688);
+                });
+
+                // Footer Date & Signature
+                ctx.fillStyle = '#1e293b';
+                ctx.font = 'bold 20px Inter, sans-serif';
+                ctx.fillText(cert.date, 280, 765);
+                ctx.fillStyle = '#94a3b8';
+                ctx.font = '14px Inter, sans-serif';
+                ctx.fillText('DATE COMPLETED', 280, 790);
+
+                // Gold Star Seal
+                ctx.fillStyle = '#f59e0b';
+                ctx.beginPath();
+                ctx.arc(W / 2, 765, 32, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.fillStyle = '#ffffff';
+                ctx.font = 'bold 32px sans-serif';
+                ctx.fillText('★', W / 2, 776);
+
+                ctx.fillStyle = '#1e293b';
+                ctx.font = 'italic bold 20px Georgia, serif';
+                ctx.fillText('F.1 English Department', W - 280, 765);
+                ctx.fillStyle = '#94a3b8';
+                ctx.font = '14px Inter, sans-serif';
+                ctx.fillText('VERIFIED ACHIEVEMENT', W - 280, 790);
+
+                // Trigger Download
+                const safeName = cert.studentName.replace(/[^a-z0-9]/gi, '_') || 'Student';
+                const link = document.createElement('a');
+                link.download = `Certificate_${safeName}_Set${cert.setId}.png`;
+                link.href = canvas.toDataURL('image/png');
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+
+                spawnFloatingXP('📥 Certificate Saved!', true);
+            } catch (err) {
+                spawnFloatingXP('Use Print / Save PDF button', false);
+            }
+        }
+    </script>
+</body>
+</html>
